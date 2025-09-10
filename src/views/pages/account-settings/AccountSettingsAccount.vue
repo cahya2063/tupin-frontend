@@ -1,33 +1,15 @@
 <script setup>
-import { baseUrl } from '@/pages/login.vue'
 import avatar1 from '@images/avatars/avatar-1.png'
+import { apiFetch } from '@/utils/api'
+import { ref } from 'vue'
 
 
 const profile = ref(null)
 const token = localStorage.getItem('token')
-onMounted(async () => {
-  try {
-    const response = await fetch(`${baseUrl}:3000/profile`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': `Bearer ${token}`,
-      },
-    })
 
-    if(response.status == 200){
-      const result = await response.json()
-      profile.value = result
-      
-      // Akses nilai setelah di-set
-      console.log('Message:', profile.value.message)
-      console.log('User:', profile.value.user)
-      console.log('User name:', profile.value.user.nama)
-      console.log('User email:', profile.value.user.email)
-    }
-  } catch (error) {
-    console.error('Gagal ambil profile:', error)
-  }
+
+onMounted(async () => {
+  getProfile()
 })
 
 
@@ -49,23 +31,68 @@ const accountData = {
 }
 
 const refInputEl = ref()
-const accountDataLocal = ref(structuredClone(accountData))
+const accountDataLocal = ref({
+  id: '',
+  name: '',
+  email: '',
+  org: '',
+  state: '',
+  language: '',
+  timezone: '',
+  currency: '',
+  avatarImg: avatar1,
+
+  // field profile tambahan
+  phone_number: '',
+  address: '',
+  country: '',
+  zip_code: '',
+})
 const isAccountDeactivated = ref(false)
 
-// Atau gunakan watch untuk memantau perubahan
-watch(profile, (newValue) => {
-  if (newValue && newValue.user) {
-    accountDataLocal.value.firstName = newValue.user.nama
-    // Atau jika ingin update semua field
+
+async function getProfile() {
+  try {
+    const data = await apiFetch(`/profile/68c10c3b3325d7ca39a3b9f1`)
+
     accountDataLocal.value = {
       ...accountDataLocal.value,
-      firstName: newValue.user.nama,
-      email: newValue.user.email || '',
-      // ... field lainnya
+      id: data.data._id,
+      name: data.data.nama,
+      email: data.data.email,
+      phone_number: data.data.phone_number || '',
+      address: data.data.address || '',
+      country: data.data.country || '',
+      zip_code: data.data.zip_code || '',
     }
-    console.log('data profile 1 :', accountDataLocal.value.firstName);
+    console.log('profile', data);
+    
+  } catch (err) {
+    console.error(err.message)
   }
-})
+}
+async function updateProfile() {
+  try {
+    const data = await apiFetch(`/profile/${accountDataLocal.value.id}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        nama: accountDataLocal.value.name,
+        phone_number: accountDataLocal.value.phone_number,
+        address: accountDataLocal.value.address,
+        country: accountDataLocal.value.country,
+        zip_code: accountDataLocal.value.zip_code,
+      })
+    })
+    console.log('data profile', data)
+    alert('Profile berhasil diperbarui ✅')
+  } catch (error) {
+    console.error(error)
+    alert('Gagal update profile ❌')
+  }
+}
 
 
 const resetForm = () => {
@@ -209,35 +236,27 @@ const currencies = [
           <!-- 👉 Form -->
           <VForm class="mt-6">
             <VRow>
-              <!-- 👉 First Name -->
-              <VCol
-                md="6"
-                cols="12"
-              >
+              <!-- 👉 ID -->
+              <VCol md="6" cols="12">
                 <VTextField
-                  v-model="accountDataLocal.firstName"
-                  placeholder="John"
-                  label="First Name"
+                  v-model="accountDataLocal.id"
+                  label="ID"
+                  placeholder="User ID"
+                  :readonly="true"
                 />
               </VCol>
 
-              <!-- 👉 Last Name -->
-              <VCol
-                md="6"
-                cols="12"
-              >
+              <!-- 👉 Name -->
+              <VCol md="6" cols="12">
                 <VTextField
-                  v-model="accountDataLocal.lastName"
-                  placeholder="Doe"
-                  label="Last Name"
+                  v-model="accountDataLocal.name"
+                  label="Name"
+                  placeholder="John Doe"
                 />
               </VCol>
 
               <!-- 👉 Email -->
-              <VCol
-                cols="12"
-                md="6"
-              >
+              <VCol cols="12" md="6">
                 <VTextField
                   v-model="accountDataLocal.email"
                   label="E-mail"
@@ -247,10 +266,7 @@ const currencies = [
               </VCol>
 
               <!-- 👉 Organization -->
-              <VCol
-                cols="12"
-                md="6"
-              >
+              <VCol cols="12" md="6">
                 <VTextField
                   v-model="accountDataLocal.org"
                   label="Organization"
@@ -259,22 +275,16 @@ const currencies = [
               </VCol>
 
               <!-- 👉 Phone -->
-              <VCol
-                cols="12"
-                md="6"
-              >
+              <VCol cols="12" md="6">
                 <VTextField
-                  v-model="accountDataLocal.phone"
+                  v-model="accountDataLocal.phone_number"
                   label="Phone Number"
                   placeholder="+1 (917) 543-9876"
                 />
               </VCol>
 
               <!-- 👉 Address -->
-              <VCol
-                cols="12"
-                md="6"
-              >
+              <VCol cols="12" md="6">
                 <VTextField
                   v-model="accountDataLocal.address"
                   label="Address"
@@ -283,10 +293,7 @@ const currencies = [
               </VCol>
 
               <!-- 👉 State -->
-              <VCol
-                cols="12"
-                md="6"
-              >
+              <VCol cols="12" md="6">
                 <VTextField
                   v-model="accountDataLocal.state"
                   label="State"
@@ -295,22 +302,16 @@ const currencies = [
               </VCol>
 
               <!-- 👉 Zip Code -->
-              <VCol
-                cols="12"
-                md="6"
-              >
+              <VCol cols="12" md="6">
                 <VTextField
-                  v-model="accountDataLocal.zip"
+                  v-model="accountDataLocal.zip_code"
                   label="Zip Code"
                   placeholder="10001"
                 />
               </VCol>
 
               <!-- 👉 Country -->
-              <VCol
-                cols="12"
-                md="6"
-              >
+              <VCol cols="12" md="6">
                 <VSelect
                   v-model="accountDataLocal.country"
                   label="Country"
@@ -320,52 +321,40 @@ const currencies = [
               </VCol>
 
               <!-- 👉 Language -->
-              <VCol
-                cols="12"
-                md="6"
-              >
+              <VCol cols="12" md="6">
                 <VSelect
                   v-model="accountDataLocal.language"
                   label="Language"
-                  placeholder="Select Language"
                   :items="['English', 'Spanish', 'Arabic', 'Hindi', 'Urdu']"
+                  placeholder="Select Language"
                 />
               </VCol>
 
               <!-- 👉 Timezone -->
-              <VCol
-                cols="12"
-                md="6"
-              >
+              <VCol cols="12" md="6">
                 <VSelect
                   v-model="accountDataLocal.timezone"
                   label="Timezone"
-                  placeholder="Select Timezone"
                   :items="timezones"
+                  placeholder="Select Timezone"
                   :menu-props="{ maxHeight: 200 }"
                 />
               </VCol>
 
               <!-- 👉 Currency -->
-              <VCol
-                cols="12"
-                md="6"
-              >
+              <VCol cols="12" md="6">
                 <VSelect
                   v-model="accountDataLocal.currency"
                   label="Currency"
-                  placeholder="Select Currency"
                   :items="currencies"
+                  placeholder="Select Currency"
                   :menu-props="{ maxHeight: 200 }"
                 />
               </VCol>
 
               <!-- 👉 Form Actions -->
-              <VCol
-                cols="12"
-                class="d-flex flex-wrap gap-4"
-              >
-                <VBtn>Save changes</VBtn>
+              <VCol cols="12" class="d-flex flex-wrap gap-4">
+                <VBtn @click="updateProfile">Save changes</VBtn>
 
                 <VBtn
                   color="secondary"
