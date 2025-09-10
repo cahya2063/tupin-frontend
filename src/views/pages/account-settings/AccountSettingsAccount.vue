@@ -1,5 +1,36 @@
 <script setup>
+import { baseUrl } from '@/pages/login.vue'
 import avatar1 from '@images/avatars/avatar-1.png'
+
+
+const profile = ref(null)
+const token = localStorage.getItem('token')
+onMounted(async () => {
+  try {
+    const response = await fetch(`${baseUrl}:3000/profile`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'authorization': `Bearer ${token}`,
+      },
+    })
+
+    if(response.status == 200){
+      const result = await response.json()
+      profile.value = result
+      
+      // Akses nilai setelah di-set
+      console.log('Message:', profile.value.message)
+      console.log('User:', profile.value.user)
+      console.log('User name:', profile.value.user.nama)
+      console.log('User email:', profile.value.user.email)
+    }
+  } catch (error) {
+    console.error('Gagal ambil profile:', error)
+  }
+})
+
+
 
 const accountData = {
   avatarImg: avatar1,
@@ -20,6 +51,22 @@ const accountData = {
 const refInputEl = ref()
 const accountDataLocal = ref(structuredClone(accountData))
 const isAccountDeactivated = ref(false)
+
+// Atau gunakan watch untuk memantau perubahan
+watch(profile, (newValue) => {
+  if (newValue && newValue.user) {
+    accountDataLocal.value.firstName = newValue.user.nama
+    // Atau jika ingin update semua field
+    accountDataLocal.value = {
+      ...accountDataLocal.value,
+      firstName: newValue.user.nama,
+      email: newValue.user.email || '',
+      // ... field lainnya
+    }
+    console.log('data profile 1 :', accountDataLocal.value.firstName);
+  }
+})
+
 
 const resetForm = () => {
   accountDataLocal.value = structuredClone(accountData)

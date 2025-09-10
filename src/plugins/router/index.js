@@ -18,6 +18,10 @@ router.beforeEach((to, from, next) => {
       path: '/login',
     })
   }
+    if (token && (to.path === '/login' || to.path === '/register' || to.path === '/')) {
+      // Kalau sudah login → redirect ke dashboard
+      return next({ path: '/dashboard' })
+    }
 
   next()
 })

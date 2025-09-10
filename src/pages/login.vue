@@ -1,5 +1,5 @@
 <!-- views/Login.vue -->
-<script setup>
+<script>
 import TemplateForm from '@/components/form/TemplateForm.vue'
 import TemplateButton from '@/components/form/TemplateButton.vue'
 import { ref } from 'vue'
@@ -7,7 +7,7 @@ import TemplateAlertFailed from '@/components/alert/TemplateAlertFailed.vue'
 import TemplateAlertSuccess from '@/components/alert/TemplateAlertSuccess.vue'
 import { useRouter } from 'vue-router'
 
-let baseUrl = window.location.protocol + "//" + window.location.hostname
+export let baseUrl = window.location.protocol + "//" + window.location.hostname
 
 const email = ref('')
 const password = ref('')
