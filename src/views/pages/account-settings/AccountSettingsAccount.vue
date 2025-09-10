@@ -6,6 +6,7 @@ import { ref } from 'vue'
 
 const profile = ref(null)
 const token = localStorage.getItem('token')
+const userId = localStorage.getItem('userId')
 
 
 onMounted(async () => {
@@ -51,29 +52,10 @@ const accountDataLocal = ref({
 const isAccountDeactivated = ref(false)
 
 
-async function getProfile() {
-  try {
-    const data = await apiFetch(`/profile/68c10c3b3325d7ca39a3b9f1`)
 
-    accountDataLocal.value = {
-      ...accountDataLocal.value,
-      id: data.data._id,
-      name: data.data.nama,
-      email: data.data.email,
-      phone_number: data.data.phone_number || '',
-      address: data.data.address || '',
-      country: data.data.country || '',
-      zip_code: data.data.zip_code || '',
-    }
-    console.log('profile', data);
-    
-  } catch (err) {
-    console.error(err.message)
-  }
-}
 async function updateProfile() {
   try {
-    const data = await apiFetch(`/profile/${accountDataLocal.value.id}`, {
+    const data = await apiFetch(`/profile/${userId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -86,14 +68,31 @@ async function updateProfile() {
         zip_code: accountDataLocal.value.zip_code,
       })
     })
-    console.log('data profile', data)
     alert('Profile berhasil diperbarui ✅')
   } catch (error) {
     console.error(error)
     alert('Gagal update profile ❌')
   }
 }
+async function getProfile() {
+  try {
+    const data = await apiFetch(`/profile/${userId}`)
 
+    accountDataLocal.value = {
+      ...accountDataLocal.value,
+      id: data.data._id,
+      name: data.data.nama,
+      email: data.data.email,
+      phone_number: data.data.phone_number || '',
+      address: data.data.address || '',
+      country: data.data.country || '',
+      zip_code: data.data.zip_code || '',
+    }
+    
+  } catch (err) {
+    console.error(err.message)
+  }
+}
 
 const resetForm = () => {
   accountDataLocal.value = structuredClone(accountData)

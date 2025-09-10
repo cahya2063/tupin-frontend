@@ -35,9 +35,10 @@ async function loginUser() {
     statusCode.value = response.status
     const result = await response.json()
     alertMessage.value = result.message
-
+    
     if (response.status === 200 && result.token) {
       localStorage.setItem('token', result.token)
+      localStorage.setItem('userId', result.data.id)
       setTimeout(() => {
         router.push('/dashboard')
       }, 1500)
