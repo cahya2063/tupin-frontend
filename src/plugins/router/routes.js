@@ -29,8 +29,8 @@ export const routes = [
         component: () => import('@/pages/tables.vue'),
       },
       {
-        path: 'form-layouts',
-        component: () => import('@/pages/form-layouts.vue'),
+        path: 'jobs',
+        component: () => import('@/pages/jobs.vue'),
       },
     ],
   },

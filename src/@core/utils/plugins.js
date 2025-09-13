@@ -38,6 +38,8 @@
  * app.mount('#app')
  * ```
  */
+import '@coreui/coreui-pro/dist/css/coreui.min.css'
+import CoreuiVue from '@coreui/vue-pro'
 export const registerPlugins = app => {
   const imports = import.meta.glob(['../../plugins/*.{ts,js}', '../../plugins/*/index.{ts,js}'], { eager: true })
   const importPaths = Object.keys(imports).sort()
@@ -47,4 +49,9 @@ export const registerPlugins = app => {
 
     pluginImportModule.default?.(app)
   })
+}
+export function registerPlugins1(app) {
+
+  // 👉 CoreUI (ini yang penting)
+  app.use(CoreuiVue)
 }

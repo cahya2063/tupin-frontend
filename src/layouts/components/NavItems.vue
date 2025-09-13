@@ -217,9 +217,9 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
   />
   <VerticalNavLink
     :item="{
-      title: 'Form Layouts',
+      title: 'Jobs',
       icon: 'ri-layout-4-line',
-      to: '/form-layouts',
+      to: '/jobs',
     }"
   />
   <VerticalNavLink

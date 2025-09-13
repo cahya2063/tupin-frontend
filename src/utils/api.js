@@ -13,12 +13,21 @@ export async function apiFetch(url, options = {}) {
     headers,
   })
 
+  // const statusCode = response.status
+  console.log('status code :', response.status);
+  
   if (response.status === 403) {
     // token kadaluarsa → logout paksa
     localStorage.removeItem('token')
+    localStorage.removeItem('userId')
+
     router.push('/login') // ✅ gunakan instance router
     throw new Error('Token expired, please login again')
   }
 
-  return response.json()
+  return {
+    status: response.status,
+    data: await response.json()
+  }
 }
+

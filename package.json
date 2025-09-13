@@ -12,9 +12,12 @@
     "postinstall": "npm run build:icons"
   },
   "dependencies": {
+    "@coreui/coreui-pro": "^5.19.0", 
+    "@coreui/vue-pro": "^5.15.0",
     "@floating-ui/dom": "1.6.8",
     "@iconify-json/bxl": "^1.1.10",
     "@stylistic/stylelint-config": "^1.0.1",
+    "@vueform/vueform": "^1.13.2",
     "@vueuse/core": "^10.11.1",
     "@vueuse/math": "^10.11.1",
     "apexcharts": "^3.54.1",
@@ -48,7 +51,6 @@
     "eslint-plugin-regexp": "^2.6.0",
     "eslint-plugin-sonarjs": "^0.24.0",
     "eslint-plugin-unicorn": "^51.0.1",
-    "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-vue": "^9.32.0",
     "postcss-html": "^1.7.0",
     "postcss-scss": "^4.0.9",

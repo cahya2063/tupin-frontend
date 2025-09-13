@@ -1,44 +1,43 @@
 <script setup>
+  const icons = [
+    'mdi-facebook',
+    'mdi-twitter',
+    'mdi-linkedin',
+    'mdi-instagram',
+  ]
 </script>
-
 <template>
-
-  <div class="container-footer">
-    <div class="row">
-      <div class="footer-col">
-        <h4>Company</h4>
-        <ul>
-          <li><a href="">about us</a></li>
-          <li><a href="">our service</a></li>
-          <li><a href="">privacy policy</a></li>
-          <li><a href="">affiliate program</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Get help</h4>
-        <ul>
-          <li><a href="">FAQ</a></li>
-          <li><a href="">shipping</a></li>
-          <li><a href="">returns</a></li>
-          <li><a href="">order status</a></li>
-          <li><a href="">payments option</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>online shop</h4>
-        <ul>
-          <li><a href="">watch</a></li>
-          <li><a href="">bag</a></li>
-          <li><a href="">shoes</a></li>
-          <li><a href="">dress</a></li>
-        </ul>
-      </div>
-      
+  <v-footer class=" footer text-center d-flex flex-column ga-2 py-4" color="indigo-lighten-1">
+    <div class="d-flex ga-3">
+      <v-btn
+        v-for="icon in icons"
+        :key="icon"
+        :icon="icon"
+        density="comfortable"
+        variant="text"
+      ></v-btn>
     </div>
-  </div>
+
+    <v-divider class="my-2" thickness="2" width="50"></v-divider>
+
+    <div class="text-caption font-weight-regular opacity-60">
+      Phasellus feugiat arcu sapien, et iaculis ipsum elementum sit amet. Mauris cursus commodo interdum. Praesent ut risus eget metus luctus accumsan id ultrices nunc. Sed at orci sed massa consectetur dignissim a sit amet dui. Duis commodo vitae velit et faucibus. Morbi vehicula lacinia malesuada. Nulla placerat augue vel ipsum ultrices, cursus iaculis dui sollicitudin. Vestibulum eu ipsum vel diam elementum tempor vel ut orci. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+    </div>
+
+    <v-divider></v-divider>
+
+    <div>
+      {{ new Date().getFullYear() }} — <strong>Vuetify</strong>
+    </div>
+  </v-footer>
 </template>
 
 <style scoped>
+.footer{
+  background-color: #AA38D1;
+}
+.text-caption{
+  color: black;
 
-
+}
 </style>

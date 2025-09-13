@@ -55,7 +55,7 @@ const isAccountDeactivated = ref(false)
 
 async function updateProfile() {
   try {
-    const data = await apiFetch(`/profile/${userId}`, {
+    const response = await apiFetch(`/profile/${userId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -67,8 +67,10 @@ async function updateProfile() {
         country: accountDataLocal.value.country,
         zip_code: accountDataLocal.value.zip_code,
       })
+      
     })
-    alert('Profile berhasil diperbarui ✅')
+    console.log('data profile:', response.data);
+      alert(response.data.message)
   } catch (error) {
     console.error(error)
     alert('Gagal update profile ❌')
@@ -76,18 +78,19 @@ async function updateProfile() {
 }
 async function getProfile() {
   try {
-    const data = await apiFetch(`/profile/${userId}`)
+    const response = await apiFetch(`/profile/${userId}`)
 
     accountDataLocal.value = {
       ...accountDataLocal.value,
-      id: data.data._id,
-      name: data.data.nama,
-      email: data.data.email,
-      phone_number: data.data.phone_number || '',
-      address: data.data.address || '',
-      country: data.data.country || '',
-      zip_code: data.data.zip_code || '',
+      id: response.data.user._id,
+      name: response.data.user.nama,
+      email: response.data.user.email,
+      phone_number: response.data.user.phone_number || '',
+      address: response.data.user.address || '',
+      country: response.data.user.country || '',
+      zip_code: response.data.user.zip_code || '',
     }
+    console.log('data profile :', response.data.user);
     
   } catch (err) {
     console.error(err.message)
