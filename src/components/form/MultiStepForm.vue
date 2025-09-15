@@ -6,35 +6,71 @@ const stepperRef = ref()
 const currentStep = ref(1)
 const finish = ref(false)
 const validationState = ref(0)
-const picked = ref('Elektronik')
 const uid = useId()
-const needDeadline = ref(false)
 
 const steps = ['Judul', 'Kategori', 'Keahlian', 'Deadline', 'Pengalaman', 'Budget', 'Deskripsi']
+
+// langsung flat
 const options = ref([])
 
 async function getSkills() {
   const response = await apiFetch(`/skills`)
   console.log('data skill', response.data.skills)
 
-  const skills = response.data.skills.map((item) => {
-    return {
-      label: item.label, // kategori, misalnya "Kendaraan"
-      options: item.skill.map((s, idx) => ({
-        value: s.value,   // ambil value dari skill
-        label: s.value,   // teks yang ditampilkan
-      })),
-    }
-  })
+  // flatten: ambil semua skill dari tiap kategori
+  const flatSkills = response.data.skills.flatMap((item) =>
+    item.skill.map((s) => ({
+      value: s.value,
+      label: s.value, // <- WAJIB pakai "label"
+    }))
+  )
 
-  options.value = skills
-  console.log('data skill2', options.value)
+  options.value = flatSkills
+  console.log('data skill2 (flat)', options.value)
 }
 
-onMounted(async()=>{
-    getSkills()
+const title = ref('')
+const category = ref('Elektronik')
+const skills = ref([])
+const needDeadline = ref(false)// switch date
+const vStartDate = ref(new Date())
+const vEndDate = ref(new Date())
+const experience = ref('Medioker')
+const budget = ref()
+const description = ref('')
+
+async function postJob() {
+  const newJob = {
+    title: title.value,
+    category: category.value,
+    skills: skills.value,
+    deadline: {
+      "start_date": vStartDate.value?.toISOString().split('T')[0],
+      "end_date": vEndDate.value?.toISOString().split('T')[0]
+    },
+    experiences: experience.value,
+    budget: budget.value,
+    description: description.value
+  }
+  const response = await apiFetch('/jobs', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(newJob)
+  })
+  console.log('respons ', response);
+  
+  
+  
+
+}
+
+onMounted(async () => {
+  getSkills()
 })
 </script>
+
 
 <template>
   <div>
@@ -56,7 +92,7 @@ onMounted(async()=>{
             </div>
           </CCol>
           <CCol :md="6">
-            <CFormInput class="title-input" type="text" value="root" label="tulis judul untuk perbaikanmu" required/>
+            <CFormInput class="title-input" v-model="title" name="title" type="text" value="root" label="tulis judul untuk perbaikanmu" required/>
             <div class="example-title">
                 <div class="example-title-1">
 
@@ -83,12 +119,12 @@ onMounted(async()=>{
             </div>
           </CCol>
           <CCol :md="8">
-            <CFormCheck class="category-radio" type="radio" id="flexRadioVModel1" inline label="Elektronik" value="Elektronik" v-model="picked"/>
-            <CFormCheck class="category-radio" type="radio" id="flexRadioVModel2" inline label="Furnitur" value="Furnitur" v-model="picked"/>
-            <CFormCheck class="category-radio" type="radio" id="flexRadioVModel4" inline label="Kamar Mandi" value="Kamar Mandi" v-model="picked"/>
-            <CFormCheck class="category-radio" type="radio" id="flexRadioVModel5" inline label="Kendaraan" value="Kendaraan" v-model="picked"/>
-            <CFormCheck class="category-radio" type="radio" id="flexRadioVModel5" inline label="Lainnya" value="Lainnya" v-model="picked"/>
-            <div class="picked">Picked: {{ picked }}</div>
+            <CFormCheck class="category-radio" type="radio" id="flexRadioVModel1" inline label="Elektronik" value="Elektronik" v-model="category"/>
+            <CFormCheck class="category-radio" type="radio" id="flexRadioVModel2" inline label="Furnitur" value="Furnitur" v-model="category"/>
+            <CFormCheck class="category-radio" type="radio" id="flexRadioVModel4" inline label="Kamar Mandi" value="Kamar Mandi" v-model="category"/>
+            <CFormCheck class="category-radio" type="radio" id="flexRadioVModel5" inline label="Kendaraan" value="Kendaraan" v-model="category"/>
+            <CFormCheck class="category-radio" type="radio" id="flexRadioVModel5" inline label="Lainnya" value="Lainnya" v-model="category"/>
+            <div class="picked">Category : {{ category }}</div>
           </CCol>
         </form>
       </template>
@@ -97,11 +133,15 @@ onMounted(async()=>{
         <form class="row g-3 pt-3" novalidate :ref="formRef">
           <CCol :md="4">
             <div class="title">
-                skill apa yang kamu butuhkan?
+              skill apa yang kamu butuhkan?
             </div>
           </CCol>
           <CCol :md="6">
-            <CMultiSelect :options="options" search="global" />
+            <CMultiSelect
+              :options="options"
+              multiple
+              @change="skills = $event.map(opt => opt.value)"
+            />
           </CCol>
         </form>
       </template>
@@ -120,14 +160,17 @@ onMounted(async()=>{
               Ya
             </div>
 
-            <!-- hanya muncul kalau switch aktif -->
-            <CDateRangePicker
-              v-if="needDeadline"
-              startDate="2025/08/03"
-              endDate="2025/08/17"
-              label="Date range"
-              locale="en-US"
-            />
+              <!-- hanya muncul kalau switch aktif -->
+              <CDateRangePicker
+                v-if="needDeadline"
+                label="Date range"
+                locale="en-US"
+                v-model:start-date="vStartDate"
+                v-model:end-date="vEndDate"
+              />
+              <div class="mt-2 text-muted">
+                <pre>{{vStartDate, '-', vEndDate}}</pre>
+              </div>
           </CCol>
         </form>
       </template>
@@ -144,20 +187,20 @@ onMounted(async()=>{
               <div class="experience-btn-caption">     
                 mencari seseorang yang relatif baru di bidang ini
               </div>
-              <CFormCheck type="radio" name="flexRadioDefault" id="flexRadioDefault1" label="Newbie"/>
+              <CFormCheck type="radio" value="Newbie" v-model="experience" name="flexRadioDefault" id="flexRadioDefault1"  label="Newbie"/>
             </div>
             <div class="experience-container">
               <div class="experience-btn-caption">     
                 mencari seseorang dengan pengalaman menengah
               </div>
-            <CFormCheck type="radio" name="flexRadioDefault" id="flexRadioDefault2" label="Medioker" checked/>
+            <CFormCheck type="radio" value="Medioker" v-model="experience" name="flexRadioDefault" id="flexRadioDefault2" label="Medioker" checked/>
             </div>
 
             <div class="experience-container">
               <div class="experience-btn-caption">
                 mencari seseorang ahli untuk menangani
               </div>
-              <CFormCheck type="radio" name="flexRadioDefault" id="flexRadioDefault1" label="Expert"/>
+              <CFormCheck type="radio" value="Expert" v-model="experience" name="flexRadioDefault" id="flexRadioDefault1" label="Expert"/>
             </div>
           </CCol>
         </form>
@@ -172,6 +215,7 @@ onMounted(async()=>{
           </CCol>
           <CCol :md="6" class="py-3">
             <CFormInput
+              v-model="budget"
               type="number"
               id="input-budget"
               label="Berapa budgetmu?"
@@ -180,6 +224,7 @@ onMounted(async()=>{
           </CCol>
         </form>
       </template>
+
       <template #step-7="{ formRef }">
         <form class="row g-3 pt-3" novalidate :ref="formRef">
           <CCol :md="4">
@@ -189,6 +234,7 @@ onMounted(async()=>{
           </CCol>
           <CCol :md="6" class="py-3">
             <CFormTextarea
+              v-model="description"
               id="exampleFormControlTextarea1"
               label="Example textarea"
               rows="6"
@@ -218,7 +264,7 @@ onMounted(async()=>{
       <CButton
         v-if="!finish && currentStep === steps.length"
         color="primary"
-        @click="stepperRef?.finish()"
+        @click="postJob"
       >
         Finish
       </CButton>
