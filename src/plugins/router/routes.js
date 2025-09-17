@@ -6,8 +6,17 @@ export const routes = [
     children: [
       {
         path: 'dashboard',
-        component: () => import('@/pages/dashboard.vue'),
+        component: () => import('@/pages/transaction/dashboard.vue'),
       },
+      {
+        path: 'jobs',
+        component: () => import('@/pages/transaction/jobs.vue'),
+      },
+      {
+        path: 'view-jobs',
+        component: () => import('@/pages/transaction/view-jobs.vue')
+      },
+      // bawaan template
       {
         path: 'account-settings',
         component: () => import('@/pages/account-settings.vue'),
@@ -28,10 +37,6 @@ export const routes = [
         path: 'tables',
         component: () => import('@/pages/tables.vue'),
       },
-      {
-        path: 'jobs',
-        component: () => import('@/pages/jobs.vue'),
-      },
     ],
   },
   {
@@ -40,11 +45,11 @@ export const routes = [
     children: [
       {
         path: 'login',
-        component: () => import('@/pages/login.vue'),
+        component: () => import('@/pages/auth/login.vue'),
       },
       {
         path: 'register',
-        component: () => import('@/pages/register.vue'),
+        component: () => import('@/pages/auth/register.vue'),
       },
       {
         path: '/:pathMatch(.*)*',

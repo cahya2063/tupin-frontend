@@ -41,7 +41,7 @@ const accountDataLocal = ref({
   language: '',
   timezone: '',
   currency: '',
-  avatarImg: avatar1,
+  avatar: '',
 
   // field profile tambahan
   phone_number: '',
@@ -89,6 +89,7 @@ async function getProfile() {
       address: response.data.user.address || '',
       country: response.data.user.country || '',
       zip_code: response.data.user.zip_code || '',
+      avatar: response.data.user.avatar || avatar1, // default avatar jika kosong
     }
     console.log('data profile :', response.data.user);
     
@@ -101,21 +102,33 @@ const resetForm = () => {
   accountDataLocal.value = structuredClone(accountData)
 }
 
-const changeAvatar = file => {
-  const fileReader = new FileReader()
+const changeAvatar = async file => {
   const { files } = file.target
-  if (files && files.length) {
-    fileReader.readAsDataURL(files[0])
-    fileReader.onload = () => {
-      if (typeof fileReader.result === 'string')
-        accountDataLocal.value.avatarImg = fileReader.result
-    }
+  if (!files || !files.length) return
+
+  const formData = new FormData()
+  formData.append('avatar', files[0]) // `avatar` harus sama dengan field multer.single('avatar')
+
+  try {
+    const response = await apiFetch(`/profile/${userId}/avatar`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    // update preview avatar
+    accountDataLocal.value.avatar = response.data.avatar
+    console.log('avatar : ', response.data.avatar);
+    
+    alert('Avatar berhasil diperbarui ✅')
+  } catch (error) {
+    console.error(error)
+    alert('Gagal upload avatar ❌')
   }
 }
 
 // reset avatar image
 const resetAvatar = () => {
-  accountDataLocal.value.avatarImg = accountData.avatarImg
+  accountDataLocal.value.avatar = accountData.avatarImg
 }
 
 const timezones = [
@@ -186,7 +199,7 @@ const currencies = [
             rounded="lg"
             size="100"
             class="me-6"
-            :image="accountDataLocal.avatarImg"
+            :image="`http://localhost:3000${accountDataLocal.avatar}`"
           />
 
           <!-- 👉 Upload Photo -->

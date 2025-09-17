@@ -8,7 +8,9 @@ const finish = ref(false)
 const validationState = ref(0)
 const uid = useId()
 
-const steps = ['Judul', 'Kategori', 'Keahlian', 'Deadline', 'Pengalaman', 'Budget', 'Deskripsi']
+const userId = localStorage.getItem('userId')
+
+const steps = ['Judul', 'Kategori', 'Keahlian', 'Deadline', 'Pengalaman', 'Budget', 'Gambar', 'Deskripsi']
 
 // langsung flat
 const options = ref([])
@@ -17,11 +19,10 @@ async function getSkills() {
   const response = await apiFetch(`/skills`)
   console.log('data skill', response.data.skills)
 
-  // flatten: ambil semua skill dari tiap kategori
   const flatSkills = response.data.skills.flatMap((item) =>
     item.skill.map((s) => ({
       value: s.value,
-      label: s.value, // <- WAJIB pakai "label"
+      label: s.value,
     }))
   )
 
@@ -32,44 +33,55 @@ async function getSkills() {
 const title = ref('')
 const category = ref('Elektronik')
 const skills = ref([])
-const needDeadline = ref(false)// switch date
-const vStartDate = ref(new Date())
-const vEndDate = ref(new Date())
+const needDeadline = ref(false)
+const vStartDate = ref('-')
+const vEndDate = ref('-')
 const experience = ref('Medioker')
 const budget = ref()
 const description = ref('')
+const photoFile = ref(null) // file akan disimpan di sini
+
+// handle ambil file
+function handleFileUpload(e) {
+  photoFile.value = e.target.files[0]
+}
 
 async function postJob() {
-  const newJob = {
-    title: title.value,
-    category: category.value,
-    skills: skills.value,
-    deadline: {
-      "start_date": vStartDate.value?.toISOString().split('T')[0],
-      "end_date": vEndDate.value?.toISOString().split('T')[0]
-    },
-    experiences: experience.value,
-    budget: budget.value,
-    description: description.value
+  const formData = new FormData()
+
+  formData.append('title', title.value)
+  formData.append('category', category.value)
+  formData.append('skills', JSON.stringify(skills.value))
+  formData.append(
+    'deadline',
+    JSON.stringify({
+      start_date: vStartDate.value || '-',
+      end_date: vEndDate.value || '-',
+    })
+  )
+  formData.append('experiences', experience.value)
+  formData.append('budget', budget.value)
+  formData.append('description', description.value)
+  formData.append('userId', userId)
+
+  if (photoFile.value) {
+    formData.append('photo', photoFile.value)
   }
+
   const response = await apiFetch('/jobs', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(newJob)
+    body: formData, // langsung FormData
+    // ❌ jangan set Content-Type
   })
-  console.log('respons ', response);
-  
-  
-  
 
+  console.log('respons API:', response)
 }
 
 onMounted(async () => {
   getSkills()
 })
 </script>
+
 
 
 <template>
@@ -92,7 +104,7 @@ onMounted(async () => {
             </div>
           </CCol>
           <CCol :md="6">
-            <CFormInput class="title-input" v-model="title" name="title" type="text" value="root" label="tulis judul untuk perbaikanmu" required/>
+            <CFormInput class="title-input" v-model="title" name="title" type="text" value="" label="tulis judul untuk perbaikanmu" required/>
             <div class="example-title">
                 <div class="example-title-1">
 
@@ -226,6 +238,17 @@ onMounted(async () => {
       </template>
 
       <template #step-7="{ formRef }">
+        <form class="row g-3 pt-3" novalidate :ref="formRef">
+          <CCol :md="4">
+            <div class="title">Upload gambar alatmu</div>
+          </CCol>
+          <CCol :md="6" class="py-3">
+            <CFormInput type="file" id="inputGroupFile01" @change="handleFileUpload" />
+          </CCol>
+        </form>
+      </template>
+
+      <template #step-8="{ formRef }">
         <form class="row g-3 pt-3" novalidate :ref="formRef">
           <CCol :md="4">
             <div class="title">
