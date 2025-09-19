@@ -12,7 +12,9 @@
     "postinstall": "npm run build:icons"
   },
   "dependencies": {
-    "@coreui/coreui-pro": "^5.19.0", 
+    "@ckeditor/ckeditor5-build-inline": "^41.4.2",
+    "@ckeditor/ckeditor5-vue": "^7.3.0",
+    "@coreui/coreui-pro": "^5.19.0",
     "@coreui/vue-pro": "^5.15.0",
     "@floating-ui/dom": "1.6.8",
     "@iconify-json/bxl": "^1.1.10",

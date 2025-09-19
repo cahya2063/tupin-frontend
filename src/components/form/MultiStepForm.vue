@@ -1,6 +1,27 @@
 <script setup>
 import { apiFetch } from '@/utils/api'
-import { onMounted, ref, useId } from 'vue'
+import { onMounted, ref, useId, computed } from 'vue'
+import { Ckeditor } from '@ckeditor/ckeditor5-vue';
+import InlineEditor from '@ckeditor/ckeditor5-build-inline'
+
+// import 'ckeditor5/ckeditor5.css';
+
+// ===========CKEDITOR============//
+
+const editor = InlineEditor
+const editorData = ref('<p>Tulis sesuatu di sini...</p>')
+
+const config = {
+  toolbar: [
+    'undo', 'redo', '|',
+    'heading', '|',
+    'bold', 'italic', '|',
+    'link', '|',
+    'bulletedList', 'numberedList', 'outdent', 'indent'
+  ],
+  placeholder: 'Ketik atau paste konten di sini...',
+  height: '100px'
+}
 
 const stepperRef = ref()
 const currentStep = ref(1)
@@ -34,8 +55,8 @@ const title = ref('')
 const category = ref('Elektronik')
 const skills = ref([])
 const needDeadline = ref(false)
-const vStartDate = ref('-')
-const vEndDate = ref('-')
+const vStartDate = ref(null)
+const vEndDate = ref(null)
 const experience = ref('Medioker')
 const budget = ref()
 const description = ref('')
@@ -175,6 +196,7 @@ onMounted(async () => {
               <!-- hanya muncul kalau switch aktif -->
               <CDateRangePicker
                 v-if="needDeadline"
+                :key="'date-picker-' + needDeadline"
                 label="Date range"
                 locale="en-US"
                 v-model:start-date="vStartDate"
@@ -256,14 +278,15 @@ onMounted(async () => {
             </div>
           </CCol>
           <CCol :md="6" class="py-3">
-            <CFormTextarea
-              v-model="description"
-              id="exampleFormControlTextarea1"
-              label="Example textarea"
-              rows="6"
-              text="Must be 8-20 words long."
-              placeholder="ceritakan lebih detail lagi tentang alatmu disini..."
-            ></CFormTextarea>
+            <div class="main-container">
+              <div class="editor-container editor-container_inline-editor" ref="editorContainerElement">
+                <div class="editor-container__editor">
+                  <div ref="editorElement">
+                    <ckeditor v-if="editor && config" v-model="description" :modelValue="config.initialData" :editor="editor" :config="config" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </CCol>
         </form>
       </template>
@@ -333,5 +356,19 @@ onMounted(async () => {
 }
 .experience-btn-caption{
   color: rgb(165, 156, 156);
+}
+.ck-editor__editable_inline {
+  width: 600px;
+  min-height: 120px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;     /* kasih border default */
+  border-radius: 4px;         /* biar lebih halus */
+  padding: 8px;               /* kasih jarak teks ke border */
+  background: #fff;     
+}
+.ck-editor__editable_inline:focus {
+  border-color: #4a90e2;      /* warna border saat fokus */
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
 }
 </style>

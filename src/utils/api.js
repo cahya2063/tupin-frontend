@@ -20,6 +20,7 @@ export async function apiFetch(url, options = {}) {
     // token kadaluarsa → logout paksa
     localStorage.removeItem('token')
     localStorage.removeItem('userId')
+    localStorage.removeItem('role')
 
     router.push('/login') // ✅ gunakan instance router
     throw new Error('Token expired, please login again')

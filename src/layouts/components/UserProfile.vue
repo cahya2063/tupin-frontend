@@ -8,6 +8,7 @@ const router = useRouter()
 function logout() {
   localStorage.removeItem('token')
   localStorage.removeItem('userId')
+  localStorage.removeItem('role')
   router.push('/login')
 }
 </script>

@@ -7,6 +7,7 @@ import avatar3 from '@images/avatars/avatar-3.png'
 import avatar4 from '@images/avatars/avatar-4.png'
 const jobs = ref([])
 const detailJobs = ref()
+const userId = localStorage.getItem('userId')
 const avatars = [
   avatar1,
   avatar2,
@@ -29,6 +30,24 @@ async function getDetailJobs(id){
   console.log('data detail jobs : ', detailJobs.value.title);
 }
 
+async function applyJob(jobId) {
+  const response = await apiFetch(`/jobs/${jobId}/apply`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ userId }),
+  });
+
+
+  console.log('response apply job : ', response);
+
+  if (response.status === 201) {
+    alert('Berhasil apply job');
+  } else {
+    alert('Gagal apply job');
+  }
+}
 onMounted(()=>{
     getJobs()
 })   
@@ -47,10 +66,16 @@ onMounted(()=>{
 
         <VCardText class="position-relative">
           <!-- User Avatar -->
-          <VAvatar size="75" class="avatar-center" :image="avatar1" />
+           <div class="detail-cont d-flex justify-space-between align-center">
+            <VAvatar size="75" class="avatar-center" :image="avatar1" />
+            <VBtn color="primary" @click="getDetailJobs(item._id)" :data-id="`${item._id}`">
+              Detail
+            </VBtn>
+          </div>
+
 
           <!-- Title, Subtitle & Action Button -->
-          <div class="d-flex justify-space-between flex-wrap pt-8">
+          <div class="d-flex justify-space-between flex-wrap pt-6">
             <div class="me-2 mb-2">
               <VCardTitle class="pa-0">
                 {{ item.title }}
@@ -59,11 +84,10 @@ onMounted(()=>{
                 {{ item.category }}
               </VCardSubtitle>
             </div>
-            <VBtn color="primary" @click="getDetailJobs(item._id)" :data-id="`${item._id}`">detail</VBtn>
           </div>
 
           <!-- Mutual Friends -->
-          <div class="d-flex justify-space-between align-center mt-8">
+          <div class="d-flex justify-space-between align-center">
             <span class="font-weight-medium">18 mutual friends</span>
             <div class="v-avatar-group">
               <VAvatar
@@ -95,26 +119,40 @@ onMounted(()=>{
       </div>
       <hr>
       <div class="description">
-        deskripsi kerusakan alat : <br> {{ detailJobs?.description }}
+      <h5>Deskripsi kerusakan alat :</h5>
+        <div v-html="detailJobs?.description"></div>
       </div>
+
       <hr>
-      <div class="description">
+      <div class="experience cont">
         budget : {{ detailJobs?.budget }} pengalaman : {{ detailJobs?.experiences }}
       </div>
       <hr>
       Skill :
-      <div v-for="(skill, idx) in detailJobs?.skills" :key="idx">
-        <CBadge textBgColor="primary">{{skill}}</CBadge>
+      <div v-for="(skill, idx) in detailJobs?.skills" :key="idx" class="d-inline">
+        <VChip
+            color="success"
+            size="medium"
+            class="text-capitalize py-1 px-2 mx-2"
+          >
+          {{ skill }}
+        </VChip>
+        
       </div>
       <hr>
-      <div class="description">
-        <CDateRangePicker
-          label="Deadline pengerjaan"
-          locale="en-US"
-          :start-date="detailJobs?.deadline?.start_date || ''"
-          :end-date="detailJobs?.deadline?.end_date || ''"
-        />
+      <div class="date cont deadline-box">
+        <label class="deadline-label">📅 Deadline pengerjaan:</label>
+        <p class="deadline-value">
+          {{ detailJobs?.deadline?.start_date?.split('T')[0] }}
+          → 
+          {{ detailJobs?.deadline?.end_date?.split('T')[0] }}
+        </p>
       </div>
+      <div class="apply-btn d-flex justify-end">
+        <VBtn color="primary" @click="applyJob(detailJobs?._id)" >Apply</VBtn>
+      </div>
+      
+
 
     </CModalBody>
   </CModal>
@@ -124,8 +162,52 @@ onMounted(()=>{
   font-size: 17px;
   margin-block: 40px;
 }
-.description{
+.cont{
   margin-block: 40px;
-
 }
+.date{
+  max-width: 80%;
+  margin-inline: auto;
+}
+.description :deep(ul) {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.description :deep(li) {
+  margin-bottom: 4px;
+}
+
+.deadline-box {
+  background: #f5f9ff;
+  border: 1px solid #d0e3ff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.deadline-box:hover {
+  background: #ebf4ff;
+  transform: translateY(-2px);
+}
+
+.deadline-label {
+  display: block;
+  font-weight: 600;
+  font-size: 15px;
+  color: #3b82f6;
+  margin-bottom: 6px;
+}
+
+.deadline-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #1e293b;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
 </style>

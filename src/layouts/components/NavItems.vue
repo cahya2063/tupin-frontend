@@ -2,6 +2,34 @@
 import VerticalNavSectionTitle from '@/@layouts/components/VerticalNavSectionTitle.vue'
 import VerticalNavGroup from '@layouts/components/VerticalNavGroup.vue'
 import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
+
+import { ref, computed } from 'vue'
+
+const role = localStorage.getItem('role')
+
+const menuItems = computed(() => {
+  if (role === 'client') {
+    return [
+      {
+        title: 'Post Job',
+        icon: 'ri-briefcase-line',
+        to: '/jobs',
+      },
+    ]
+  }
+
+  if (role === 'technician') {
+    return [
+      {
+        title: 'Search Job',
+        icon: 'ri-tools-line',
+        to: '/view-jobs',
+      },
+    ]
+  }
+
+  return [] // default: kosong
+})
 </script>
 
 <template>
@@ -27,19 +55,10 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
     }"
   />
   <VerticalNavLink
-    :item="{
-      title: 'Post Job',
-      icon: 'ri-briefcase-line',
-      to: '/jobs'
-    }"
-  />
-  <VerticalNavLink
-    :item="{
-      title: 'Search Job',
-      icon: 'ri-tools-line',
-      to: '/view-jobs'
-    }"
-  />
+      v-for="item in menuItems"
+      :key="item.title"
+      :item="item"
+    />
   <VerticalNavLink
     :item="{
       title: 'Chat',
