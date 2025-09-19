@@ -5,29 +5,36 @@ import avatar1 from '@images/avatars/avatar-1.png'
 import avatar2 from '@images/avatars/avatar-2.png'
 import avatar3 from '@images/avatars/avatar-3.png'
 import avatar4 from '@images/avatars/avatar-4.png'
-const jobs = ref([])
+const avatarList = [avatar1, avatar2, avatar3, avatar4]
+const jobs = ref()
 const detailJobs = ref()
 const userId = localStorage.getItem('userId')
-const avatars = [
-  avatar1,
-  avatar2,
-  avatar3,
-  avatar4,
-]
+const avatars = ref([])
 const xlDemo = ref(false)
+
 async function getJobs() {
   const response = await apiFetch('/jobs')
   jobs.value = response.data.jobs
+
+  // setelah jobs didapat, langsung ambil profil untuk tiap idCreator
+  for (const job of jobs.value) {
+    getProfile(job.idCreator)
+  }
+}
+
+
+const getProfile = async(id) => {
+  if (!id || avatars.value[id]) return   // kalau sudah ada jangan fetch lagi
+  const response = await apiFetch(`/profile/${id}`)
+  avatars.value[id] = response.data.user.avatar
 }
 
 async function getDetailJobs(id){
   xlDemo.value = true
   const response = await apiFetch(`/jobs/${id}`)
-  console.log('response : ', response.data.job);
   
   detailJobs.value = response.data.job
   
-  console.log('data detail jobs : ', detailJobs.value.title);
 }
 
 async function applyJob(jobId) {
@@ -38,9 +45,6 @@ async function applyJob(jobId) {
     },
     body: JSON.stringify({ userId }),
   });
-
-
-  console.log('response apply job : ', response);
 
   if (response.status === 201) {
     alert('Berhasil apply job');
@@ -63,11 +67,22 @@ onMounted(()=>{
     >
       <VCard>
         <VImg :src="`http://localhost:3000/uploads/jobs/${item.photo}`" />
-
         <VCardText class="position-relative">
           <!-- User Avatar -->
            <div class="detail-cont d-flex justify-space-between align-center">
-            <VAvatar size="75" class="avatar-center" :image="avatar1" />
+            <VAvatar
+              size="75"
+              class="avatar-center"
+              :image="`${avatars[item.idCreator] ?`http://localhost:3000${avatars[item.idCreator]}` :  avatar1}`"
+            />
+            <VChip
+              v-if="item.invites.find(invite => invite === userId)"
+                color="success"
+                size="medium"
+                class="text-capitalize py-1 px-2 mx-2"
+              >
+              dilamar
+            </VChip>
             <VBtn color="primary" @click="getDetailJobs(item._id)" :data-id="`${item._id}`">
               Detail
             </VBtn>
@@ -77,7 +92,7 @@ onMounted(()=>{
           <!-- Title, Subtitle & Action Button -->
           <div class="d-flex justify-space-between flex-wrap pt-6">
             <div class="me-2 mb-2">
-              <VCardTitle class="pa-0">
+              <VCardTitle class="pa-0 text-wrap">
                 {{ item.title }}
               </VCardTitle>
               <VCardSubtitle class="text-caption pa-0">
@@ -91,7 +106,7 @@ onMounted(()=>{
             <span class="font-weight-medium">18 mutual friends</span>
             <div class="v-avatar-group">
               <VAvatar
-                v-for="(avatar, idx) in avatars"
+                v-for="(avatar, idx) in avatarList"
                 :key="idx"
                 :image="avatar"
                 size="40"
@@ -149,7 +164,23 @@ onMounted(()=>{
         </p>
       </div>
       <div class="apply-btn d-flex justify-end">
-        <VBtn color="primary" @click="applyJob(detailJobs?._id)" >Apply</VBtn>
+        <!-- Jika user sudah melamar -->
+        <VBtn
+          v-if="detailJobs?.invites?.includes(userId)"
+          style="color: red;"
+          disabled
+        >
+          Anda sudah melamar
+        </VBtn>
+
+        <!-- Jika belum melamar -->
+        <VBtn
+          v-else
+          color="primary"
+          @click="applyJob(detailJobs?._id)"
+        >
+          Apply
+        </VBtn>
       </div>
       
 

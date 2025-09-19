@@ -31,10 +31,8 @@ async function registerUser() {
     })
 
     statusCode.value = response.status
-    console.log('Status:', statusCode.value)
 
     const result = await response.json()
-    console.log('Success:', result)
     alertMessage.value = result.message
 
     // kalau berhasil (status 201), redirect ke /login

@@ -35,7 +35,6 @@ async function loginUser() {
     statusCode.value = response.status
     const result = await response.json()
     alertMessage.value = result.message
-    console.log('result',result.data);
     
     if (response.status === 200 && result.token) {
       localStorage.setItem('token', result.token)

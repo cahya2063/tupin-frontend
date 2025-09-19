@@ -38,8 +38,6 @@ const options = ref([])
 
 async function getSkills() {
   const response = await apiFetch(`/skills`)
-  console.log('data skill', response.data.skills)
-
   const flatSkills = response.data.skills.flatMap((item) =>
     item.skill.map((s) => ({
       value: s.value,
@@ -48,7 +46,6 @@ async function getSkills() {
   )
 
   options.value = flatSkills
-  console.log('data skill2 (flat)', options.value)
 }
 
 const title = ref('')
@@ -95,7 +92,6 @@ async function postJob() {
     // ❌ jangan set Content-Type
   })
 
-  console.log('respons API:', response)
 }
 
 onMounted(async () => {

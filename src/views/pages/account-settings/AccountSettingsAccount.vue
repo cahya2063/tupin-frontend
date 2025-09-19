@@ -69,7 +69,6 @@ async function updateProfile() {
       })
       
     })
-    console.log('data profile:', response.data);
       alert(response.data.message)
   } catch (error) {
     console.error(error)
@@ -91,7 +90,6 @@ async function getProfile() {
       zip_code: response.data.user.zip_code || '',
       avatar: response.data.user.avatar || avatar1, // default avatar jika kosong
     }
-    console.log('data profile :', response.data.user);
     
   } catch (err) {
     console.error(err.message)
@@ -117,7 +115,6 @@ const changeAvatar = async file => {
 
     // update preview avatar
     accountDataLocal.value.avatar = response.data.avatar
-    console.log('avatar : ', response.data.avatar);
     
     alert('Avatar berhasil diperbarui ✅')
   } catch (error) {
