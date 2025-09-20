@@ -15,6 +15,11 @@ const menuItems = computed(() => {
         icon: 'ri-briefcase-line',
         to: '/jobs',
       },
+      {
+        title: 'Posted Job',
+        icon: 'ri-briefcase-line',
+        to: '/posted-jobs',
+      },
     ]
   }
 

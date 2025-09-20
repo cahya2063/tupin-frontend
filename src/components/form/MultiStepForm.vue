@@ -91,6 +91,11 @@ async function postJob() {
     body: formData, // langsung FormData
     // ❌ jangan set Content-Type
   })
+  if(response.status === 201){
+    alert('berhasil posting job')
+    // reset form
+    stepperRef.value.reset()
+  }
 
 }
 

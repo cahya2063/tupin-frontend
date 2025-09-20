@@ -5,19 +5,36 @@ import avatar1 from '@images/avatars/avatar-1.png'
 import avatar2 from '@images/avatars/avatar-2.png'
 import avatar3 from '@images/avatars/avatar-3.png'
 import avatar4 from '@images/avatars/avatar-4.png'
+const headers = [
+  {
+    title: 'User',
+    key: 'username',
+  },
+  {
+    title: 'Email',
+    key: 'email',
+  },
+  {
+    title: 'Role',
+    key: 'role',
+  },
+  {
+    title: 'Status',
+    key: 'status',
+  },
+]
 
-const jobs = ref([])
-const detailJobs = ref()
-const userId = localStorage.getItem('userId')
+const userData = ref([])
+
 const xlDemo = ref(false)
-
+const userId = localStorage.getItem('userId')
+const jobs = ref([])
 // avatars creator
 const avatars = ref({}) 
 // avatars untuk invites per job
 const invitesAvatars = ref({})  
-
-async function getJobs() {
-  const response = await apiFetch('/jobs')
+async function getPostedJobs(){
+  const response = await apiFetch(`/jobs/uploaded/${userId}`)
   jobs.value = response.data.jobs
 
   for (const job of jobs.value) {
@@ -54,6 +71,8 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
     if (alreadyFetched) return
 
     const response = await apiFetch(`/profile/${id}`)
+    userData.value.push(response.data.user)    
+    
     invitesAvatars.value[jobId].push({
       userId: id,
       avatar: response.data.user.avatar,
@@ -61,32 +80,10 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
   }
 }
 
-async function getDetailJobs(id) {
-  xlDemo.value = true
-  const response = await apiFetch(`/jobs/${id}`)
-  detailJobs.value = response.data.job
-}
-
-async function applyJob(jobId) {
-  const response = await apiFetch(`/jobs/${jobId}/apply`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId }),
-  });
-
-  if (response.status === 201) {
-    alert('Berhasil apply job');
-  } else {
-    alert('Gagal apply job');
-  }
-}
-
-onMounted(() => {
-  getJobs()
+onMounted(()=>{
+    getPostedJobs()
 })
 </script>
-
-
 <template>
   <VRow class="jobs-container">
     <VCol
@@ -114,7 +111,8 @@ onMounted(() => {
               >
               dilamar
             </VChip>
-            <VBtn color="primary" @click="getDetailJobs(item._id)" :data-id="`${item._id}`">
+            
+            <VBtn color="primary" @click="() => { xlDemo = true }" :data-id="`${item._id}`">
               Detail
             </VBtn>
           </div>
@@ -168,127 +166,76 @@ onMounted(() => {
     </VCol>
   </VRow>
   <CModal
-      size="xl"
-      :visible="xlDemo"
-      @close="() => { xlDemo = false }"
-      aria-labelledby="OptionalSizesExample1"
-    >
+    size="xl"
+    :visible="xlDemo"
+    @close="() => { xlDemo = false }"
+    aria-labelledby="OptionalSizesExample1"
+  >
     <CModalHeader>
-      <CModalTitle id="OptionalSizesExample1">{{ detailJobs?.title }}</CModalTitle>
+      <CModalTitle id="OptionalSizesExample1">Extra large modal</CModalTitle>
     </CModalHeader>
     <CModalBody>
-      <CImage align="center" rounded :src="`http://localhost:3000/uploads/jobs/${detailJobs?.photo}`" width="50%"/>
-      <hr>
-      <div class="category-text">
-        kategori : {{ detailJobs?.category }}
-      </div>
-      <hr>
-      <div class="description">
-      <h5>Deskripsi kerusakan alat :</h5>
-        <div v-html="detailJobs?.description"></div>
-      </div>
+        <VDataTable
+            :headers="headers"
+            :items="userData || []"
+            item-value="id"
+            class="text-no-wrap"
+            >
+        <!-- User -->
+        <template #item.username="{ item }">
 
-      <hr>
-      <div class="experience cont">
-        budget : {{ detailJobs?.budget }} pengalaman : {{ detailJobs?.experiences }}
-      </div>
-      <hr>
-      Skill :
-      <div v-for="(skill, idx) in detailJobs?.skills" :key="idx" class="d-inline">
-        <VChip
-            color="success"
-            size="medium"
-            class="text-capitalize py-1 px-2 mx-2"
-          >
-          {{ skill }}
-        </VChip>
-        
-      </div>
-      <hr>
-      <div class="date cont deadline-box">
-        <label class="deadline-label">📅 Deadline pengerjaan:</label>
-        <p class="deadline-value">
-          {{ detailJobs?.deadline?.start_date?.split('T')[0] }}
-          → 
-          {{ detailJobs?.deadline?.end_date?.split('T')[0] }}
-        </p>
-      </div>
-      <div class="apply-btn d-flex justify-end">
-        <!-- Jika user sudah melamar -->
-        <VBtn
-          v-if="detailJobs?.invites?.includes(userId)"
-          style="color: red;"
-          disabled
-        >
-          Anda sudah melamar
-        </VBtn>
+            <div class="d-flex align-center gap-x-4">
+            <VAvatar
+                size="34"
+                :variant="!item.avatar ? 'tonal' : undefined"
+                :color="`black`"
+            >
+                <VImg
+                :src="item.avatar ? `http://localhost:3000${item.avatar}` : avatar1"
+                />
+            </VAvatar>
 
-        <!-- Jika belum melamar -->
-        <VBtn
-          v-else
-          color="primary"
-          @click="applyJob(detailJobs?._id)"
-        >
-          Apply
-        </VBtn>
-      </div>
-      
+            <div class="d-flex flex-column">
+                <h6 class="text-h6 font-weight-medium user-list-name">
+                {{ item.fullName }}
+                </h6>
 
+            </div>
+            </div>
+        </template>
+        <!-- Role -->
+        <template #item.role="{ item }">
+            <div class="d-flex gap-4">
+            <VIcon
+                :icon="`ri-user-line`"
+                :color="`black`"
+                size="22"
+            />
+            <div class="text-capitalize text-high-emphasis">
+                {{ item.role }}
+            </div>
+            </div>
+        </template>
+        <!-- Plan -->
+        <template #item.plan="{ item }">
+            <span class="text-capitalize text-high-emphasis">{{ item.currentPlan }}</span>
+        </template>
+        <!-- Status -->
+        <template #item.status="{ item }">
+            <VChip
+            :color="`black`"
+            size="small"
+            class="text-capitalize"
+            >
+            {{ item.status }}
+            </VChip>
+        </template>
 
+        <template #bottom />
+    </VDataTable>
     </CModalBody>
   </CModal>
 </template>
 <style scoped>
-.category-text{
-  font-size: 17px;
-  margin-block: 40px;
-}
-.cont{
-  margin-block: 40px;
-}
-.date{
-  max-width: 80%;
-  margin-inline: auto;
-}
-.description :deep(ul) {
-  list-style-type: disc;
-  padding-left: 20px;
-  margin: 8px 0;
-}
-
-.description :deep(li) {
-  margin-bottom: 4px;
-}
-
-.deadline-box {
-  background: #f5f9ff;
-  border: 1px solid #d0e3ff;
-  border-radius: 12px;
-  padding: 16px 20px;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  transition: all 0.3s ease;
-}
-
-.deadline-box:hover {
-  background: #ebf4ff;
-  transform: translateY(-2px);
-}
-
-.deadline-label {
-  display: block;
-  font-weight: 600;
-  font-size: 15px;
-  color: #3b82f6;
-  margin-bottom: 6px;
-}
-
-.deadline-value {
-  font-size: 18px;
-  font-weight: bold;
-  color: #1e293b;
-  margin: 0;
-  letter-spacing: 0.5px;
-}
 
 </style>
