@@ -2,9 +2,6 @@
 import { apiFetch } from '@/utils/api';
 import { onMounted, ref } from 'vue';
 import avatar1 from '@images/avatars/avatar-1.png'
-import avatar2 from '@images/avatars/avatar-2.png'
-import avatar3 from '@images/avatars/avatar-3.png'
-import avatar4 from '@images/avatars/avatar-4.png'
 const headers = [
   {
     title: 'User',
@@ -56,7 +53,7 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
   // kalau creator
   if (type === 'creator') {
     if (avatars.value[id]) return
-    const response = await apiFetch(`/profile/${id}`)
+    const response = await apiFetch(`/profile/${id}`)    
     avatars.value[id] = response.data.user.avatar
   }
 
@@ -72,6 +69,7 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
 
     const response = await apiFetch(`/profile/${id}`)
     userData.value.push(response.data.user)    
+    console.log('data profile', userData);
     
     invitesAvatars.value[jobId].push({
       userId: id,
@@ -79,6 +77,22 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
     })
   }
 }
+
+const openDetail = (job) => {
+  userData.value = [] // reset dulu
+
+  // kalau job ini punya teknisi berminat
+  if (invitesAvatars.value[job._id]) {
+    for (const invite of invitesAvatars.value[job._id]) {
+      apiFetch(`/profile/${invite.userId}`).then(res => {
+        userData.value.push(res.data.user)
+      })
+    }
+  }
+
+  xlDemo.value = true
+}
+
 
 onMounted(()=>{
     getPostedJobs()
@@ -112,9 +126,13 @@ onMounted(()=>{
               dilamar
             </VChip>
             
-            <VBtn color="primary" @click="() => { xlDemo = true }" :data-id="`${item._id}`">
+            <VBtn 
+              color="primary" 
+              @click="() => openDetail(item)"
+            >
               Detail
             </VBtn>
+
           </div>
 
 
@@ -197,9 +215,22 @@ onMounted(()=>{
 
             <div class="d-flex flex-column">
                 <h6 class="text-h6 font-weight-medium user-list-name">
-                {{ item.fullName }}
+                {{ item.nama }}
                 </h6>
 
+            </div>
+            </div>
+        </template>
+        <!-- Email -->
+         <template #item.email="{ item }">
+            <div class="d-flex gap-4">
+            <VIcon
+                :icon="`ri-user-line`"
+                :color="`black`"
+                size="22"
+            />
+            <div class="text-capitalize text-high-emphasis">
+                {{ item.email }}
             </div>
             </div>
         </template>
@@ -215,10 +246,6 @@ onMounted(()=>{
                 {{ item.role }}
             </div>
             </div>
-        </template>
-        <!-- Plan -->
-        <template #item.plan="{ item }">
-            <span class="text-capitalize text-high-emphasis">{{ item.currentPlan }}</span>
         </template>
         <!-- Status -->
         <template #item.status="{ item }">
