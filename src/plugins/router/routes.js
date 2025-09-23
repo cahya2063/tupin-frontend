@@ -20,6 +20,10 @@ export const routes = [
         path: 'posted-jobs',
         component: () => import('@/pages/transaction/postedJob.vue')
       },
+      {
+        path: 'technician-detail/:id',
+        component: ()=> import('@/views/pages/account-settings/TechnicianDetail.vue')
+      },
       // bawaan template
       {
         path: 'account-settings',

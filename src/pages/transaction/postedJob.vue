@@ -16,13 +16,13 @@ const headers = [
     key: 'role',
   },
   {
-    title: 'Status',
-    key: 'status',
+    title: 'Profile',
+    key: 'profile',
   },
 ]
 
 const userData = ref([])
-
+const selectedJob = ref(null)
 const xlDemo = ref(false)
 const userId = localStorage.getItem('userId')
 const jobs = ref([])
@@ -80,8 +80,8 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
 
 const openDetail = (job) => {
   userData.value = [] // reset dulu
+  selectedJob.value = job // simpan job yg lagi dilihat
 
-  // kalau job ini punya teknisi berminat
   if (invitesAvatars.value[job._id]) {
     for (const invite of invitesAvatars.value[job._id]) {
       apiFetch(`/profile/${invite.userId}`).then(res => {
@@ -108,7 +108,20 @@ onMounted(()=>{
       md="4"
     >
       <VCard>
-        <VImg :src="`http://localhost:3000/uploads/jobs/${item.photo}`" />
+        <div class="position-relative">
+            <VImg
+              :src="`http://localhost:3000/uploads/jobs/${item.photo}`"
+            />
+
+            <!-- VChip status -->
+            <VChip
+              color="primary"
+              size="small"
+              class="job-status-chip"
+            >
+              {{ item.status }}
+            </VChip>
+          </div>
         <VCardText class="position-relative">
           <!-- User Avatar -->
            <div class="detail-cont d-flex justify-space-between align-center">
@@ -229,7 +242,7 @@ onMounted(()=>{
                 :color="`black`"
                 size="22"
             />
-            <div class="text-capitalize text-high-emphasis">
+            <div class="text-high-emphasis">
                 {{ item.email }}
             </div>
             </div>
@@ -247,15 +260,14 @@ onMounted(()=>{
             </div>
             </div>
         </template>
-        <!-- Status -->
-        <template #item.status="{ item }">
-            <VChip
-            :color="`black`"
-            size="small"
-            class="text-capitalize"
+        <!-- detail -->
+        <template #item.profile="{ item }">
+            <VBtn
+              v-if="selectedJob"
+              :to="`/technician-detail/${item._id}?jobId=${selectedJob._id}`"
             >
-            {{ item.status }}
-            </VChip>
+              Profile
+            </VBtn>
         </template>
 
         <template #bottom />
@@ -264,5 +276,10 @@ onMounted(()=>{
   </CModal>
 </template>
 <style scoped>
-
+.job-status-chip {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-weight: bold;
+}
 </style>

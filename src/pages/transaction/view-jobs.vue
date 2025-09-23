@@ -18,7 +18,8 @@ const invitesAvatars = ref({})
 
 async function getJobs() {
   const response = await apiFetch('/jobs')
-  jobs.value = response.data.jobs
+  jobs.value = response.data.jobs.filter(job => job.status === 'open')
+
 
   for (const job of jobs.value) {
     // avatar si creator
@@ -89,83 +90,103 @@ onMounted(() => {
 
 <template>
   <VRow class="jobs-container">
-    <VCol
-      v-for="(item, i) in jobs"
-      :key="i"
-      cols="12"
-      sm="6"
-      md="4"
-    >
-      <VCard>
-        <VImg :src="`http://localhost:3000/uploads/jobs/${item.photo}`" />
-        <VCardText class="position-relative">
-          <!-- User Avatar -->
-           <div class="detail-cont d-flex justify-space-between align-center">
-            <VAvatar
-              size="75"
-              class="avatar-center"
-              :image="`${avatars[item.idCreator] ?`http://localhost:3000${avatars[item.idCreator]}` :  avatar1}`"
-            />
+    <!-- Jika ada job open -->
+    <template v-if="jobs.length > 0">
+      <VCol
+        v-for="(item, i) in jobs"
+        :key="i"
+        cols="12"
+        sm="6"
+        md="4"
+      >
+        <VCard>
+          <div class="position-relative">
+            <VImg :src="`http://localhost:3000/uploads/jobs/${item.photo}`" />
+
+            <!-- VChip status -->
             <VChip
-              v-if="item.invites.find(invite => invite === userId)"
+              color="warning"
+              size="small"
+              class="job-status-chip"
+            >
+              {{ item.status }}
+            </VChip>
+          </div>
+
+          <VCardText class="position-relative">
+            <!-- User Avatar -->
+            <div class="detail-cont d-flex justify-space-between align-center">
+              <VAvatar
+                size="75"
+                class="avatar-center"
+                :image="`${avatars[item.idCreator] ? `http://localhost:3000${avatars[item.idCreator]}` : avatar1}`"
+              />
+              <VChip
+                v-if="item.invites.find(invite => invite === userId)"
                 color="success"
                 size="medium"
                 class="text-capitalize py-1 px-2 mx-2"
               >
-              dilamar
-            </VChip>
-            <VBtn color="primary" @click="getDetailJobs(item._id)" :data-id="`${item._id}`">
-              Detail
-            </VBtn>
-          </div>
+                dilamar
+              </VChip>
+              <VBtn color="primary" @click="getDetailJobs(item._id)">
+                Detail
+              </VBtn>
+            </div>
 
-
-          <!-- Title, Subtitle & Action Button -->
-          <div class="d-flex justify-space-between flex-wrap pt-6">
-            <div class="me-2 mb-2">
-              <VCardTitle class="pa-0 text-wrap">
-                {{ item.title }}
-              </VCardTitle>
-              <VCardSubtitle class="text-caption pa-0">
-                <VChip
+            <!-- Title, Subtitle & Action Button -->
+            <div class="d-flex justify-space-between flex-wrap pt-6">
+              <div class="me-2 mb-2">
+                <VCardTitle class="pa-0 text-wrap">
+                  {{ item.title }}
+                </VCardTitle>
+                <VCardSubtitle class="text-caption pa-0">
+                  <VChip
                     color="warning"
                     size="medium"
                     class="text-capitalize py-1 px-2 mx-2"
                   >
-                  {{ item.category }}
-                </VChip>
-              </VCardSubtitle>
+                    {{ item.category }}
+                  </VChip>
+                </VCardSubtitle>
+              </div>
             </div>
-          </div>
 
-          <!-- Mutual Friends -->
-          <div class="d-flex justify-space-between align-center">
-            <span class="font-weight-medium">
-              {{ (invitesAvatars[item._id]?.length || 0) }} teknisi berminat
-            </span>
-            <div class="v-avatar-group">
-              <!-- tampilkan maksimal 4 avatar -->
-              <VAvatar
-                v-for="(invite, idx) in (invitesAvatars[item._id] || []).slice(0,4)"
-                :key="idx"
-                :image="invite.avatar ? `http://localhost:3000${invite.avatar}` : avatar1"
-                size="40"
-              />
-              <!-- kalau lebih dari 4, tampilkan badge +N -->
-              <VAvatar
-                v-if="(invitesAvatars[item._id]?.length || 0) > 4"
-                size="40"
-                color="grey lighten-1"
-                class="d-flex align-center justify-center"
-              >
-                +{{ (invitesAvatars[item._id].length - 4) }}
-              </VAvatar>
+            <!-- Mutual Friends -->
+            <div class="d-flex justify-space-between align-center">
+              <span class="font-weight-medium">
+                {{ (invitesAvatars[item._id]?.length || 0) }} teknisi berminat
+              </span>
+              <div class="v-avatar-group">
+                <VAvatar
+                  v-for="(invite, idx) in (invitesAvatars[item._id] || []).slice(0,4)"
+                  :key="idx"
+                  :image="invite.avatar ? `http://localhost:3000${invite.avatar}` : avatar1"
+                  size="40"
+                />
+                <VAvatar
+                  v-if="(invitesAvatars[item._id]?.length || 0) > 4"
+                  size="40"
+                  color="grey lighten-1"
+                  class="d-flex align-center justify-center"
+                >
+                  +{{ (invitesAvatars[item._id].length - 4) }}
+                </VAvatar>
+              </div>
             </div>
-          </div>
+          </VCardText>
+        </VCard>
+      </VCol>
+    </template>
 
-        </VCardText>
-      </VCard>
-    </VCol>
+    <!-- Jika tidak ada job open -->
+    <template v-else>
+      <VCol cols="12">
+        <div class="text-center py-10">
+          <h3>Tidak ada job tersedia</h3>
+        </div>
+      </VCol>
+    </template>
   </VRow>
   <CModal
       size="xl"
@@ -246,6 +267,13 @@ onMounted(() => {
 .cont{
   margin-block: 40px;
 }
+.job-status-chip {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-weight: bold;
+}
+
 .date{
   max-width: 80%;
   margin-inline: auto;
