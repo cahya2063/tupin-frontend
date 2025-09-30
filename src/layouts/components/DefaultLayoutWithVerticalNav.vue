@@ -7,14 +7,73 @@ import VerticalNavLayout from '@layouts/components/VerticalNavLayout.vue'
 import Footer from '@/layouts/components/Footer.vue'
 import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
 import UserProfile from '@/layouts/components/UserProfile.vue'
+import { apiFetch } from '@/utils/api'
+import { ref, onMounted } from 'vue'
+
+const userId = localStorage.getItem('userId')
+const notifications = ref([]) // list notifikasi
+
+// hitung notifikasi unread
+const unreadCount = computed(() => {
+  return notifications.value.filter(notif => notif.isRead === false).length
+})
+
+// ambil data notifikasi user
+async function getNotificationsByUserId() {
+  try {
+    const response = await apiFetch(`/notifications/${userId}`)
+    notifications.value = response.data.notification || []
+    console.log('response notif', notifications.value)
+  } catch (err) {
+    console.error('Gagal ambil notifikasi:', err)
+  }
+}
+
+async function readNotification(notificationId){
+  try {
+    const response = await apiFetch(`/notifications/read/${notificationId}`, {
+      method: 'GET' // atau PATCH sesuai backend
+    })
+    console.log('readNotification', response);
+
+    // refresh notifikasi setelah dibaca
+    await getNotificationsByUserId()
+  } catch (err) {
+    console.error('Gagal update notifikasi:', err)
+  }
+}
+
+const visibleVerticallyCenteredDemo = ref(false)
+const selectedNotif = ref(null)
+
+function handleNotifClick(notif) {
+  readNotification(notif._id)
+  selectedNotif.value = notif
+  visibleVerticallyCenteredDemo.value = true
+}
+function formatDate(dateString) {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleString('id-ID', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+onMounted(() => {
+  getNotificationsByUserId()
+})
 </script>
+
 
 <template>
   <VerticalNavLayout>
     <!-- 👉 navbar -->
     <template #navbar="{ toggleVerticalOverlayNavActive }">
       <div class="d-flex h-100 align-center">
-        <!-- 👉 Vertical nav toggle in overlay mode -->
+        <!-- 👉 Vertical nav toggle -->
         <IconBtn
           class="ms-n3 d-lg-none"
           @click="toggleVerticalOverlayNavActive(true)"
@@ -22,54 +81,90 @@ import UserProfile from '@/layouts/components/UserProfile.vue'
           <VIcon icon="ri-menu-line" />
         </IconBtn>
 
-        <!-- 👉 Search -->
-        <div
-          class="d-flex align-center cursor-pointer"
-          style="user-select: none;"
-        >
-          <!-- 👉 Search Trigger button -->
-          <IconBtn>
-            <VIcon icon="ri-search-line" />
-          </IconBtn>
-
-          <span class="d-none d-md-flex align-center text-disabled">
-            <span class="me-3">Search</span>
-            <span class="meta-key">&#8984;K</span>
-          </span>
-        </div>
-
         <VSpacer />
 
-        <IconBtn
-          href="https://github.com/themeselection/materio-vuetify-vuejs-admin-template-free"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <VIcon icon="ri-github-fill" />
-        </IconBtn>
+        <!-- 👉 Notifikasi -->
+        <CDropdown variant="nav-item" :popper="true">
+          <CDropdownToggle :caret="false">
+            <VIcon icon="ri-notification-line" />
+            <span
+              v-if="unreadCount > 0"
+              class="notif-badge"
+            >{{ unreadCount }}</span>
+          </CDropdownToggle>
 
-        <IconBtn>
-          <VIcon icon="ri-notification-line" />
-        </IconBtn>
+          <CDropdownMenu class="p-2" style="width: 20rem; max-height: 24rem; overflow-y: auto;">
+            <template v-if="notifications.length">
+              <CCard
+                v-for="notif in notifications"
+                :key="notif._id"
+                class="mb-2 shadow-sm"
+                @click="handleNotifClick(notif)"
+              >
+                <CCardBody>
+                  <CCardTitle class="text-sm font-weight-bold mb-1">
+                    📢 Notifikasi
+                  </CCardTitle>
+                  <CCardText class="text-xs text-muted">
+                    {{ notif.message }}
+                  </CCardText>
+
+                  <div class="d-flex justify-between items-center">
+                    <small class="text-secondary">
+                      {{ new Date(notif.createdAt).toLocaleString() }}
+                    </small>
+                    <VChip
+                      v-if="notif.isRead === false"
+                      color="primary"
+                      size="x-small"
+                      class="ms-2"
+                    >
+                      Unread
+                    </VChip>
+                  </div>
+                </CCardBody>
+              </CCard>
+            </template>
+
+            <template v-else>
+              <p class="text-center text-muted my-3">Belum ada notifikasi</p>
+            </template>
+          </CDropdownMenu>
+        </CDropdown>
+
+        <CModal
+          alignment="center"
+          :visible="visibleVerticallyCenteredDemo"
+          @close="() => { visibleVerticallyCenteredDemo = false }"
+          aria-labelledby="VerticallyCenteredExample"
+        >
+          <CModalHeader>
+            <CModalTitle id="VerticallyCenteredExample">
+              Detail Notifikasi
+            </CModalTitle>
+          </CModalHeader>
+          <CModalBody>
+            <div v-if="selectedNotif">
+              <p><strong>Pesan:</strong> {{ selectedNotif.message }}</p>
+              <p><strong>Tanggal:</strong> {{ formatDate(selectedNotif.createdAt) }}</p>
+            </div>
+          </CModalBody>
+          <CModalFooter>
+            <CButton color="secondary" @click="() => { visibleVerticallyCenteredDemo = false }">
+              Tutup
+            </CButton>
+          </CModalFooter>
+        </CModal>
+
 
         <NavbarThemeSwitcher class="me-2" />
-
         <UserProfile />
       </div>
     </template>
 
     <template #vertical-nav-header="{ toggleIsOverlayNavActive }">
-      <RouterLink
-        to="/"
-        class="app-logo app-title-wrapper"
-      >
-        <!-- eslint-disable vue/no-v-html -->
-        <div
-          class="d-flex"
-          v-html="logo"
-        />
-        <!-- eslint-enable -->
-
+      <RouterLink to="/" class="app-logo app-title-wrapper">
+        <div class="d-flex" v-html="logo" />
         <h1 class="font-weight-medium leading-normal text-xl text-uppercase">
           Materio
         </h1>
@@ -97,26 +192,17 @@ import UserProfile from '@/layouts/components/UserProfile.vue'
   </VerticalNavLayout>
 </template>
 
+
 <style lang="scss" scoped>
-.meta-key {
-  border: thin solid rgba(var(--v-border-color), var(--v-border-opacity));
-  border-radius: 6px;
-  block-size: 1.5625rem;
-  line-height: 1.3125rem;
-  padding-block: 0.125rem;
-  padding-inline: 0.25rem;
-}
-
-.app-logo {
-  display: flex;
-  align-items: center;
-  column-gap: 0.75rem;
-
-  .app-logo-title {
-    font-size: 1.25rem;
-    font-weight: 500;
-    line-height: 1.75rem;
-    text-transform: uppercase;
-  }
+.notif-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: red;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
 }
 </style>
+

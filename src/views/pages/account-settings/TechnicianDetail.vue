@@ -53,15 +53,17 @@ async function getProfile() {
 async function chooseTechnician(technicianId, jobId){
   try{
     console.log('chooseTechnician', technicianId, jobId);
+    const data = {
+      clientId: localStorage.getItem('userId'),
+      technicianId: technicianId
+    }
     
     const response = await apiFetch(`/jobs/${jobId}/choose-technician`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        technicianId: JSON.stringify(technicianId)
-      })
+      body: JSON.stringify(data)
     })
     console.log('response', response);
     if(response.status == 200){

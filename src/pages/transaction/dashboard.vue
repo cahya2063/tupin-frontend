@@ -10,6 +10,10 @@ import AnalyticsUserTable from '@/views/dashboard/AnalyticsUserTable.vue'
 import AnalyticsWeeklyOverview from '@/views/dashboard/AnalyticsWeeklyOverview.vue'
 import CardStatisticsVertical from '@core/components/cards/CardStatisticsVertical.vue'
 
+import { apiFetch } from '@/utils/api'
+
+
+
 const totalProfit = {
   title: 'Total Profit',
   color: 'secondary',
