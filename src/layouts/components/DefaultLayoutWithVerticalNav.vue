@@ -150,6 +150,12 @@ onMounted(() => {
             </div>
           </CModalBody>
           <CModalFooter>
+            <VBtn
+              
+              :to="`/chat-view`"
+            >
+              Hubungi
+            </VBtn>
             <CButton color="secondary" @click="() => { visibleVerticallyCenteredDemo = false }">
               Tutup
             </CButton>

@@ -24,6 +24,10 @@ export const routes = [
         path: 'technician-detail/:id',
         component: ()=> import('@/views/pages/account-settings/TechnicianDetail.vue')
       },
+      {
+        path: 'chat-view',
+        component: ()=> import('@/pages/transaction/chatView.vue')
+      },
       // bawaan template
       {
         path: 'account-settings',
