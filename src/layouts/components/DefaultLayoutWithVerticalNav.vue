@@ -18,12 +18,14 @@ const unreadCount = computed(() => {
   return notifications.value.filter(notif => notif.isRead === false).length
 })
 
+// modal detail notifikasi
+const visibleVerticallyCenteredDemo = ref(false)
+
 // ambil data notifikasi user
 async function getNotificationsByUserId() {
   try {
     const response = await apiFetch(`/notifications/${userId}`)
     notifications.value = response.data.notification || []
-    console.log('response notif', notifications.value)
   } catch (err) {
     console.error('Gagal ambil notifikasi:', err)
   }
@@ -34,7 +36,6 @@ async function readNotification(notificationId){
     const response = await apiFetch(`/notifications/read/${notificationId}`, {
       method: 'GET' // atau PATCH sesuai backend
     })
-    console.log('readNotification', response);
 
     // refresh notifikasi setelah dibaca
     await getNotificationsByUserId()
@@ -42,13 +43,43 @@ async function readNotification(notificationId){
     console.error('Gagal update notifikasi:', err)
   }
 }
+async function getDetailJobs(jobId){
+  try {
+    const response = await apiFetch(`/jobs/${jobId}`)
+    return response.data.job
+  } catch (error) {
+    console.error('Gagal ambil detail job:', error)
+    return null;
+  }
+}
 
-const visibleVerticallyCenteredDemo = ref(false)
+async function createChat(clientId, technicianId){  
+  try {
+    const response = await apiFetch(`/chats/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        clientId: clientId,
+        technicianId: technicianId
+      })
+      
+    })
+    console.log('Chat created:', response.data);
+    visibleVerticallyCenteredDemo.value = false
+  } catch (error) {
+    console.error('Gagal membuat chat:', error);
+    
+  }
+}
+
 const selectedNotif = ref(null)
-
-function handleNotifClick(notif) {
+const job = ref(null)
+async function handleNotifClick(notif) {
   readNotification(notif._id)
   selectedNotif.value = notif
+  job.value = await getDetailJobs(notif.jobId)
   visibleVerticallyCenteredDemo.value = true
 }
 function formatDate(dateString) {
@@ -151,7 +182,7 @@ onMounted(() => {
           </CModalBody>
           <CModalFooter>
             <VBtn
-              
+              @click="createChat(job.idCreator, job.selectedTechnician)"
               :to="`/chat-view`"
             >
               Hubungi
