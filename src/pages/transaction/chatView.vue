@@ -2,11 +2,9 @@
 import { apiFetch } from "@/utils/api";
 import { onMounted, ref } from "vue";
 
-const userId = "6520a1f9c1234a1234567890";
-const userId1 = localStorage.getItem('userId')
+const userId = localStorage.getItem('userId')
 const userRole = localStorage.getItem('role')
-// user login (contoh)
-// const userId = localStorage.getItem('userId')
+
 
 async function getProfile(userId){
   try {
@@ -32,7 +30,7 @@ async function getChatByUserId(userId){
 // data dummy
 const chats = ref([]);
 onMounted(async () => {
-  const data = await getChatByUserId(userId1)
+  const data = await getChatByUserId(userId)
 
   // isi chats.value, jangan bikin variabel baru
   chats.value = await Promise.all(
@@ -47,8 +45,6 @@ onMounted(async () => {
       }
     })
   )
-
-  console.log("Chats with profile:", chats.value)
 })
 
 
@@ -57,36 +53,40 @@ const messages = ref([]);
 const newMessage = ref("");
 
 // pilih chat
-function selectChat(chat) {
+async function selectChat(chat) {
   selectedChat.value = chat;
-  messages.value = [
-    {
-      _id: "m1",
-      chat_id: chat._id,
-      sender_id: "6520a1f9c1234a1234567890",
-      message: "Halo, alat saya rusak di bagian motor",
-      created_at: new Date(),
-    },
-    {
-      _id: "m2",
-      chat_id: chat._id,
-      sender_id: "teknisi123",
-      message: "Oke, saya bisa datang besok",
-      created_at: new Date(),
-    },
-  ];
+  // console.log('chat data : ', chat._id);
+  
+  const response = await apiFetch(`/messages/read/${chat._id}`, {
+    method: 'GET',
+    'Content-Type': 'application/json'
+  })
+  console.log('chat data : ', response.data);
+  
+  messages.value = response.data.chat_message
 }
 
 // kirim pesan
-function sendMessage() {
+async function sendMessage() {
+  console.log('selected chat : ', selectedChat.value._id);
+  
   if (!newMessage.value.trim()) return;
   const msg = {
-    _id: Date.now().toString(),
-    chat_id: selectedChat.value._id,
-    sender_id: userId,
+    chatId: selectedChat.value._id,
+    senderId: userId,
     message: newMessage.value,
-    created_at: new Date(),
+    createdAt: new Date(),
   };
+
+  const response = await apiFetch(`/messages/send`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(msg)
+  })
+  console.log('status message : ', response.data);
+  
   messages.value.push(msg);
   console.log('message : ', messages.value);
   
@@ -111,11 +111,13 @@ function formatDate(date) {
           @click="selectChat(chat)"
         >
           <div class="chat-info">
+            <hr>
             <strong v-if="userRole == `technician`">{{ chat.client?.nama }}</strong>
-            <strong v-else>{{ chat.technician?.nama }}</strong>
-            <p class="last-message">
-              {{ chat.lastMessage?.message || 'Belum ada pesan' }}
-            </p>
+            <strong v-else>{{ chat.teknisi?.nama }}</strong>
+            <hr>
+            <!-- <p class="last-message">
+              {{ messages.at(-1)?.message || 'Belum ada pesan' }}
+            </p> -->
           </div>
         </li>
       </ul>
@@ -128,7 +130,7 @@ function formatDate(date) {
           👤 {{ selectedChat.client?.nama}}
         </h3>
         <h3 v-else>
-          👤 {{ selectedChat.technician?.nama}}
+          👤 {{ selectedChat.teknisi?.nama}}
         </h3>
       </header>
 
@@ -136,10 +138,10 @@ function formatDate(date) {
         <div
           v-for="msg in messages"
           :key="msg._id"
-          :class="['chat-message', msg.sender_id === userId ? 'sent' : 'received']"
+          :class="['chat-message', msg.senderId === userId ? 'sent' : 'received']"
         >
           <p>{{ msg.message }}</p>
-          <small>{{ formatDate(msg.created_at) }}</small>
+          <small>{{ formatDate(msg.createdAt) }}</small>
         </div>
       </div>
 
@@ -194,7 +196,6 @@ function formatDate(date) {
 }
 
 .chat-sidebar li {
-  padding: 0.8rem;
   border-radius: 8px;
   cursor: pointer;
   margin-bottom: 0.5rem;

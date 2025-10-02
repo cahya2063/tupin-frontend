@@ -1,16 +1,43 @@
 <script setup>
+import { apiFetch } from '@/utils/api'
 import avatar1 from '@images/avatars/avatar-1.png'
+import { onMounted, ref } from 'vue'
 
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const userId = localStorage.getItem('userId')
 
+const nama = ref('')
+const role = localStorage.getItem('role')
 function logout() {
   localStorage.removeItem('token')
   localStorage.removeItem('userId')
   localStorage.removeItem('role')
   router.push('/login')
 }
+
+async function getProfile(userId){
+  try {
+    
+    const response = await apiFetch(`/profile/${userId}`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    return response.data.user
+  } catch (error) {
+    console.error(error);
+    
+  }
+}
+
+onMounted(async()=>{
+  const profile = await getProfile(userId)
+  nama.value = profile.nama
+  
+})
 </script>
 
 <template>
@@ -59,9 +86,9 @@ function logout() {
             </template>
 
             <VListItemTitle class="font-weight-semibold">
-              John Doe
+              {{ nama }}
             </VListItemTitle>
-            <VListItemSubtitle>Admin</VListItemSubtitle>
+            <VListItemSubtitle>{{ role }}</VListItemSubtitle>
           </VListItem>
           <VDivider class="my-2" />
 

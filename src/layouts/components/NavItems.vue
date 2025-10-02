@@ -68,10 +68,7 @@ const menuItems = computed(() => {
     :item="{
       title: 'Chat',
       icon: 'ri-wechat-line',
-      href: 'https://demos.themeselection.com/materio-vuetify-vuejs-admin-template/demo-1/apps/chat',
-      target: '_blank',
-      badgeContent: 'Pro',
-      badgeClass: 'bg-light-primary text-primary',
+      to: '/chat-view',
     }"
   />
   <VerticalNavLink
