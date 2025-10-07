@@ -1,5 +1,5 @@
 import { router } from "@/plugins/router"
-
+const baseUrl = import.meta.env.VITE_API_URL
 export async function apiFetch(url, options = {}) {
   const token = localStorage.getItem('token')
 
@@ -8,7 +8,7 @@ export async function apiFetch(url, options = {}) {
     authorization: token ? `Bearer ${token}` : ''
   }
 
-  const response = await fetch(`http://localhost:3000${url}`, {
+  const response = await fetch(`${baseUrl}${url}`, {
     ...options,
     headers,
   })

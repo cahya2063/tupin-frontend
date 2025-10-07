@@ -1,76 +1,75 @@
 <script setup>
 import { apiFetch } from "@/utils/api";
 import { onMounted, ref } from "vue";
+import {io} from 'socket.io-client'
 
+
+const socket = io('http://localhost:3000')
 const userId = localStorage.getItem('userId')
 const userRole = localStorage.getItem('role')
 
-
-async function getProfile(userId){
-  try {
-    const response = await apiFetch(`/profile/${userId}`)
-    return response.data
-  } catch (error) {
-    console.error('Gagal mengambil profil:', error);
-    
-  }
-}
-
-async function getChatByUserId(userId){
-  try {
-    const response = await apiFetch(`/chats/${userId}`)
-    return response.data.chats
-  } catch (error) {
-    console.error('Gagal ambil chat:', error)
-    return []
-  }
-}
-
-
-// data dummy
 const chats = ref([]);
-onMounted(async () => {
-  const data = await getChatByUserId(userId)
-
-  // isi chats.value, jangan bikin variabel baru
-  chats.value = await Promise.all(
-    data.map(async (item) => {
-      const profileClient = await getProfile(item.clientId)
-      const profileTeknisi = await getProfile(item.technicianId)
-
-      return {
-        ...item,
-        client: { nama: profileClient?.user?.nama || "Client" },
-        teknisi: { nama: profileTeknisi?.user?.nama || "Teknisi" },
-      }
-    })
-  )
-})
-
-
 const selectedChat = ref(null);
 const messages = ref([]);
 const newMessage = ref("");
 
+async function getProfile(userId) {
+  try {
+    const response = await apiFetch(`/profile/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Gagal mengambil profil:", error);
+  }
+}
+
+async function getChatByUserId(userId) {
+  try {
+    const response = await apiFetch(`/chats/${userId}`);
+    return response.data.chats;
+  } catch (error) {
+    console.error("Gagal ambil chat:", error);
+    return [];
+  }
+}
+
+
+
+onMounted(async () => {
+  const data = await getChatByUserId(userId);
+  chats.value = await Promise.all(
+    data.map(async (item) => {
+      const profileClient = await getProfile(item.clientId);
+      const profileTeknisi = await getProfile(item.technicianId);
+      return {
+        ...item,
+        client: { nama: profileClient?.user?.nama || "Client" },
+        teknisi: { nama: profileTeknisi?.user?.nama || "Teknisi" },
+      };
+    })
+  );
+
+  // ✅ dengarkan pesan masuk dari socket
+  socket.on("receive_message", (msg) => {
+    if (selectedChat.value && msg.chatId === selectedChat.value._id) {
+      messages.value.push(msg);
+    }
+  });
+});
+
+
+
 // pilih chat
 async function selectChat(chat) {
   selectedChat.value = chat;
-  // console.log('chat data : ', chat._id);
-  
-  const response = await apiFetch(`/messages/read/${chat._id}`, {
-    method: 'GET',
-    'Content-Type': 'application/json'
-  })
-  console.log('chat data : ', response.data);
-  
-  messages.value = response.data.chat_message
+  socket.emit("join_room", chat._id); // join room
+  const response = await apiFetch(`/messages/read/${chat._id}`);
+  messages.value = response.data.chat_message;
 }
 
 // kirim pesan
 async function sendMessage() {
-  console.log('selected chat : ', selectedChat.value._id);
-  
-  if (!newMessage.value.trim()) return;
+  if (!newMessage.value.trim() || !selectedChat.value) return;
+
   const msg = {
     chatId: selectedChat.value._id,
     senderId: userId,
@@ -78,18 +77,16 @@ async function sendMessage() {
     createdAt: new Date(),
   };
 
-  const response = await apiFetch(`/messages/send`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(msg)
-  })
-  console.log('status message : ', response.data);
-  
-  messages.value.push(msg);
-  console.log('message : ', messages.value);
-  
+  // simpan ke DB via API
+  await apiFetch(`/messages/send`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(msg),
+  });
+
+  // kirim via socket biar realtime muncul ke lawan chat
+  // socket.emit("send_message", msg);
+
   newMessage.value = "";
 }
 
@@ -168,7 +165,7 @@ function formatDate(date) {
 <style scoped>
 .chat-container {
   display: flex;
-  height: 100vh;
+  height: 80vh;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: #f8f9fb;
 }
