@@ -28,6 +28,10 @@ export const routes = [
         path: 'chat-view',
         component: ()=> import('@/pages/transaction/chatView.vue')
       },
+      {
+        path: 'accepted-jobs',
+        component: ()=> import('@/pages/transaction/acceptedJobs.vue')
+      },
       // bawaan template
       {
         path: 'account-settings',

@@ -30,6 +30,11 @@ const menuItems = computed(() => {
         icon: 'ri-tools-line',
         to: '/view-jobs',
       },
+      {
+        title: 'Accepted Jobs',
+        icon: 'ri-tools-line',
+        to: 'accepted-jobs'
+      }
     ]
   }
 

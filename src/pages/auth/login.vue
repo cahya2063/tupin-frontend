@@ -8,6 +8,7 @@ import TemplateForm from '@/components/form/TemplateForm.vue'
 import TemplateButton from '@/components/form/TemplateButton.vue'
 import TemplateAlertFailed from '@/components/alert/TemplateAlertFailed.vue'
 import TemplateAlertSuccess from '@/components/alert/TemplateAlertSuccess.vue'
+import { apiFetch } from '@/utils/api'
 
 const baseUrl = import.meta.env.VITE_API_URL
 
@@ -23,7 +24,7 @@ async function loginUser() {
     alertMessage.value = ''
     statusCode.value = null
 
-    const response = await fetch(`${baseUrl}/signin`, {
+    const response = await apiFetch(`/signin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -31,18 +32,19 @@ async function loginUser() {
         password: password.value,
       }),
     })
-
-    statusCode.value = response.status
-    const result = await response.json()
+    const result = response.data
     alertMessage.value = result.message
+    statusCode.value = response.status
+    
     
     if (response.status === 200 && result.token) {
       localStorage.setItem('token', result.token)
       localStorage.setItem('userId', result.data.id)
       localStorage.setItem('role', result.data.role)
+      // alertMessage.value = response.data.message
       setTimeout(() => {
         router.push('/dashboard')
-      }, 1500)
+      }, 2000)
     }
   } catch (error) {
     console.error('Error:', error)
@@ -53,9 +55,8 @@ async function loginUser() {
 <template>
   <div class="container-form">
     <p class="teks-login-3">Login Aplikasi</p>
-
-    <TemplateAlertFailed v-if="statusCode === 400" :message="alertMessage" :duration="5"/>
-    <TemplateAlertSuccess v-else-if="statusCode === 200" :message="alertMessage" :duration="5"/>
+    <TemplateAlertSuccess v-show="statusCode == 200" :message="alertMessage" :duration="5"/>
+    <TemplateAlertFailed v-show="statusCode != 200" :message="alertMessage" :duration="5"/>
 
     <p>
       Belum punya akun?

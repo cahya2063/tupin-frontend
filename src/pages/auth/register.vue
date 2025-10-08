@@ -5,8 +5,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TemplateAlertFailed from '@/components/alert/TemplateAlertFailed.vue'
 import TemplateAlertSuccess from '@/components/alert/TemplateAlertSuccess.vue'
-
-let baseUrl = window.location.protocol + "//" + window.location.hostname
+import { apiFetch } from '@/utils/api'
 
 const name = ref('')
 const email = ref('')
@@ -18,7 +17,7 @@ async function registerUser() {
   try {
     alertMessage.value = ''
     statusCode.value = null
-    const response = await fetch(`${baseUrl}:3000/signup`, {
+    const response = await apiFetch(`/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -30,10 +29,9 @@ async function registerUser() {
       })
     })
 
-    statusCode.value = response.status
-
-    const result = await response.json()
+    const result = response.data
     alertMessage.value = result.message
+    statusCode.value = response.status
 
     // kalau berhasil (status 201), redirect ke /login
     if (response.status === 201) {
@@ -55,8 +53,8 @@ async function registerUser() {
     <p class="teks-register-3">Registrasi</p>
 
     <!-- alert kondisi -->
-    <TemplateAlertFailed v-if="statusCode === 400" :message="alertMessage" :duration="5"/>
-    <TemplateAlertSuccess v-else-if="statusCode === 201" :message="alertMessage" :duration="5"/>
+    <TemplateAlertSuccess v-show="statusCode == 201" :message="alertMessage" :duration="5"/>
+    <TemplateAlertFailed v-show="statusCode != 201" :message="alertMessage" :duration="5"/>
 
     <p>
       Sudah punya akun?

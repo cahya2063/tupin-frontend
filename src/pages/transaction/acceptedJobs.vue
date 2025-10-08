@@ -2,98 +2,46 @@
 import { apiFetch } from '@/utils/api';
 import { onMounted, ref } from 'vue';
 import avatar1 from '@images/avatars/avatar-1.png'
-import avatar2 from '@images/avatars/avatar-2.png'
-import avatar3 from '@images/avatars/avatar-3.png'
-import avatar4 from '@images/avatars/avatar-4.png'
 
-const jobs = ref([])
-const detailJobs = ref()
-const userId = localStorage.getItem('userId')
-const xlDemo = ref(false)
 
 // avatars creator
-const avatars = ref({}) 
+const avatars = ref({})
 // avatars untuk invites per job
-const invitesAvatars = ref({})  
-
-async function getJobs() {
-  const response = await apiFetch('/jobs')
-  jobs.value = response.data.jobs.filter(job => job.status === 'open')
+const invitesAvatars = ref({})
+const xlDemo = ref(false)
 
 
-  for (const job of jobs.value) {
-    // avatar si creator
-    getProfile(job.idCreator, 'creator')
-
-    // avatar untuk semua invites
-    if (job.invites && job.invites.length > 0) {
-      for (const inviteId of job.invites) {
-        getProfile(inviteId, 'invite', job._id)
-      }
+const acceptedJobs = ref([])
+const detailJobs = ref()
+const userId = localStorage.getItem('userId')
+async function getAcceptedJobs(technicianId){
+    try {
+        const response = await apiFetch(`/jobs/${technicianId}/accepted-jobs`)
+        console.log('acceptedJobs : ', response.data.jobs);
+        acceptedJobs.value = response.data.jobs
+    } catch (error) {
+        console.error(error);
+        
     }
-  }
-}
-
-const getProfile = async (id, type = 'creator', jobId = null) => {
-  if (!id) return
-
-  // kalau creator
-  if (type === 'creator') {
-    if (avatars.value[id]) return
-    const response = await apiFetch(`/profile/${id}`)
-    avatars.value[id] = response.data.user.avatar
-  }
-
-  // kalau invite
-  if (type === 'invite' && jobId) {
-    if (!invitesAvatars.value[jobId]) {
-      invitesAvatars.value[jobId] = []
-    }
-
-    // cek kalau sudah ada jangan fetch lagi
-    const alreadyFetched = invitesAvatars.value[jobId].find(a => a.userId === id)
-    if (alreadyFetched) return
-
-    const response = await apiFetch(`/profile/${id}`)
-    invitesAvatars.value[jobId].push({
-      userId: id,
-      avatar: response.data.user.avatar,
-    })
-  }
 }
 
 async function getDetailJobs(id) {
-  const response = await apiFetch(`/jobs/${id}`)
-  detailJobs.value = response.data.job
-  xlDemo.value = true
+    const response = await apiFetch(`/jobs/${id}`)
+    detailJobs.value = response.data.job
+    xlDemo.value = true
+    console.log('detailJobs response:', response.data)
 }
 
-async function applyJob(jobId) {
-  const response = await apiFetch(`/jobs/${jobId}/apply`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId }),
-  });
-
-  if (response.status === 201) {
-    alert('Berhasil apply job');
-  } else {
-    alert('Gagal apply job');
-  }
-}
-
-onMounted(() => {
-  getJobs()
+onMounted(()=>{
+    getAcceptedJobs(userId)
 })
 </script>
-
-
 <template>
   <VRow class="jobs-container">
     <!-- Jika ada job open -->
-    <template v-if="jobs.length > 0">
+    <template v-if="acceptedJobs.length > 0">
       <VCol
-        v-for="(item, i) in jobs"
+        v-for="(item, i) in acceptedJobs"
         :key="i"
         cols="12"
         sm="6"
@@ -101,7 +49,10 @@ onMounted(() => {
       >
         <VCard>
           <div class="position-relative">
-            <VImg :src="`http://localhost:3000/uploads/jobs/${item.photo}`" />
+            <VImg
+                v-if="item.photo"
+                :src="`http://localhost:3000/uploads/jobs/${item.photo}`"
+                />
 
             <!-- VChip status -->
             <VChip
@@ -154,9 +105,7 @@ onMounted(() => {
 
             <!-- Mutual Friends -->
             <div class="d-flex justify-space-between align-center">
-              <span class="font-weight-medium">
-                {{ (invitesAvatars[item._id]?.length || 0) }} teknisi berminat
-              </span>
+              
               <div class="v-avatar-group">
                 <VAvatar
                   v-for="(invite, idx) in (invitesAvatars[item._id] || []).slice(0,4)"
@@ -183,12 +132,12 @@ onMounted(() => {
     <template v-else>
       <VCol cols="12">
         <div class="text-center py-10">
-          <h3>Tidak ada job tersedia</h3>
+          <h3>Belum ada yang menerima apply mu</h3>
         </div>
       </VCol>
     </template>
   </VRow>
-  <CModal
+   <CModal
       size="xl"
       :visible="xlDemo"
       @close="() => { xlDemo = false }"
@@ -198,6 +147,7 @@ onMounted(() => {
       <CModalTitle id="OptionalSizesExample1">{{ detailJobs?.title }}</CModalTitle>
     </CModalHeader>
     <CModalBody>
+        {{ detailJobs?.photo }}
       <CImage align="center" rounded :src="`http://localhost:3000/uploads/jobs/${detailJobs?.photo}`" width="50%"/>
       <hr>
       <div class="category-text">
@@ -318,5 +268,4 @@ onMounted(() => {
   margin: 0;
   letter-spacing: 0.5px;
 }
-
 </style>
