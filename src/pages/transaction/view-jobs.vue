@@ -2,14 +2,13 @@
 import { apiFetch } from '@/utils/api';
 import { onMounted, ref } from 'vue';
 import avatar1 from '@images/avatars/avatar-1.png'
-// import avatar2 from '@images/avatars/avatar-2.png'
-// import avatar3 from '@images/avatars/avatar-3.png'
-// import avatar4 from '@images/avatars/avatar-4.png'
+import CardJob from '@/layouts/components/CardJob.vue';
 
 const jobs = ref([])
 const detailJobs = ref()
 const userId = localStorage.getItem('userId')
 const xlDemo = ref(false)
+const userName = ref([])
 
 // avatars creator
 const avatars = ref({}) 
@@ -20,21 +19,25 @@ async function getJobs() {
   const response = await apiFetch('/jobs')
   jobs.value = response.data.jobs.filter(job => job.status === 'open')
 
+  for (const job of jobs.value) {
+    const profile = await getProfile(job.idCreator)
+    job.creatorName = profile.nama
+  }
 
   for (const job of jobs.value) {
     // avatar si creator
-    getProfile(job.idCreator, 'creator')
+    getAvatar(job.idCreator, 'creator')
 
     // avatar untuk semua invites
     if (job.invites && job.invites.length > 0) {
       for (const inviteId of job.invites) {
-        getProfile(inviteId, 'invite', job._id)
+        getAvatar(inviteId, 'invite', job._id)
       }
     }
   }
 }
 
-const getProfile = async (id, type = 'creator', jobId = null) => {
+const getAvatar = async (id, type = 'creator', jobId = null) => {
   if (!id) return
 
   // kalau creator
@@ -62,9 +65,29 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
   }
 }
 
+async function getProfile(userId){
+  try {
+    
+    const response = await apiFetch(`/profile/${userId}`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    return response.data.user
+  } catch (error) {
+    console.error(error);
+    
+  }
+}
 async function getDetailJobs(id) {
   const response = await apiFetch(`/jobs/${id}`)
   detailJobs.value = response.data.job
+
+  // Ambil profil creator berdasarkan idCreator dari job detail
+    const profile = await getProfile(detailJobs.value.idCreator)
+    userName.value = profile.nama // simpan nama creator
+
   xlDemo.value = true
 }
 
@@ -92,107 +115,26 @@ onMounted(() => {
   <VRow class="jobs-container pa-4">
     <!-- Jika ada job open -->
     <template v-if="jobs.length > 0">
-      <VCol
+      
+      <div class="container-job">
+        
+        <CardJob
         v-for="(item, i) in jobs"
         :key="i"
-        cols="12"
-        sm="6"
-        md="4"
-        class="fade-in"
-      >
-        <VCard class="job-card" elevation="4">
-          <div class="position-relative">
-            <VImg
-              :src="`http://localhost:3000/uploads/jobs/${item.photo}`"
-              height="200"
-              cover
-              class="job-image"
-            />
-
-            <!-- Status chip -->
-            <VChip
-              color="amber lighten-2"
-              text-color="black"
-              size="small"
-              class="job-status-chip"
-              variant="elevated"
-            >
-              {{ item.status }}
-            </VChip>
-          </div>
-
-          <VCardText class="px-4 pb-4">
-            <!-- Avatar + Detail Button -->
-            <div class="detail-cont d-flex justify-space-between align-center mb-4">
-              <VAvatar
-                size="64"
-                class="avatar-center"
-                :image="`${avatars[item.idCreator] ? `http://localhost:3000${avatars[item.idCreator]}` : avatar1}`"
-              />
-
-              <div class="d-flex align-center">
-                <VChip
-                  v-if="item.invites.find(invite => invite === userId)"
-                  color="success"
-                  size="small"
-                  class="text-capitalize me-2"
-                >
-                  Dilamar
-                </VChip>
-                <VBtn
-                  color="primary"
-                  size="small"
-                  variant="tonal"
-                  @click="getDetailJobs(item._id)"
-                >
-                  Detail
-                </VBtn>
-              </div>
-            </div>
-
-            <!-- Title dan kategori -->
-            <div class="text-section mb-3">
-              <VCardTitle class="pa-0 text-wrap job-title">
-                {{ item.title }}
-              </VCardTitle>
-              <VCardSubtitle class="text-caption pa-0 mt-1">
-                <VChip
-                  color="blue lighten-4"
-                  text-color="primary"
-                  size="small"
-                  class="text-capitalize"
-                >
-                  {{ item.category }}
-                </VChip>
-              </VCardSubtitle>
-            </div>
-
-            <!-- Jumlah teknisi -->
-            <div class="d-flex justify-space-between align-center">
-              <span class="font-weight-medium text-body-2 text-grey-darken-1">
-                {{ (invitesAvatars[item._id]?.length || 0) }} teknisi berminat
-              </span>
-              <div class="v-avatar-group">
-                <VAvatar
-                  v-for="(invite, idx) in (invitesAvatars[item._id] || []).slice(0, 4)"
-                  :key="idx"
-                  :image="invite.avatar ? `http://localhost:3000${invite.avatar}` : avatar1"
-                  size="40"
-                  class="me-1"
-                />
-                <VAvatar
-                  v-if="(invitesAvatars[item._id]?.length || 0) > 4"
-                  size="40"
-                  color="grey lighten-2"
-                  class="d-flex align-center justify-center text-body-2 font-weight-medium"
-                >
-                  +{{ (invitesAvatars[item._id].length - 4) }}
-                </VAvatar>
-              </div>
-            </div>
-          </VCardText>
-        </VCard>
-      </VCol>
+        
+          :id="item._id"
+          :title="item.title"
+          :subtext1="[item.experiences, item.deadline, item.budget]"
+          :desc="item.description"
+          :skills="item.skills"
+          :category="item.category"
+          :status="item.status"
+          @click="getDetailJobs(item._id)"
+          :creator="item.creatorName"
+          :invitesAvatars="invitesAvatars"
+          :avatarPlaceholder="avatar1"
+        />
+      </div>
     </template>
 
     <!-- Jika tidak ada job open -->
@@ -207,71 +149,62 @@ onMounted(() => {
   </VRow>
 
   <!-- Modal Detail -->
-  <CModal
-    size="xl"
-    :visible="xlDemo"
-    @close="() => { xlDemo = false }"
-    aria-labelledby="OptionalSizesExample1"
-  >
-    <CModalHeader>
-      <CModalTitle id="OptionalSizesExample1" class="fw-bold">
-        {{ detailJobs?.title }}
-      </CModalTitle>
-    </CModalHeader>
+  <!-- Slide-over Modal -->
+<transition name="slide-fade">
+  <div v-if="xlDemo" class="slide-modal-overlay" @click.self="xlDemo = false">
+    <div class="slide-modal-content">
+      <div class="slide-modal-header">
+        <h4>{{ detailJobs?.title }}</h4>
+        <button class="close-btn" @click="xlDemo = false">×</button>
+      </div>
 
-    <CModalBody>
-      <div class="text-center mb-4">
+      <div class="slide-modal-body">
         <CImage
-          align="center"
-          rounded
           :src="`http://localhost:3000/uploads/jobs/${detailJobs?.photo}`"
-          width="55%"
-          class="shadow-sm"
+          rounded
+          width="100%"
+          class="job-detail-image"
         />
-      </div>
 
-      <div class="category-text">
-        <strong>Kategori:</strong> {{ detailJobs?.category }}
-      </div>
+        <div class="category-text mt-3">
+          <strong>Kategori:</strong> {{ detailJobs?.category }}
+        </div>
 
-      <hr>
-      <div class="description">
-        <h5>Deskripsi Kerusakan Alat:</h5>
-        <div v-html="detailJobs?.description" class="text-body-1"></div>
-      </div>
+        <div class="description mt-3">
+          <h6>Deskripsi Kerusakan Alat:</h6>
+          <div v-html="detailJobs?.description"></div>
+        </div>
 
-      <hr>
-      <div class="experience cont">
-        💰 <strong>Budget:</strong> {{ detailJobs?.budget }} |
-        🧰 <strong>Pengalaman:</strong> {{ detailJobs?.experiences }}
-      </div>
+        <div class="info-box mb-4">
+              💰 <strong>Budget:</strong> Rp {{ detailJobs.budget?.toLocaleString('id-ID') }}<br>
+              🧰 <strong>Pengalaman:</strong> {{ detailJobs.experiences }}
+            </div>
 
-      <hr>
-      <div>
-        <h6>Skill yang Dibutuhkan:</h6>
-        <div v-for="(skill, idx) in detailJobs?.skills" :key="idx" class="d-inline">
-          <VChip
-            color="green lighten-4"
-            text-color="green darken-2"
-            size="small"
-            class="text-capitalize me-2 mb-2"
-          >
-            {{ skill }}
-          </VChip>
+        <div class="skills mt-3">
+          <h6>Skill yang Dibutuhkan:</h6>
+          <div v-for="(skill, idx) in detailJobs?.skills" :key="idx" class="d-inline">
+            <VChip
+              color="green lighten-4"
+              text-color="green darken-2"
+              size="small"
+              class="text-capitalize me-2 mb-2"
+            >
+              {{ skill }}
+            </VChip>
+          </div>
+        </div>
+
+        <div class="deadline-box mt-3">
+          <label class="deadline-label">📅 Deadline Pengerjaan:</label>
+          <p class="deadline-value">
+            {{ detailJobs?.deadline?.start_date?.split('T')[0] }}
+            →
+            {{ detailJobs?.deadline?.end_date?.split('T')[0] }}
+          </p>
         </div>
       </div>
 
-      <hr>
-      <div class="date cont deadline-box">
-        <label class="deadline-label">📅 Deadline Pengerjaan:</label>
-        <p class="deadline-value">
-          {{ detailJobs?.deadline?.start_date?.split('T')[0] }}
-          →
-          {{ detailJobs?.deadline?.end_date?.split('T')[0] }}
-        </p>
-      </div>
-
-      <div class="apply-btn d-flex justify-end mt-4">
+      <div class="slide-modal-footer">
         <VBtn
           v-if="detailJobs?.invites?.includes(userId)"
           variant="outlined"
@@ -290,38 +223,17 @@ onMounted(() => {
           Apply Sekarang
         </VBtn>
       </div>
-    </CModalBody>
-  </CModal>
+    </div>
+  </div>
+</transition>
+
 </template>
 
 <style scoped>
-.job-card {
-  border-radius: 16px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  background-color: #fff;
-}
-
-.job-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-}
-
-.job-image {
-  border-bottom: 1px solid #eee;
-}
-
-.job-status-chip {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  font-weight: 600;
-}
-
-.job-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1e293b;
+.container-job {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .category-text {
@@ -347,6 +259,13 @@ onMounted(() => {
 .deadline-box:hover {
   background: #ebf4ff;
 }
+.info-box {
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #334155;
+}
 
 .deadline-label {
   font-weight: 600;
@@ -360,6 +279,7 @@ onMounted(() => {
   color: #1e293b;
 }
 
+/* Opsional: hanya simpan jika kamu benar-benar pakai animasi fade-in */
 .fade-in {
   animation: fadeInUp 0.4s ease-in-out;
 }
@@ -374,5 +294,113 @@ onMounted(() => {
     transform: translateY(0);
   }
 }
+
+.v-avatar-group {
+  display: flex;
+  align-items: center;
+}
+
+.v-avatar-group .v-avatar {
+  border: 2px solid white;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Overlay blur belakang */
+.slide-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 2000;
+}
+
+/* Panel kanan */
+.slide-modal-content {
+  background: #fff;
+  width: 500px;
+  max-width: 90%;
+  height: 100%;
+  overflow-y: auto;
+  border-top-left-radius: 16px;
+  border-bottom-left-radius: 16px;
+  box-shadow: -2px 0 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  animation: fadeInRight 0.3s ease forwards;
+}
+
+/* Header */
+.slide-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+  background-color: #f8faff;
+}
+
+.slide-modal-header h4 {
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  color: #64748b;
+  transition: color 0.2s;
+}
+.close-btn:hover {
+  color: #ef4444;
+}
+
+/* Body */
+.slide-modal-body {
+  padding: 20px;
+  flex: 1;
+}
+
+.job-detail-image {
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+/* Footer */
+.slide-modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background: #f9fafb;
+}
+
+/* Animasi Slide */
+@keyframes fadeInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0.3;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Animasi Transition */
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  opacity: 0;
+}
+
 </style>
 

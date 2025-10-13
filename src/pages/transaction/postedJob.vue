@@ -2,43 +2,34 @@
 import { apiFetch } from '@/utils/api';
 import { onMounted, ref } from 'vue';
 import avatar1 from '@images/avatars/avatar-1.png'
+import CardJob from '@/layouts/components/CardJob.vue';
+
 const headers = [
-  {
-    title: 'User',
-    key: 'username',
-  },
-  {
-    title: 'Email',
-    key: 'email',
-  },
-  {
-    title: 'Role',
-    key: 'role',
-  },
-  {
-    title: 'Profile',
-    key: 'profile',
-  },
+  { title: 'User', key: 'username' },
+  { title: 'Email', key: 'email' },
+  { title: 'Role', key: 'role' },
+  { title: 'Profile', key: 'profile' },
 ]
 
 const userData = ref([])
 const selectedJob = ref(null)
-const xlDemo = ref(false)
+const showSidebar = ref(false)
+const showApplicantsModal = ref(false)
 const userId = localStorage.getItem('userId')
 const jobs = ref([])
+
 // avatars creator
 const avatars = ref({}) 
 // avatars untuk invites per job
 const invitesAvatars = ref({})  
+
 async function getPostedJobs(){
   const response = await apiFetch(`/jobs/uploaded/${userId}`)
   jobs.value = response.data.jobs
 
   for (const job of jobs.value) {
-    // avatar si creator
     getProfile(job.idCreator, 'creator')
 
-    // avatar untuk semua invites
     if (job.invites && job.invites.length > 0) {
       for (const inviteId of job.invites) {
         getProfile(inviteId, 'invite', job._id)
@@ -50,27 +41,21 @@ async function getPostedJobs(){
 const getProfile = async (id, type = 'creator', jobId = null) => {
   if (!id) return
 
-  // kalau creator
   if (type === 'creator') {
     if (avatars.value[id]) return
     const response = await apiFetch(`/profile/${id}`)    
     avatars.value[id] = response.data.user.avatar
   }
 
-  // kalau invite
   if (type === 'invite' && jobId) {
     if (!invitesAvatars.value[jobId]) {
       invitesAvatars.value[jobId] = []
     }
 
-    // cek kalau sudah ada jangan fetch lagi
     const alreadyFetched = invitesAvatars.value[jobId].find(a => a.userId === id)
     if (alreadyFetched) return
 
     const response = await apiFetch(`/profile/${id}`)
-    userData.value.push(response.data.user)    
-    console.log('data profile', userData);
-    
     invitesAvatars.value[jobId].push({
       userId: id,
       avatar: response.data.user.avatar,
@@ -79,207 +64,324 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
 }
 
 const openDetail = (job) => {
-  userData.value = [] // reset dulu
-  selectedJob.value = job // simpan job yg lagi dilihat
+  selectedJob.value = job
+  showSidebar.value = true
+}
 
-  if (invitesAvatars.value[job._id]) {
-    for (const invite of invitesAvatars.value[job._id]) {
-      apiFetch(`/profile/${invite.userId}`).then(res => {
-        userData.value.push(res.data.user)
-      })
+const openApplicants = async () => {
+  userData.value = []
+
+  if (invitesAvatars.value[selectedJob.value._id]) {
+    for (const invite of invitesAvatars.value[selectedJob.value._id]) {
+      const res = await apiFetch(`/profile/${invite.userId}`)
+      userData.value.push(res.data.user)
     }
   }
 
-  xlDemo.value = true
+  showApplicantsModal.value = true
 }
 
-
-onMounted(()=>{
-    getPostedJobs()
+onMounted(() => {
+  getPostedJobs()
 })
 </script>
+
 <template>
   <VRow class="jobs-container">
-    <VCol
-      v-for="(item, i) in jobs"
-      :key="i"
-      cols="12"
-      sm="6"
-      md="4"
-    >
-      <VCard>
-        <div class="position-relative">
-            <VImg
-              :src="`http://localhost:3000/uploads/jobs/${item.photo}`"
-            />
-
-            <!-- VChip status -->
-            <VChip
-              color="primary"
-              size="small"
-              class="job-status-chip"
-            >
-              {{ item.status }}
-            </VChip>
-          </div>
-        <VCardText class="position-relative">
-          <!-- User Avatar -->
-           <div class="detail-cont d-flex justify-space-between align-center">
-            <VAvatar
-              size="75"
-              class="avatar-center"
-              :image="`${avatars[item.idCreator] ?`http://localhost:3000${avatars[item.idCreator]}` :  avatar1}`"
-            />
-            <VChip
-              v-if="item.invites.find(invite => invite === userId)"
-                color="success"
-                size="medium"
-                class="text-capitalize py-1 px-2 mx-2"
-              >
-              dilamar
-            </VChip>
-            
-            <VBtn 
-              color="primary" 
-              @click="() => openDetail(item)"
-            >
-              Detail
-            </VBtn>
-
-          </div>
-
-
-          <!-- Title, Subtitle & Action Button -->
-          <div class="d-flex justify-space-between flex-wrap pt-6">
-            <div class="me-2 mb-2">
-              <VCardTitle class="pa-0 text-wrap">
-                {{ item.title }}
-              </VCardTitle>
-              <VCardSubtitle class="text-caption pa-0">
-                <VChip
-                    color="warning"
-                    size="medium"
-                    class="text-capitalize py-1 px-2 mx-2"
-                  >
-                  {{ item.category }}
-                </VChip>
-              </VCardSubtitle>
-            </div>
-          </div>
-
-          <!-- Mutual Friends -->
-          <div class="d-flex justify-space-between align-center">
-            <span class="font-weight-medium">
-              {{ (invitesAvatars[item._id]?.length || 0) }} teknisi berminat
-            </span>
-            <div class="v-avatar-group">
-              <!-- tampilkan maksimal 4 avatar -->
-              <VAvatar
-                v-for="(invite, idx) in (invitesAvatars[item._id] || []).slice(0,4)"
-                :key="idx"
-                :image="invite.avatar ? `http://localhost:3000${invite.avatar}` : avatar1"
-                size="40"
-              />
-              <!-- kalau lebih dari 4, tampilkan badge +N -->
-              <VAvatar
-                v-if="(invitesAvatars[item._id]?.length || 0) > 4"
-                size="40"
-                color="grey lighten-1"
-                class="d-flex align-center justify-center"
-              >
-                +{{ (invitesAvatars[item._id].length - 4) }}
-              </VAvatar>
-            </div>
-          </div>
-
-        </VCardText>
-      </VCard>
-    </VCol>
+    <template v-if="jobs.length > 0">
+      <div class="container-job">
+        <CardJob
+          v-for="(item, i) in jobs"
+          :key="i"
+          :id="item._id"
+          :title="item.title"
+          :subtext1="[item.experiences, item.deadline, item.budget]"
+          :desc="item.description"
+          :skills="item.skills"
+          :category="item.category"
+          :status="item.status"
+          @click="openDetail(item)"
+          :creator="item.creatorName"
+          :invitesAvatars="invitesAvatars"
+          :avatarPlaceholder="avatar1"
+        />
+      </div>
+    </template>
   </VRow>
-  <CModal
-    size="xl"
-    :visible="xlDemo"
-    @close="() => { xlDemo = false }"
-    aria-labelledby="OptionalSizesExample1"
-  >
-    <CModalHeader>
-      <CModalTitle id="OptionalSizesExample1">Extra large modal</CModalTitle>
-    </CModalHeader>
-    <CModalBody>
+
+  <!-- Sidebar kanan untuk detail job -->
+  <transition name="slide-fade">
+    <div v-if="showSidebar" class="slide-modal-overlay" @click.self="showSidebar = false">
+      <div class="slide-modal-content">
+        <div class="slide-modal-header">
+          <h4>Detail Job</h4>
+          <button class="close-btn" @click="showSidebar = false">×</button>
+        </div>
+
+        <div class="slide-modal-body">
+          <CImage
+          :src="`http://localhost:3000/uploads/jobs/${selectedJob?.photo}`"
+          rounded
+          width="100%"
+          class="job-detail-image"
+        />
+          <div v-if="selectedJob" class="job-detail">
+            <h5 class="fw-bold mb-2">{{ selectedJob.title }}</h5>
+            <p class="text-muted mb-2"><strong>Kategori:</strong> {{ selectedJob.category }}</p>
+            <p class="text-muted mb-3"><strong>Status:</strong> {{ selectedJob.status }}</p>
+
+            <div class="description mb-4">
+              <h6 class="fw-semibold">Deskripsi:</h6>
+              <div v-html="selectedJob.description"></div>
+            </div>
+
+            <div class="info-box mb-4">
+              💰 <strong>Budget:</strong> Rp {{ selectedJob.budget?.toLocaleString('id-ID') }}<br>
+              🧰 <strong>Pengalaman:</strong> {{ selectedJob.experiences }}
+            </div>
+
+            <div class="skills mb-4">
+              <h6 class="fw-semibold mb-2">Skill Dibutuhkan:</h6>
+              <VChip
+                v-for="(skill, idx) in selectedJob.skills"
+                :key="idx"
+                color="green lighten-4"
+                text-color="green darken-2"
+                size="small"
+                class="text-capitalize me-2 mb-2"
+              >
+                {{ skill }}
+              </VChip>
+            </div>
+
+            <div class="deadline-box mt-3">
+          <label class="deadline-label">📅 Deadline Pengerjaan:</label>
+          <p class="deadline-value">
+            {{ selectedJob?.deadline?.start_date?.split('T')[0] }}
+            →
+            {{ selectedJob?.deadline?.end_date?.split('T')[0] }}
+          </p>
+        </div>
+
+            <VBtn color="primary" variant="elevated" class="mt-2" @click="openApplicants">
+              Lihat Pelamar
+            </VBtn>
+          </div>
+        </div>
+      </div>
+    </div>
+  </transition>
+
+  <!-- Modal Pop-up Pelamar -->
+  <VDialog v-model="showApplicantsModal" max-width="800">
+    <VCard>
+      <VCardTitle class="d-flex justify-between align-center">
+        <span>Daftar Pelamar</span>
+      </VCardTitle>
+      <VCardText>
         <VDataTable
-            :headers="headers"
-            :items="userData || []"
-            item-value="id"
-            class="text-no-wrap"
-            >
-        <!-- User -->
-        <template #item.username="{ item }">
+          :headers="headers"
+          :items="userData"
+          item-value="id"
+          class="text-no-wrap"
+          density="comfortable"
+        >
+          <!-- Kolom Avatar & Nama -->
+          <template #item.username="{ item }">
+            <div class="d-flex align-center gap-x-3">
+              <VAvatar size="36">
+                <VImg :src="item.avatar ? `http://localhost:3000${item.avatar}` : avatar1" />
+              </VAvatar>
+              <div><strong>{{ item.nama }}</strong></div>
+            </div>
+          </template>
 
-            <div class="d-flex align-center gap-x-4">
-            <VAvatar
-                size="34"
-                :variant="!item.avatar ? 'tonal' : undefined"
-                :color="`black`"
-            >
-                <VImg
-                :src="item.avatar ? `http://localhost:3000${item.avatar}` : avatar1"
-                />
-            </VAvatar>
+          <template #item.email="{ item }">
+            <span>{{ item.email }}</span>
+          </template>
 
-            <div class="d-flex flex-column">
-                <h6 class="text-h6 font-weight-medium user-list-name">
-                {{ item.nama }}
-                </h6>
+          <template #item.role="{ item }">
+            <span class="text-capitalize">{{ item.role }}</span>
+          </template>
 
-            </div>
-            </div>
-        </template>
-        <!-- Email -->
-         <template #item.email="{ item }">
-            <div class="d-flex gap-4">
-            <VIcon
-                :icon="`ri-user-line`"
-                :color="`black`"
-                size="22"
-            />
-            <div class="text-high-emphasis">
-                {{ item.email }}
-            </div>
-            </div>
-        </template>
-        <!-- Role -->
-        <template #item.role="{ item }">
-            <div class="d-flex gap-4">
-            <VIcon
-                :icon="`ri-user-line`"
-                :color="`black`"
-                size="22"
-            />
-            <div class="text-capitalize text-high-emphasis">
-                {{ item.role }}
-            </div>
-            </div>
-        </template>
-        <!-- detail -->
-        <template #item.profile="{ item }">
+          <template #item.profile="{ item }">
             <VBtn
-              v-if="selectedJob"
+              color="secondary"
+              variant="tonal"
               :to="`/technician-detail/${item._id}?jobId=${selectedJob._id}`"
             >
               Profile
             </VBtn>
-        </template>
+          </template>
 
-        <template #bottom />
-    </VDataTable>
-    </CModalBody>
-  </CModal>
+          <template #bottom />
+        </VDataTable>
+      </VCardText>
+    </VCard>
+  </VDialog>
 </template>
 <style scoped>
-.job-status-chip {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-weight: bold;
+.container-job {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
+
+.category-text {
+  font-size: 17px;
+  margin-block: 20px;
+}
+
+.description :deep(ul) {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+.deadline-box {
+  background: #f5f9ff;
+  border: 1px solid #d0e3ff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.deadline-box:hover {
+  background: #ebf4ff;
+}
+
+.deadline-label {
+  font-weight: 600;
+  font-size: 15px;
+  color: #3b82f6;
+}
+
+.deadline-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #1e293b;
+}
+
+/* Opsional: hanya simpan jika kamu benar-benar pakai animasi fade-in */
+.fade-in {
+  animation: fadeInUp 0.4s ease-in-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* Overlay blur */
+.slide-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 2000;
+}
+
+/* Panel kanan */
+.slide-modal-content {
+  background: #fff;
+  width: 480px;
+  max-width: 90%;
+  height: 100%;
+  overflow-y: auto;
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+  box-shadow: -2px 0 20px rgba(0, 0, 0, 0.1);
+  animation: fadeInRight 0.3s ease forwards;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.slide-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f8fafc;
+}
+
+.slide-modal-header h4 {
+  margin: 0;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.close-btn {
+  border: none;
+  background: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #64748b;
+  transition: color 0.2s;
+}
+.close-btn:hover {
+  color: #ef4444;
+}
+
+/* Body */
+.slide-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.job-detail h5 {
+  color: #0f172a;
+}
+
+.deadline-label {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.deadline-value {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.info-box {
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #334155;
+}
+
+/* Animasi */
+@keyframes fadeInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0.2;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  opacity: 0;
+}
+
 </style>

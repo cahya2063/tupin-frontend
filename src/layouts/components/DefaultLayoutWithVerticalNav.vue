@@ -106,7 +106,7 @@ onMounted(() => {
       <div class="d-flex h-100 align-center">
         <!-- 👉 Vertical nav toggle -->
         <IconBtn
-          class="ms-n3 d-lg-none"
+          class="ms-n3 icon-nav"
           @click="toggleVerticalOverlayNavActive(true)"
         >
           <VIcon icon="ri-menu-line" />
@@ -240,6 +240,12 @@ onMounted(() => {
   border-radius: 50%;
   font-size: 0.65rem;
   padding: 0.15rem 0.4rem;
+}
+@media (min-width: 1279px) {
+  .icon-nav{
+
+    display: none;
+  }
 }
 </style>
 
