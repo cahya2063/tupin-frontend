@@ -110,7 +110,7 @@ async function applyJob(jobId) {
     })
   } else {
     xlDemo.value = false
-    return Swal.fire({
+    Swal.fire({
       title: 'Gagal',
       text: 'gagal melamar job',
       icon: 'error',

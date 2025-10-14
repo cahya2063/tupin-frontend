@@ -53,26 +53,26 @@ async function getDetailJobs(jobId){
   }
 }
 
-async function createChat(clientId, technicianId){  
-  try {
-    const response = await apiFetch(`/chats/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        clientId: clientId,
-        technicianId: technicianId
-      })
+// async function createChat(clientId, technicianId){  
+//   try {
+//     const response = await apiFetch(`/chats/create`, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify({
+//         clientId: clientId,
+//         technicianId: technicianId
+//       })
       
-    })
-    console.log('Chat created:', response.data);
-    visibleVerticallyCenteredDemo.value = false
-  } catch (error) {
-    console.error('Gagal membuat chat:', error);
+//     })
+//     console.log('Chat created:', response.data);
+//     visibleVerticallyCenteredDemo.value = false
+//   } catch (error) {
+//     console.error('Gagal membuat chat:', error);
     
-  }
-}
+//   }
+// }
 
 const selectedNotif = ref(null)
 const job = ref(null)
@@ -181,12 +181,6 @@ onMounted(() => {
             </div>
           </CModalBody>
           <CModalFooter>
-            <VBtn
-              @click="createChat(job.idCreator, job.selectedTechnician)"
-              :to="`/chat-view`"
-            >
-              Hubungi
-            </VBtn>
             <CButton color="secondary" @click="() => { visibleVerticallyCenteredDemo = false }">
               Tutup
             </CButton>

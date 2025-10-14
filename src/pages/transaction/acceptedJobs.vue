@@ -91,6 +91,30 @@ async function createChat(clientId, technicianId){
   }
 }
 
+async function technicianRequest(jobId) {
+  try {
+    console.log('client id : ', detailJobs.value.idCreator);
+    console.log('technician id : ', detailJobs.value.selectedTechnician);
+    
+    const response = await apiFetch(`/jobs/${jobId}/technician-request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        clientId: detailJobs.value.idCreator,
+        technicianId: detailJobs.value.selectedTechnician
+      })
+    })
+
+    console.log('response technician request : ', response.data);
+    return response
+    
+  } catch (error) {
+    sweetAlert.error()
+  }
+}
+
 async function cancelJob(jobId) {
   try {
     const response = await apiFetch(`/jobs/${jobId}/cancel-jobs`, {
@@ -154,7 +178,7 @@ onMounted(()=>{
   <div v-if="xlDemo" class="slide-modal-overlay" @click.self="xlDemo = false">
     <div class="slide-modal-content">
       <div class="slide-modal-header">
-        <h4>{{ detailJobs?.title }}</h4>
+        <h4>{{ detailJobs?.title }} </h4>
         <button class="close-btn" @click="xlDemo = false">×</button>
       </div>
 
@@ -204,7 +228,7 @@ onMounted(()=>{
         </div>
       </div>
 
-      <div class="apply-btn d-flex justify-end mt-4">
+      <div class="apply-btn d-flex justify-end my-4">
         <VBtn
           class="mx-4"
           color="primary"
@@ -213,6 +237,32 @@ onMounted(()=>{
           :to="`/chat-view`"
         >
           💬 Hubungi
+        </VBtn>
+        <VBtn
+            v-if="detailJobs.status == 'pending'"
+            style="margin-right: 20px;"
+            color="success"
+            variant="elevated"
+            @click="xlDemo = false; sweetAlert.confirm({
+              title: 'Ajukan perbaikan?',
+              text: 'pastikan anda sudah punya kesepakatan dengan klien melalui chat',
+              confirmText: 'Ajukan!',
+              cancelText: 'Batal'
+            }).then(async (result) => {
+              if (result.isConfirmed) {
+
+                const response = await technicianRequest(detailJobs._id)
+                console.log('response alert : ', response.status);
+                if(response.status != 200){
+
+                  sweetAlert.error(response.data.message)
+                }
+                sweetAlert.success(response.data.message)
+                
+              }
+            })"
+          >
+            Ajukan perbaikan
         </VBtn>
         <VBtn
         style="margin-right: 20px;"
