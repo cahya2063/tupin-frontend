@@ -3,6 +3,7 @@ import { apiFetch } from '@/utils/api';
 import { onMounted, ref } from 'vue';
 import avatar1 from '@images/avatars/avatar-1.png'
 import CardJob from '@/layouts/components/CardJob.vue';
+import Swal from 'sweetalert2';
 
 const jobs = ref([])
 const detailJobs = ref()
@@ -99,9 +100,23 @@ async function applyJob(jobId) {
   });
 
   if (response.status === 201) {
-    alert('Berhasil apply job');
+    xlDemo.value = false
+    Swal.fire({
+      title: 'Sukses',
+      text: response.data.message,
+      icon: 'success',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#16a34a'
+    })
   } else {
-    alert('Gagal apply job');
+    xlDemo.value = false
+    return Swal.fire({
+      title: 'Gagal',
+      text: 'gagal melamar job',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#dc2626'
+    })
   }
 }
 
@@ -319,7 +334,7 @@ onMounted(() => {
 /* Panel kanan */
 .slide-modal-content {
   background: #fff;
-  width: 500px;
+  width: 50%;
   max-width: 90%;
   height: 100%;
   overflow-y: auto;

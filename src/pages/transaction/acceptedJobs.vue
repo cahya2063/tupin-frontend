@@ -218,8 +218,7 @@ onMounted(()=>{
         style="margin-right: 20px;"
           color="danger"
           variant="elevated"
-          @click.self="xlDemo = false"
-          @click="sweetAlert.confirm({
+          @click="xlDemo = false; sweetAlert.confirm({
             title: 'Cancel Jobs?',
             text: 'apakah anda yakin ingin cancel Job?',
             confirmText: 'Ya, cancel!',
@@ -320,7 +319,7 @@ onMounted(()=>{
 /* Panel kanan */
 .slide-modal-content {
   background: #fff;
-  width: 500px;
+  width: 50%;
   max-width: 90%;
   height: 100%;
   overflow-y: auto;

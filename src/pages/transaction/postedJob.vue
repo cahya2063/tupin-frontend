@@ -3,6 +3,7 @@ import { apiFetch } from '@/utils/api';
 import { onMounted, ref } from 'vue';
 import avatar1 from '@images/avatars/avatar-1.png'
 import CardJob from '@/layouts/components/CardJob.vue';
+import sweetAlert from '@/utils/sweetAlert';
 
 const headers = [
   { title: 'User', key: 'username' },
@@ -60,6 +61,23 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
       userId: id,
       avatar: response.data.user.avatar,
     })
+  }
+}
+
+async function cancelJob(jobId) {
+  try {
+    const response = await apiFetch(`/jobs/${jobId}/cancel-jobs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    console.log('response cancel : ', response.data);
+    return response.data
+    
+  } catch (error) {
+    console.error('gagal melakukan cancel job');
+    
   }
 }
 
@@ -163,8 +181,30 @@ onMounted(() => {
           </p>
         </div>
 
-            <VBtn color="primary" variant="elevated" class="mt-2" @click="openApplicants">
+            <VBtn color="primary" variant="elevated" class="mt-4 mx-2" @click="openApplicants">
               Lihat Pelamar
+            </VBtn>
+            <VBtn
+            class="mt-4 mx-2"
+            v-if="selectedJob?.status == 'progress'"
+              style="margin-right: 20px;"
+                color="danger"
+                variant="elevated"
+                @click="showSidebar = false; sweetAlert.confirm({
+                  title: 'Cancel Jobs?',
+                  text: 'apakah anda yakin ingin cancel Job?',
+                  confirmText: 'Ya, cancel!',
+                  cancelText: 'Batal'
+                }).then(async (result) => {
+                  if (result.isConfirmed) {
+                    const cancelJobData = await cancelJob(selectedJob._id)
+                    console.log(cancelJobData);
+                    
+                    sweetAlert.success(cancelJobData.message)
+                  }
+                })"
+              >
+                Cancel
             </VBtn>
           </div>
         </div>
@@ -294,7 +334,7 @@ onMounted(() => {
 /* Panel kanan */
 .slide-modal-content {
   background: #fff;
-  width: 480px;
+  width: 50%;
   max-width: 90%;
   height: 100%;
   overflow-y: auto;

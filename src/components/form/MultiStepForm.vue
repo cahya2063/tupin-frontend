@@ -3,6 +3,7 @@ import { apiFetch } from '@/utils/api'
 import { onMounted, ref, useId, computed } from 'vue'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
 import InlineEditor from '@ckeditor/ckeditor5-build-inline'
+import Swal from 'sweetalert2';
 
 // import 'ckeditor5/ckeditor5.css';
 
@@ -92,7 +93,13 @@ async function postJob() {
     // ❌ jangan set Content-Type
   })
   if(response.status === 201){
-    alert('berhasil posting job')
+    Swal.fire({
+      title: 'Sukses',
+      text: response.data.message,
+      icon: 'success',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#16a34a'
+    })
     // reset form
     stepperRef.value.reset()
   }

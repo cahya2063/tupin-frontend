@@ -2,6 +2,7 @@
 import { useRoute } from 'vue-router';
 import avatar1 from '@images/avatars/avatar-1.png'
 import { apiFetch } from '@/utils/api';
+import Swal from 'sweetalert2';
 
 const route = useRoute()
 const technicianId = route.params.id      // dari :id di path
@@ -68,10 +69,22 @@ async function chooseTechnician(technicianId, jobId){
     console.log('response', response);
     if(response.status == 200){
 
-      alert('berhasil menyetujui teknisi')
+      Swal.fire({
+        title: 'Sukses',
+        text: response.data.message,
+        icon: 'success',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#16a34a'
+      })
     }    
   }catch(error){
-    alert('gagal menyetujui teknisi')
+    Swal.fire({
+      title: 'Gagal',
+      text: 'gagal menyetujui teknisi',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#dc2626'
+    })
   }
 }
 
