@@ -1,6 +1,6 @@
 <script setup>
 import { apiFetch } from '@/utils/api';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import avatar1 from '@images/avatars/avatar-1.png'
 import CardJob from '@/layouts/components/CardJob.vue';
 import sweetAlert from '@/utils/sweetAlert';
@@ -24,6 +24,9 @@ const avatars = ref({})
 // avatars untuk invites per job
 const invitesAvatars = ref({})  
 
+const isCancelable = computed(() => 
+  ['open', 'pending', 'request'].includes(selectedJob.value?.status)
+)
 async function getPostedJobs(){
   const response = await apiFetch(`/jobs/uploaded/${userId}`)
   jobs.value = response.data.jobs
@@ -64,6 +67,21 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
   }
 }
 
+async function approveJobRequest(jobId){
+  try {
+    const response = await apiFetch(`/jobs/${jobId}/approve-job-request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    console.log('response approve : ', response.data);
+    return response.data
+  } catch (error) {
+    sweetAlert.error()
+  }
+}
+
 async function cancelJob(jobId) {
   try {
     const response = await apiFetch(`/jobs/${jobId}/cancel-jobs`, {
@@ -78,6 +96,39 @@ async function cancelJob(jobId) {
   } catch (error) {
     console.error('gagal melakukan cancel job');
     
+  }
+}
+
+async function handleApproveRequest(){
+  showSidebar.value = false
+  const result = await sweetAlert.confirm({
+    title: 'Setujui Request?',
+    text: 'Apakah anda yakin ingin menyetujui teknisi yang mengajukan request untuk memperbaiki alatmu?',
+    confirmText: 'Ya, cancel!',
+    cancelText: 'Batal'
+  })
+
+  if(result.isConfirmed){
+    const approveData = await approveJobRequest(selectedJob.value._id)
+    console.log(approveData);
+    sweetAlert.success(approveData.message)
+    
+  }
+}
+
+async function handleCancel() {
+  showSidebar.value = false
+  const result = await sweetAlert.confirm({
+    title: 'Cancel Jobs?',
+    text: 'Apakah anda yakin ingin cancel Job?',
+    confirmText: 'Ya, cancel!',
+    cancelText: 'Batal'
+  })
+
+  if (result.isConfirmed) {
+    const cancelJobData = await cancelJob(selectedJob.value._id)
+    console.log(cancelJobData)
+    sweetAlert.success(cancelJobData.message)
   }
 }
 
@@ -173,38 +224,34 @@ onMounted(() => {
             </div>
 
             <div class="deadline-box mt-3">
-          <label class="deadline-label">📅 Deadline Pengerjaan:</label>
-          <p class="deadline-value">
-            {{ selectedJob?.deadline?.start_date?.split('T')[0] }}
-            →
-            {{ selectedJob?.deadline?.end_date?.split('T')[0] }}
-          </p>
-        </div>
+              <label class="deadline-label">📅 Deadline Pengerjaan:</label>
+              <p class="deadline-value">
+                {{ selectedJob?.deadline?.start_date?.split('T')[0] }}
+                →
+                {{ selectedJob?.deadline?.end_date?.split('T')[0] }}
+              </p>
+            </div>
 
             <VBtn color="primary" variant="elevated" class="mt-4 mx-2" @click="openApplicants">
               Lihat Pelamar
             </VBtn>
-            <VBtn
-            class="mt-4 mx-2"
-            v-if="selectedJob?.status == 'progress'"
-              style="margin-right: 20px;"
-                color="danger"
-                variant="elevated"
-                @click="showSidebar = false; sweetAlert.confirm({
-                  title: 'Cancel Jobs?',
-                  text: 'apakah anda yakin ingin cancel Job?',
-                  confirmText: 'Ya, cancel!',
-                  cancelText: 'Batal'
-                }).then(async (result) => {
-                  if (result.isConfirmed) {
-                    const cancelJobData = await cancelJob(selectedJob._id)
-                    console.log(cancelJobData);
-                    
-                    sweetAlert.success(cancelJobData.message)
-                  }
-                })"
+            <VBtn 
+              v-if="selectedJob?.status == 'request'"
+              class="mt-4 mx-2"
+              color="success"
+              @click="handleApproveRequest"
               >
-                Cancel
+              Setujui perbaikan
+            </VBtn>
+              
+            <VBtn
+              class="mt-4 mx-2"
+              v-if="isCancelable"
+              color="danger"
+              variant="elevated"
+              @click="handleCancel"
+            >
+              Cancel
             </VBtn>
           </div>
         </div>

@@ -2,11 +2,13 @@
 import { useRoute } from 'vue-router';
 import avatar1 from '@images/avatars/avatar-1.png'
 import { apiFetch } from '@/utils/api';
+import { ref } from 'vue';
 import Swal from 'sweetalert2';
 
 const route = useRoute()
 const technicianId = route.params.id      // dari :id di path
 const jobId = route.query.jobId           // dari query ?jobId=...
+const detailJobs = ref()
 
 console.log('id job : ', jobId);
 console.log('id teknisi : ', technicianId);
@@ -51,6 +53,13 @@ async function getProfile() {
   }
 }
 
+async function getDetailJobs(id) {
+  const response = await apiFetch(`/jobs/${id}`)
+  detailJobs.value = response.data.job
+  console.log('detail job : ', detailJobs.value);
+  
+}
+
 async function chooseTechnician(technicianId, jobId){
   try{
     console.log('chooseTechnician', technicianId, jobId);
@@ -90,6 +99,7 @@ async function chooseTechnician(technicianId, jobId){
 
 onMounted(async () => {
   getProfile()
+  getDetailJobs(jobId)
 })
 
 </script>
@@ -202,8 +212,14 @@ onMounted(async () => {
               </VCol>
 
               <!-- 👉 Zip Code -->
-              <VCol cols="12" md="6">
+              <VCol cols="12" md="6" v-if="!detailJobs?.selectedTechnician">
                 <VBtn @click="chooseTechnician(accountDataLocal.id, jobId)">Accept</VBtn>
+              </VCol>
+
+              <VCol cols="12" md="6" v-else>
+                <VAlert type="info" variant="tonal" border="start" color="primary">
+                  Teknisi sudah dipilih untuk job ini.
+                </VAlert>
               </VCol>
 
             </VRow>

@@ -101,10 +101,6 @@ async function technicianRequest(jobId) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        clientId: detailJobs.value.idCreator,
-        technicianId: detailJobs.value.selectedTechnician
-      })
     })
 
     console.log('response technician request : ', response.data);
