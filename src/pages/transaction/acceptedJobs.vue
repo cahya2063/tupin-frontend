@@ -92,24 +92,34 @@ async function createChat(clientId, technicianId){
 }
 
 async function technicianRequest(jobId) {
-  try {
-    console.log('client id : ', detailJobs.value.idCreator);
-    console.log('technician id : ', detailJobs.value.selectedTechnician);
-    
+  try {    
     const response = await apiFetch(`/jobs/${jobId}/technician-request`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
     })
-
-    console.log('response technician request : ', response.data);
     return response
     
   } catch (error) {
     sweetAlert.error()
   }
 }
+
+async function doneJobRequest(jobId){
+  try {
+    const response = await apiFetch(`/jobs/${jobId}/done-job`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    return response.data
+  } catch (error) {
+    sweetAlert.error()
+  }
+}
+
 
 async function cancelJob(jobId) {
   try {
@@ -125,6 +135,55 @@ async function cancelJob(jobId) {
   } catch (error) {
     console.error('gagal melakukan cancel job');
     
+  }
+}
+
+async function handleTechnicianRequest(){
+  showSidebar.value = false
+  const result = await sweetAlert.confirm({
+    title: 'Ajukan perbaikan?',
+    text: 'pastikan anda sudah punya kesepakatan dengan klien melalui chat',
+    confirmText: 'Ya, kirim!',
+    cancelText: 'Batal'
+  })
+
+  if(result.isConfirmed){
+    const approveData = await technicianRequest(detailJobs.value._id)
+    console.log(approveData);
+    sweetAlert.success(approveData.message)
+    
+  }
+}
+async function handleDoneJob(){
+  xlDemo.value = false
+  const result = await sweetAlert.confirm({
+    title: 'Sudah diperbaiki?',
+    text: 'pastikan anda sudah menyelesaikan perbaikan alat klien',
+    confirmText: 'Ya, sudah!',
+    cancelText: 'Batal'
+  })
+
+  if(result.isConfirmed){
+    const approveData = await doneJobRequest(detailJobs.value._id)
+    console.log(approveData);
+    sweetAlert.success(approveData.message)
+    
+  }
+}
+
+async function handleCancel() {
+  showSidebar.value = false
+  const result = await sweetAlert.confirm({
+    title: 'Cancel Jobs?',
+    text: 'Apakah anda yakin ingin cancel Job?',
+    confirmText: 'Ya, cancel!',
+    cancelText: 'Batal'
+  })
+
+  if (result.isConfirmed) {
+    const cancelJobData = await cancelJob(detailJobs.value._id)
+    console.log(cancelJobData)
+    sweetAlert.success(cancelJobData.message)
   }
 }
 
@@ -177,8 +236,9 @@ onMounted(()=>{
         <h4>{{ detailJobs?.title }} </h4>
         <button class="close-btn" @click="xlDemo = false">×</button>
       </div>
-
+      
       <div class="slide-modal-body">
+        <h5 style="color: red;" v-if="detailJobs?.status == `progress` ">Request anda disetujui segera perbaiki alat clientmu!</h5>
         <CImage
           :src="`http://localhost:3000/uploads/jobs/${detailJobs?.photo}`"
           rounded
@@ -226,7 +286,15 @@ onMounted(()=>{
 
       <div class="apply-btn d-flex justify-end my-4">
         <VBtn
-          class="mx-4"
+          v-if="detailJobs.status == `progress`"
+          color="success"
+          variant="elevated"
+          @click="handleDoneJob"
+        >
+          Perbaikan selesai
+        </VBtn>
+        <VBtn
+        class="mx-4"
           color="primary"
           variant="elevated"
           @click="createChat(detailJobs.idCreator, detailJobs.selectedTechnician)"
@@ -239,24 +307,7 @@ onMounted(()=>{
             style="margin-right: 20px;"
             color="success"
             variant="elevated"
-            @click="xlDemo = false; sweetAlert.confirm({
-              title: 'Ajukan perbaikan?',
-              text: 'pastikan anda sudah punya kesepakatan dengan klien melalui chat',
-              confirmText: 'Ajukan!',
-              cancelText: 'Batal'
-            }).then(async (result) => {
-              if (result.isConfirmed) {
-
-                const response = await technicianRequest(detailJobs._id)
-                console.log('response alert : ', response.status);
-                if(response.status != 200){
-
-                  sweetAlert.error(response.data.message)
-                }
-                sweetAlert.success(response.data.message)
-                
-              }
-            })"
+            @click="handleTechnicianRequest"
           >
             Ajukan perbaikan
         </VBtn>
@@ -264,19 +315,7 @@ onMounted(()=>{
         style="margin-right: 20px;"
           color="danger"
           variant="elevated"
-          @click="xlDemo = false; sweetAlert.confirm({
-            title: 'Cancel Jobs?',
-            text: 'apakah anda yakin ingin cancel Job?',
-            confirmText: 'Ya, cancel!',
-            cancelText: 'Batal'
-          }).then(async (result) => {
-            if (result.isConfirmed) {
-              const cancelJobData = await cancelJob(detailJobs._id)
-              console.log(cancelJobData);
-              
-              sweetAlert.success(cancelJobData.message)
-            }
-          })"
+          @click="handleCancel"
         >
           Cancel
         </VBtn>

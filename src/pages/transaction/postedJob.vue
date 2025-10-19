@@ -183,11 +183,12 @@ onMounted(() => {
     <div v-if="showSidebar" class="slide-modal-overlay" @click.self="showSidebar = false">
       <div class="slide-modal-content">
         <div class="slide-modal-header">
-          <h4>Detail Job</h4>
+          <h4>{{ selectedJob.title }}</h4>
           <button class="close-btn" @click="showSidebar = false">×</button>
         </div>
 
         <div class="slide-modal-body">
+        <h5 style="color: red;" v-if="selectedJob?.status == `progress` ">tunggu teknisi sedang perbaiki alatmu</h5>
           <CImage
           :src="`http://localhost:3000/uploads/jobs/${selectedJob?.photo}`"
           rounded
@@ -195,7 +196,6 @@ onMounted(() => {
           class="job-detail-image"
         />
           <div v-if="selectedJob" class="job-detail">
-            <h5 class="fw-bold mb-2">{{ selectedJob.title }}</h5>
             <p class="text-muted mb-2"><strong>Kategori:</strong> {{ selectedJob.category }}</p>
             <p class="text-muted mb-3"><strong>Status:</strong> {{ selectedJob.status }}</p>
 
