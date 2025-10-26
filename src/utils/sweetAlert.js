@@ -72,17 +72,24 @@ sweetAlert.confirm = function ({
   text = 'Tindakan ini tidak dapat dibatalkan!',
   confirmText = 'Ya, lanjutkan!',
   cancelText = 'Batal',
-  icon = 'warning'
+  denyText = 'Tolak',
+  icon = 'warning',
+  showCancelButton = true,
+  showDenyButton = false // default tidak muncul
 } = {}) {
   return Swal.fire({
     title,
     text,
     icon,
     showCancelButton: true,
+    showDenyButton, // hanya muncul jika true
+    showCancelButton,
     confirmButtonColor: '#3085d6',
     cancelButtonColor: '#d33',
+    denyButtonColor: '#eab308',
     confirmButtonText: confirmText,
-    cancelButtonText: cancelText
+    cancelButtonText: cancelText,
+    denyButtonText: denyText
   })
 }
 

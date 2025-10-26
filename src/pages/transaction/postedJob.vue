@@ -75,13 +75,28 @@ async function approveJobRequest(jobId){
         'Content-Type': 'application/json'
       }
     })
-    console.log('response approve : ', response.data);
+    // console.log('response approve : ', response.data);
     return response.data
   } catch (error) {
     sweetAlert.error()
   }
 }
 
+async function completeJob(jobId, status){
+  try {
+    const response = await apiFetch(`/jobs/${jobId}/is-job-completed`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({status})
+    })
+    // console.log('response complete : ', response.data);
+    return response.data
+  } catch (error) {
+    sweetAlert.error(error.message)
+  }
+}
 async function cancelJob(jobId) {
   try {
     const response = await apiFetch(`/jobs/${jobId}/cancel-jobs`, {
@@ -110,9 +125,29 @@ async function handleApproveRequest(){
 
   if(result.isConfirmed){
     const approveData = await approveJobRequest(selectedJob.value._id)
-    console.log(approveData);
+    // console.log(approveData);
     sweetAlert.success(approveData.message)
-    
+  }
+}
+async function handleIsJobCompleted(){
+  showSidebar.value = false
+  const result = await sweetAlert.confirm({
+    title: 'Selesaikan Job?',
+    text: 'Apakah anda yakin teknisi sudah menyelesaikan job ini?',
+    confirmText: 'Ya, selesai!',
+    showCancelButton: false,
+    showDenyButton: true,
+    denyText: 'Belum selesai'
+  })
+
+  if(result.isConfirmed){
+    const completedJob = await completeJob(selectedJob.value._id, 'completed')
+    // console.log(approveData);
+    sweetAlert.success(completedJob.message)
+  }
+  else if(result.isDenied){
+    const uncompletedJob = await completeJob(selectedJob.value._id, 'uncompleted')
+    sweetAlert.warning(uncompletedJob.message, 'Job Belum Selesai')
   }
 }
 
@@ -242,6 +277,15 @@ onMounted(() => {
               @click="handleApproveRequest"
               >
               Setujui perbaikan
+            </VBtn>
+
+            <VBtn
+              v-if="selectedJob?.status == 'done'"
+              class="mt-4 mx-2"
+              color="warning"
+              @click="handleIsJobCompleted"
+            >
+              Selesai diperbaiki?
             </VBtn>
               
             <VBtn
