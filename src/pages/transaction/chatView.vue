@@ -1,17 +1,18 @@
 <script setup>
 import { apiFetch } from "@/utils/api";
 import { onMounted, ref } from "vue";
-import {io} from 'socket.io-client'
+import { io } from "socket.io-client";
 
-
-const socket = io('http://localhost:3000')
-const userId = localStorage.getItem('userId')
-const userRole = localStorage.getItem('role')
+const socket = io("http://localhost:3000");
+const userId = localStorage.getItem("userId");
+const userRole = localStorage.getItem("role");
 
 const chats = ref([]);
 const selectedChat = ref(null);
 const messages = ref([]);
 const newMessage = ref("");
+const isMobileView = ref(false)
+const showChat = ref(false)
 
 async function getProfile(userId) {
   try {
@@ -32,41 +33,45 @@ async function getChatByUserId(userId) {
   }
 }
 
-
-
 onMounted(async () => {
-  const data = await getChatByUserId(userId);
+  // Ambil data chat
+  const data = await getChatByUserId(userId)
   chats.value = await Promise.all(
     data.map(async (item) => {
-      const profileClient = await getProfile(item.clientId);
-      const profileTeknisi = await getProfile(item.technicianId);
+      const profileClient = await getProfile(item.clientId)
+      const profileTeknisi = await getProfile(item.technicianId)
       return {
         ...item,
         client: { nama: profileClient?.user?.nama || "Client" },
         teknisi: { nama: profileTeknisi?.user?.nama || "Teknisi" },
-      };
+      }
     })
-  );
+  )
 
-  // ✅ dengarkan pesan masuk dari socket
+  // Cek ukuran layar
+  const checkScreen = () => {
+    isMobileView.value = window.innerWidth <= 992 // batas tablet ke bawah
+  }
+
+  checkScreen()
+  window.addEventListener("resize", checkScreen)
+
   socket.on("receive_message", (msg) => {
     if (selectedChat.value && msg.chatId === selectedChat.value._id) {
-      messages.value.push(msg);
+      messages.value.push(msg)
     }
-  });
-});
+  })
+})
 
 
-
-// pilih chat
 async function selectChat(chat) {
-  selectedChat.value = chat;
-  socket.emit("join_room", chat._id); // join room
-  const response = await apiFetch(`/messages/read/${chat._id}`);
-  messages.value = response.data.chat_message;
+  selectedChat.value = chat
+  socket.emit("join_room", chat._id)
+  const response = await apiFetch(`/messages/read/${chat._id}`)
+  messages.value = response.data.chat_message
+  if (isMobileView.value) showChat.value = true
 }
 
-// kirim pesan
 async function sendMessage() {
   if (!newMessage.value.trim() || !selectedChat.value) return;
 
@@ -77,247 +82,362 @@ async function sendMessage() {
     createdAt: new Date(),
   };
 
-  // simpan ke DB via API
   await apiFetch(`/messages/send`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(msg),
   });
 
-  // kirim via socket biar realtime muncul ke lawan chat
-  // socket.emit("send_message", msg);
-
   newMessage.value = "";
 }
 
-// format tanggal
 function formatDate(date) {
-  return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return new Date(date).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 </script>
+
 <template>
-  <div class="chat-container">
-    <!-- Sidebar daftar chat -->
-    <aside class="chat-sidebar">
-      <h2 class="sidebar-title">💬 Percakapan</h2>
-      <ul>
+  <div class="chat-wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar" v-show="!isMobileView || (isMobileView && !showChat)">
+      <div class="search-bar">
+        <input type="text" placeholder="Search..." />
+      </div>
+
+      <h3 class="section-title">Chats</h3>
+      <ul class="chat-list">
         <li
           v-for="chat in chats"
           :key="chat._id"
           :class="{ active: chat._id === selectedChat?._id }"
           @click="selectChat(chat)"
         >
-          <div class="chat-info">
-            <hr>
-            <strong v-if="userRole == `technician`">{{ chat.client?.nama }}</strong>
-            <strong v-else>{{ chat.teknisi?.nama }}</strong>
-            <hr>
-            <!-- <p class="last-message">
-              {{ messages.at(-1)?.message || 'Belum ada pesan' }}
-            </p> -->
+          <div class="avatar"></div>
+          <div class="chat-meta">
+            <h4>
+              {{ userRole == "technician" ? chat.client?.nama : chat.teknisi?.nama }}
+            </h4>
+            <p class="last">Klik untuk membuka percakapan</p>
           </div>
+          <span class="chat-time">Oct 26</span>
         </li>
       </ul>
     </aside>
 
-    <!-- Area chat -->
-    <section class="chat-main" v-if="selectedChat">
+    <!-- Chat Area -->
+    <main
+      class="chat-area"
+      :class="{ fullscreen: isMobileView && showChat }"
+      v-if="selectedChat && (!isMobileView || showChat)"
+    >
       <header class="chat-header">
-        <h3 v-if="userRole == `technician`">
-          👤 {{ selectedChat.client?.nama}}
-        </h3>
-        <h3 v-else>
-          👤 {{ selectedChat.teknisi?.nama}}
-        </h3>
+        <div class="user-info">
+          <button v-if="isMobileView" class="back-btn" @click="showChat = false">←</button>
+          <div class="avatar header"></div>
+          <div>
+            <h4>{{ userRole == "technician" ? selectedChat.client?.nama : selectedChat.teknisi?.nama }}</h4>
+            <small>Frontend Developer</small>
+          </div>
+        </div>
       </header>
 
-      <div class="chat-messages">
+      <div class="chat-body">
         <div
           v-for="msg in messages"
           :key="msg._id"
-          :class="['chat-message', msg.senderId === userId ? 'sent' : 'received']"
+          :class="['msg', msg.senderId === userId ? 'sent' : 'received']"
         >
           <p>{{ msg.message }}</p>
           <small>{{ formatDate(msg.createdAt) }}</small>
         </div>
       </div>
 
-      <footer class="chat-input">
+      <footer class="chat-footer">
         <input
           v-model="newMessage"
           type="text"
-          placeholder="Tulis pesan..."
+          placeholder="Type your message"
           @keyup.enter="sendMessage"
         />
-        <button @click="sendMessage">➤</button>
+        <button @click="sendMessage">Send ➤</button>
       </footer>
-    </section>
+    </main>
 
-    <!-- Jika belum pilih chat -->
-    <section class="chat-main empty-state" v-else>
-      <p class="empty">👆 Pilih percakapan untuk memulai</p>
-    </section>
+    <main class="chat-area empty" v-else-if="!isMobileView">
+      <p>Pilih percakapan untuk memulai</p>
+    </main>
   </div>
 </template>
 
-
-
 <style scoped>
-.chat-container {
+.chat-wrapper {
   display: flex;
-  height: 80vh;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #f8f9fb;
+  height: 70vh;
+  width: 90%;
+  margin-inline: auto;
+  background: #fafafa;
+  border: 2px solid #915eff;
+  border-radius: 30px;
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.2),
+    0 20px 20px rgba(0, 0, 0, 0.1);
+
+  overflow: hidden; /* Tambahkan ini agar radius diterapkan ke anak */
+  font-family: "Inter", sans-serif;
 }
 
 /* Sidebar */
-.chat-sidebar {
-  width: 280px;
-  background: #ffffff;
-  border-right: 1px solid #e5e5e5;
+.sidebar {
+  /* width: 40%; */
+  flex: 1.3;
+  background: #fff;
+  border-right: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 1rem 0;
+}
+.search-bar {
+  padding: 0 1rem;
 }
 
-.sidebar-title {
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-  color: #2d8cf0;
-  text-align: center;
+.search-bar input {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: 20px;
+  border: none;
+  background: #f0f2f5;
+  font-size: 0.9rem;
+  outline: none;
 }
 
-.chat-sidebar ul {
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #a855f7;
+  margin: 1rem;
+}
+
+.chat-list, .contact-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.chat-sidebar li {
-  border-radius: 8px;
+.chat-list li {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 1rem;
   cursor: pointer;
-  margin-bottom: 0.5rem;
-  transition: background 0.2s;
+  transition: background 0.3s;
 }
 
-.chat-sidebar li:hover {
-  background: #f1f9ff;
+.chat-list li.active, .chat-list li:hover {
+  background: #a855f71a;
 }
 
-.chat-sidebar li.active {
-  background: #e6f2ff;
-  border-left: 4px solid #2d8cf0;
+.avatar {
+  width: 45px;
+  height: 45px;
+  background: #a855f7;
+  border-radius: 50%;
+  margin-right: 12px;
 }
 
-.chat-info strong {
-  display: block;
+.avatar.small {
+  width: 36px;
+  height: 36px;
+}
+
+.chat-meta h4 {
+  margin: 0;
   font-size: 0.95rem;
   color: #333;
 }
 
-.chat-sidebar .last-message {
+.chat-meta .last {
   font-size: 0.8rem;
   color: #777;
-  margin-top: 2px;
+}
+
+.chat-time {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: #aaa;
 }
 
 /* Chat Area */
-.chat-main {
-  flex: 1;
+.chat-area {
+  flex: 3;
   display: flex;
   flex-direction: column;
-  background: #fdfdfd;
+  background: #fdfcff;
 }
 
 .chat-header {
-  padding: 1rem;
-  background: #2d8cf0;
-  color: #fff;
-  font-size: 1rem;
-  font-weight: bold;
-  border-bottom: 1px solid #ddd;
-}
-
-/* Messages */
-.chat-messages {
-  flex: 1;
-  padding: 1rem;
-  overflow-y: auto;
-  background: #f5f7fa;
-}
-
-.chat-message {
-  max-width: 65%;
-  padding: 0.7rem 1rem;
-  margin-bottom: 0.8rem;
-  border-radius: 16px;
-  font-size: 0.9rem;
-  position: relative;
-  word-wrap: break-word;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-
-.chat-message.sent {
-  margin-left: auto;
-  background: #daf5d9;
-  border-bottom-right-radius: 4px;
-  text-align: right;
-}
-
-.chat-message.received {
-  margin-right: auto;
-  background: #ffffff;
-  border-bottom-left-radius: 4px;
-}
-
-.chat-message small {
-  display: block;
-  font-size: 0.7rem;
-  color: #666;
-  margin-top: 0.3rem;
-}
-
-/* Input */
-.chat-input {
   display: flex;
-  padding: 0.7rem;
-  border-top: 1px solid #ddd;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #eee;
   background: #fff;
 }
 
-.chat-input input {
-  flex: 1;
-  padding: 0.6rem;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  outline: none;
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.chat-input button {
-  margin-left: 0.6rem;
-  padding: 0.6rem 1rem;
-  border: none;
-  background: #2d8cf0;
-  color: white;
+.avatar.header {
+  width: 45px;
+  height: 45px;
+  background: #a855f7;
   border-radius: 50%;
+}
+
+.chat-body {
+  flex: 1;
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.msg {
+  max-width: 60%;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.8rem;
+  border-radius: 15px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  font-size: 0.9rem;
+}
+
+.msg.sent {
+  background: #a855f7;
+  color: #fff;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+
+.msg.received {
+  background: #fff;
+  color: #333;
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.2),
+    0 20px 20px rgba(0, 0, 0, 0.1);
+}
+
+.msg small {
+  display: block;
+  font-size: 0.7rem;
+  margin-top: 3px;
+  opacity: 0.8;
+}
+
+/* Input */
+.chat-footer {
+  display: flex;
+  padding: 1rem 2rem;
+  border-top: 1px solid #eee;
+  background: #fff;
+}
+
+.chat-footer input {
+  flex: 1;
+  border: none;
+  border-radius: 20px;
+  padding: 0.8rem 1rem;
+  background: #f0f2f5;
+  outline: none;
+  font-size: 0.9rem;
+}
+
+.chat-footer button {
+  margin-left: 1rem;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  background: #a855f7;
+  color: #fff;
+  border-radius: 50px;
   cursor: pointer;
-  font-size: 1rem;
+  font-weight: 500;
+  transition: background 0.3s;
 }
 
-.chat-input button:hover {
-  background: #1a73e8;
+.chat-footer button:hover {
+  background: #9333ea;
 }
 
-/* Empty state */
-.empty-state {
+/* Empty */
+.chat-area.empty {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.empty {
   color: #999;
   font-size: 1.1rem;
-  text-align: center;
 }
+@media(min-width: 992px){
+  .sidebar{
+    left: 0px;
+  }
+}
+@media(max-width: 992px) {
+  .chat-wrapper {
+    position: relative; /* pastikan anak-anak bisa absolute penuh */
+    width: 100%;
+    height: 100dvh;
+    border: none;
+    border-radius: 0;
+    overflow: visible; /* cegah munculnya scroll sisa */
+    margin-inline: 0;
+  }
+
+  /* Sidebar tampil penuh di mobile */
+  .sidebar {
+    position: absolute;
+    top: 0;
+    left: 257px;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background: #fff;
+    z-index: 1; /* pastikan di atas chat-area */
+  }
+
+  /* Chat disembunyikan default */
+  .chat-area {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fdfcff;
+    flex-direction: column;
+    z-index: 2; /* muncul di atas sidebar saat aktif */
+  }
+
+  /* Ketika showChat = true */
+  .chat-area.fullscreen {
+    display: flex !important;
+  }
+
+  .back-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    margin-right: 10px;
+    cursor: pointer;
+    color: #a855f7;
+  }
+}
+
+
 </style>
