@@ -139,7 +139,7 @@ function formatDate(date) {
           <div class="avatar header"></div>
           <div>
             <h4>{{ userRole == "technician" ? selectedChat.client?.nama : selectedChat.teknisi?.nama }}</h4>
-            <small>Frontend Developer</small>
+            <small>{{userRole == 'technician' ? `client` : `teknisi`}}</small>
           </div>
         </div>
       </header>

@@ -9,6 +9,8 @@ import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
 import UserProfile from '@/layouts/components/UserProfile.vue'
 import { apiFetch } from '@/utils/api'
 import { ref, onMounted } from 'vue'
+import { CButton } from '@coreui/vue-pro'
+import sweetAlert from '@/utils/sweetAlert'
 
 const userId = localStorage.getItem('userId')
 const notifications = ref([]) // list notifikasi
@@ -52,27 +54,19 @@ async function getDetailJobs(jobId){
     return null;
   }
 }
-
-// async function createChat(clientId, technicianId){  
-//   try {
-//     const response = await apiFetch(`/chats/create`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json'
-//       },
-//       body: JSON.stringify({
-//         clientId: clientId,
-//         technicianId: technicianId
-//       })
-      
-//     })
-//     console.log('Chat created:', response.data);
-//     visibleVerticallyCenteredDemo.value = false
-//   } catch (error) {
-//     console.error('Gagal membuat chat:', error);
-    
-//   }
-// }
+async function deleteNotification(notificationId){
+  try {
+    const response = await apiFetch(`/notifications/delete/${notificationId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    sweetAlert.success(response.data.message)
+  } catch (error) {
+    sweetAlert.error('Gagal menghapus notifikasi:', error)
+  }
+}
 
 const selectedNotif = ref(null)
 const job = ref(null)
@@ -181,6 +175,9 @@ onMounted(() => {
             </div>
           </CModalBody>
           <CModalFooter>
+            <CButton color="danger" v-show="selectedNotif.isRead == true" @click="deleteNotification(selectedNotif._id)">
+              Hapus
+            </CButton>
             <CButton color="secondary" @click="() => { visibleVerticallyCenteredDemo = false }">
               Tutup
             </CButton>

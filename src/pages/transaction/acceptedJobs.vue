@@ -139,7 +139,7 @@ async function cancelJob(jobId) {
 }
 
 async function handleTechnicianRequest(){
-  showSidebar.value = false
+  xlDemo.value = false
   const result = await sweetAlert.confirm({
     title: 'Ajukan perbaikan?',
     text: 'pastikan anda sudah punya kesepakatan dengan klien melalui chat',
@@ -172,7 +172,7 @@ async function handleDoneJob(){
 }
 
 async function handleCancel() {
-  showSidebar.value = false
+  xlDemo.value = false
   const result = await sweetAlert.confirm({
     title: 'Cancel Jobs?',
     text: 'Apakah anda yakin ingin cancel Job?',
