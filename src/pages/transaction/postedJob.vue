@@ -287,6 +287,12 @@ onMounted(() => {
             >
               Selesai diperbaiki?
             </VBtn>
+
+            <VBtn
+            v-if="selectedJob?.status == 'completed'"
+            class="mt-4 mx-2"
+            color="success"
+            >Bayar</VBtn>
               
             <VBtn
               class="mt-4 mx-2"
