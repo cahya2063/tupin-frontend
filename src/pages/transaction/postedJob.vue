@@ -4,6 +4,7 @@ import { onMounted, ref, computed } from 'vue';
 import avatar1 from '@images/avatars/avatar-1.png'
 import CardJob from '@/layouts/components/CardJob.vue';
 import sweetAlert from '@/utils/sweetAlert';
+import { CForm } from '@coreui/vue-pro';
 
 const headers = [
   { title: 'User', key: 'username' },
@@ -16,8 +17,17 @@ const userData = ref([])
 const selectedJob = ref(null)
 const showSidebar = ref(false)
 const showApplicantsModal = ref(false)
+const showRatingModal = ref(false)
 const userId = localStorage.getItem('userId')
 const jobs = ref([])
+const rating = ref(0)
+const comment = ref('')
+
+// untuk validasi required
+const errors = ref({
+  rating: '',
+  comment: ''
+})
 
 // avatars creator
 const avatars = ref({}) 
@@ -185,8 +195,72 @@ const openApplicants = async () => {
   showApplicantsModal.value = true
 }
 
-onMounted(() => {
-  getPostedJobs()
+const review = ref()
+
+
+async function getReviewByJobId(jobId, userId){
+  try {    
+    const response = await apiFetch(`/review/${jobId}/${userId}/get-review-byJobId`)
+    return response.data.review
+    
+  } catch (error) {
+    sweetAlert.error(error.message)
+  }
+}
+
+const createRating = async() => {
+  // reset pesan error dulu
+  errors.value.rating = ''
+  errors.value.comment = ''
+  let valid = true
+
+  if (!rating.value || rating.value === 0) {
+    errors.value.rating = 'Rating wajib diisi.'
+    valid = false
+  }
+
+  if (!comment.value.trim()) {
+    errors.value.comment = 'Komentar wajib diisi.'
+    valid = false
+  }
+
+  if (!valid) return
+  const data = {
+    senderId: userId,
+    receiverId: selectedJob.value.selectedTechnician,
+    jobId: selectedJob.value._id,
+    rating: rating.value,
+    comment: comment.value
+  }
+
+  showSidebar.value = false
+  showRatingModal.value = false
+  try {
+    const response = await apiFetch(`/review/create-review`, {
+      method: 'POST',
+      headers:{
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+
+    sweetAlert.success(response.data.message)
+
+    
+  } catch (error) {
+    sweetAlert.error(error.message)
+  }
+  
+}
+onMounted(async() => {
+  await getPostedJobs()
+  
+  jobs.value.forEach(async(e, i)=>{
+    const response = await getReviewByJobId(e._id, e.idCreator)
+    review.value = response
+    console.log('data review : ', review.value);
+    
+  })
 })
 </script>
 
@@ -301,6 +375,13 @@ onMounted(() => {
             class="mt-4 mx-2"
             color="success"
             >Bayar</VBtn>
+            
+            <VBtn
+            v-if="selectedJob?.status == 'payed done' && !review"
+            class="mt-4 mx-2"
+            color="success"
+            @click="showRatingModal = true"
+            >Beri Rating</VBtn>
               
             <VBtn
               class="mt-4 mx-2"
@@ -364,8 +445,46 @@ onMounted(() => {
       </VCardText>
     </VCard>
   </VDialog>
+  <!-- Modal Pop-up Rating -->
+  <VDialog v-model="showRatingModal" max-width="800">
+    <VCard style="font-family: 'Poppins';">
+      <VCardTitle class="d-flex justify-between align-center">
+        <span>Form Rating</span>
+      </VCardTitle>
+
+      <div class="d-flex justify-center">
+        <CForm style="width: 90%;">
+          <CRating v-model="rating" allowClear class="my-2" />
+          <div v-if="errors.rating" class="text-danger text-sm mt-1">
+            {{ errors.rating }}
+          </div>
+          <CFormTextarea
+            id="comment"
+            label="Komentar review"
+            rows="4"
+            text="Must be 8-20 words long."
+            v-model="comment"
+            required
+          ></CFormTextarea>
+          <div v-if="errors.comment" class="text-danger text-sm mt-1">
+            {{ errors.comment }}
+          </div>
+
+          <div class="d-flex justify-end my-3">
+            <VBtn color="success" @click="createRating">Kirim Rating</VBtn>
+          </div>
+        </CForm>
+      </div>
+    </VCard>
+  </VDialog>
 </template>
 <style scoped>
+.text-danger {
+  color: #dc3545;
+}
+.text-sm {
+  font-size: 0.9rem;
+}
 .container-job {
   width: 100%;
   display: flex;
