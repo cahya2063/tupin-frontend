@@ -4,14 +4,14 @@ import avatar1 from '@images/avatars/avatar-1.png'
 import { apiFetch } from '@/utils/api';
 import { ref } from 'vue';
 import Swal from 'sweetalert2';
+import ReviewContainer from '@/pages/part/ReviewContainer.vue';
 
 const route = useRoute()
 const technicianId = route.params.id      // dari :id di path
 const jobId = route.query.jobId           // dari query ?jobId=...
 const detailJobs = ref()
 
-console.log('id job : ', jobId);
-console.log('id teknisi : ', technicianId);
+
 
 const accountDataLocal = ref({
   id: '',
@@ -45,7 +45,7 @@ async function getProfile() {
       avatar: response.data.user.avatar || null, // default avatar jika kosong
     }
 
-    console.log('profile', accountDataLocal.value);
+
     
     
   } catch (err) {
@@ -56,13 +56,11 @@ async function getProfile() {
 async function getDetailJobs(id) {
   const response = await apiFetch(`/jobs/${id}`)
   detailJobs.value = response.data.job
-  console.log('detail job : ', detailJobs.value);
   
 }
 
 async function chooseTechnician(technicianId, jobId){
   try{
-    console.log('chooseTechnician', technicianId, jobId);
     const data = {
       clientId: localStorage.getItem('userId'),
       technicianId: technicianId
@@ -75,7 +73,6 @@ async function chooseTechnician(technicianId, jobId){
       },
       body: JSON.stringify(data)
     })
-    console.log('response', response);
     if(response.status == 200){
 
       Swal.fire({
@@ -227,6 +224,7 @@ onMounted(async () => {
         </VCardText>
       </VCard>
     </VCol>
+
     <VCol cols="12">
       <!-- 👉 Data Sertifikat -->
       <VCard title="Data Sertifikat">
@@ -248,13 +246,9 @@ onMounted(async () => {
         </VCardText>
       </VCard>
     </VCol>
-
+    <ReviewContainer :userId="accountDataLocal.id"/>
   </VRow>
 </template>
-
-<style scoped>
-
-</style>
 
 
 

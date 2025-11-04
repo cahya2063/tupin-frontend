@@ -1,4 +1,5 @@
 <script setup>
+import ReviewContainer from '@/pages/part/ReviewContainer.vue'
 import { apiFetch } from '@/utils/api'
 import avatar1 from '@images/avatars/avatar-1.png'
 import { ref } from 'vue'
@@ -131,27 +132,6 @@ const resetAvatar = () => {
   accountDataLocal.value.avatar = accountData.avatarImg
 }
 
-// Data dummy ulasan
-const reviews = ref([
-  {
-    user: 'Budi Santoso',
-    rating: 5,
-    comment: 'Pelayanan sangat cepat dan ramah!',
-    date: '2 November 2025',
-  },
-  {
-    user: 'Siti Rahma',
-    rating: 4,
-    comment: 'Teknisi datang tepat waktu dan hasil perbaikan bagus.',
-    date: '1 November 2025',
-  },
-  {
-    user: 'Ahmad Fauzi',
-    rating: 3,
-    comment: 'Cukup baik, tapi perlu peningkatan dalam komunikasi.',
-    date: '30 Oktober 2025',
-  },
-])
 
 // Event klik tombol ulasan (sementara hanya alert)
 // const addReview = () => {
@@ -350,74 +330,7 @@ const reviews = ref([
       </VCard>
     </VCol>
     
-    <VCol cols="12">
-    <!-- 👉 Kartu Ulasan -->
-    <VCard title="Ulasan">
-      <VCardText>
-        <!-- Daftar Komentar (Scrollable Area) -->
-        <div class="review-list">
-          <div
-            v-for="(review, index) in reviews"
-            :key="index"
-            class="mb-4 border-b pb-3"
-          >
-            <div class="d-flex align-center justify-space-between">
-              <div>
-                <strong>{{ review.user }}</strong>
-                <div class="text-grey text-caption">{{ review.date }}</div>
-              </div>
-
-              <!-- Rating Bintang -->
-              <div class="text-warning">
-                <VIcon
-                  v-for="n in 5"
-                  :key="n"
-                  :icon="n <= review.rating ? 'mdi-star' : 'mdi-star-outline'"
-                  size="18"
-                />
-              </div>
-            </div>
-
-            <!-- Isi Komentar -->
-            <div class="mt-2 text-body-2">
-              {{ review.comment }}
-            </div>
-          </div>
-        </div>
-
-
-      </VCardText>
-    </VCard>
-  </VCol>
-
     
+    <ReviewContainer :userId="accountDataLocal.id"/>
   </VRow>
 </template>
-
-<style scoped>
-.border-b {
-  border-bottom: 1px solid #e0e0e0;
-}
-.text-warning {
-  color: #fbc02d;
-}
-
-/* ✅ Scroll untuk daftar ulasan */
-.review-list {
-  max-height: 300px; /* batas tinggi area komentar */
-  overflow-y: auto;  /* aktifkan scroll vertikal */
-  padding-right: 6px;
-}
-
-/* opsional: styling scrollbar agar lebih halus */
-.review-list::-webkit-scrollbar {
-  width: 6px;
-}
-.review-list::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-  border-radius: 4px;
-}
-.review-list::-webkit-scrollbar-thumb:hover {
-  background-color: #999;
-}
-</style>

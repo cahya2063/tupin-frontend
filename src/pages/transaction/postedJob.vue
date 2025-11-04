@@ -25,7 +25,7 @@ const avatars = ref({})
 const invitesAvatars = ref({})  
 
 const isCancelable = computed(() => 
-  ['open', 'pending', 'request'].includes(selectedJob.value?.status)
+  ['pending', 'request'].includes(selectedJob.value?.status)
 )
 async function getPostedJobs(){
   const response = await apiFetch(`/jobs/uploaded/${userId}`)
@@ -210,6 +210,14 @@ onMounted(() => {
           :avatarPlaceholder="avatar1"
         />
       </div>
+    </template>
+    <template v-else>
+      <VCol cols="12">
+        <div class="text-center py-10">
+          <h3>Kamu belum pernah upload job nihh 😔</h3>
+          <p class="text-subtitle-2 text-grey-darken-1">Kalau kamu memiliki keluhan pada peralatanmu beri tahu kami ya!!</p>
+        </div>
+      </VCol>
     </template>
   </VRow>
 

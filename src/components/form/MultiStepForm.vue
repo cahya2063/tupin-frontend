@@ -64,6 +64,10 @@ const photoFile = ref(null) // file akan disimpan di sini
 function handleFileUpload(e) {
   photoFile.value = e.target.files[0]
 }
+function toLocalISODate(date) {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+  return local.toISOString().split('T')[0]
+}
 
 async function postJob() {
   const formData = new FormData()
@@ -74,8 +78,8 @@ async function postJob() {
   formData.append(
     'deadline',
     JSON.stringify({
-      start_date: vStartDate.value || '-',
-      end_date: vEndDate.value || '-',
+      start_date: vStartDate.value ? toLocalISODate(vStartDate.value) : null,
+      end_date: vEndDate.value ? toLocalISODate(vEndDate.value) : null,
     })
   )
   formData.append('experiences', experience.value)
