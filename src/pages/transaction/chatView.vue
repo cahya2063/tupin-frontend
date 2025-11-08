@@ -2,8 +2,11 @@
 import { apiFetch } from "@/utils/api";
 import { onMounted, ref } from "vue";
 import { io } from "socket.io-client";
+import sweetAlert from "@/utils/sweetAlert";
 
+// mentrigger event connection di server
 const socket = io("http://localhost:3000");
+
 const userId = localStorage.getItem("userId");
 const userRole = localStorage.getItem("role");
 
@@ -57,8 +60,15 @@ onMounted(async () => {
   window.addEventListener("resize", checkScreen)
 
   socket.on("receive_message", (msg) => {
+
+    // Hindari duplikasi: kalau pesan terakhir punya teks & sender sama, abaikan
+    const lastMsg = messages.value[messages.value.length - 1];
+    if (lastMsg && lastMsg.message === msg.message && lastMsg.senderId === msg.senderId) {
+      return;
+    }
+    
     if (selectedChat.value && msg.chatId === selectedChat.value._id) {
-      messages.value.push(msg)
+      messages.value.push(msg);
     }
   })
 })
@@ -66,6 +76,8 @@ onMounted(async () => {
 
 async function selectChat(chat) {
   selectedChat.value = chat
+
+  // mentrigger event join room di server
   socket.emit("join_room", chat._id)
   const response = await apiFetch(`/messages/read/${chat._id}`)
   messages.value = response.data.chat_message
@@ -81,6 +93,9 @@ async function sendMessage() {
     message: newMessage.value,
     createdAt: new Date(),
   };
+  
+  // mentrigger event send_message di server
+  socket.emit("send_message", msg);
 
   await apiFetch(`/messages/send`, {
     method: "POST",
@@ -89,6 +104,37 @@ async function sendMessage() {
   });
 
   newMessage.value = "";
+}
+
+async function shareLocation(){
+  if(!selectedChat.value) return
+
+  if(!navigator.geolocation){
+    sweetAlert.error('browsermu tidak mendukung geolokasi')
+  }
+
+  navigator.geolocation.getCurrentPosition(async (position)=>{
+    const {latitude, longitude} = position.coords
+
+    const msg = {
+      chatId: selectedChat.value._id,
+      senderId: userId,
+      messageType: 'location',
+      message: `https://www.google.com/maps?q=${latitude},${longitude}`,
+      createdAt: new Date()
+    }
+
+    
+    console.log('data lokasi : ', msg);
+    await apiFetch(`/messages/send`,{
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(msg)
+    })
+    socket.emit('send_message', msg)
+  })
 }
 
 function formatDate(date) {
@@ -150,7 +196,12 @@ function formatDate(date) {
           :key="msg._id"
           :class="['msg', msg.senderId === userId ? 'sent' : 'received']"
         >
-          <p>{{ msg.message }}</p>
+          <div v-if="msg.messageType === 'location'">
+            <a :href="msg.message" target="_blank">📍 Lihat Lokasi</a>
+          </div>
+          <div v-else>
+            <p>{{ msg.message }}</p>
+          </div>
           <small>{{ formatDate(msg.createdAt) }}</small>
         </div>
       </div>
@@ -162,6 +213,9 @@ function formatDate(date) {
           placeholder="Type your message"
           @keyup.enter="sendMessage"
         />
+        <button @click="shareLocation">
+          <i class="ri-map-pin-line" style="font-size: 24px;"></i>
+        </button>
         <button @click="sendMessage">Send ➤</button>
       </footer>
     </main>
