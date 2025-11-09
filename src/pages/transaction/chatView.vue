@@ -91,6 +91,7 @@ async function sendMessage() {
     chatId: selectedChat.value._id,
     senderId: userId,
     message: newMessage.value,
+    messageType: 'message',
     createdAt: new Date(),
   };
   
@@ -116,13 +117,22 @@ async function shareLocation(){
   navigator.geolocation.getCurrentPosition(async (position)=>{
     const {latitude, longitude} = position.coords
 
+    // const msg = {
+    //   chatId: selectedChat.value._id,
+    //   senderId: userId,
+    //   messageType: 'location',
+    //   message: `https://www.google.com/maps?q=${latitude},${longitude}`,
+    //   // createdAt: new Date()
+    // }
     const msg = {
       chatId: selectedChat.value._id,
       senderId: userId,
-      messageType: 'location',
-      message: `https://www.google.com/maps?q=${latitude},${longitude}`,
-      createdAt: new Date()
-    }
+      messageType: "location",
+      message: "Berbagi lokasi saat ini",
+      latitude,
+      longitude,
+      createdAt: new Date(),
+    };
 
     
     console.log('data lokasi : ', msg);
@@ -192,18 +202,40 @@ function formatDate(date) {
 
       <div class="chat-body">
         <div
-          v-for="msg in messages"
-          :key="msg._id"
-          :class="['msg', msg.senderId === userId ? 'sent' : 'received']"
-        >
-          <div v-if="msg.messageType === 'location'">
-            <a :href="msg.message" target="_blank">📍 Lihat Lokasi</a>
+            v-for="msg in messages"
+            :key="msg._id"
+            :class="['msg', msg.senderId === userId ? 'sent' : 'received']"
+          >
+            <!-- Jika pesan tipe location -->
+            <template v-if="msg.messageType === 'location'">
+              <p>{{ msg.message }}</p>
+              <iframe
+                :src="`https://www.google.com/maps?q=${msg.latitude},${msg.longitude}&hl=es;z=14&output=embed`"
+                width="250"
+                height="150"
+                style="border:0; border-radius: 8px; margin-top: 5px;"
+                allowfullscreen=""
+                loading="lazy"
+              ></iframe>
+              <br />
+              <a
+                :href="`https://www.google.com/maps?q=${msg.latitude},${msg.longitude}`"
+                target="_blank"
+                style="color: black;"
+                class="map-link"
+              >
+                Buka di Google Maps ↗
+              </a>
+            </template>
+
+            <!-- Jika pesan biasa -->
+            <template v-else>
+              <p>{{ msg.message }}</p>
+            </template>
+
+            <small>{{ formatDate(msg.createdAt) }}</small>
           </div>
-          <div v-else>
-            <p>{{ msg.message }}</p>
-          </div>
-          <small>{{ formatDate(msg.createdAt) }}</small>
-        </div>
+
       </div>
 
       <footer class="chat-footer">
@@ -393,6 +425,21 @@ function formatDate(date) {
   font-size: 0.7rem;
   margin-top: 3px;
   opacity: 0.8;
+}
+.chat-message iframe {
+  display: block;
+  margin-top: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.map-link {
+  color: #007bff;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.map-link:hover {
+  text-decoration: underline;
 }
 
 /* Input */
