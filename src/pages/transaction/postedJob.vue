@@ -377,11 +377,11 @@ onMounted(async() => {
             >Bayar</VBtn>
             
             <VBtn
-            v-if="selectedJob?.status == 'payed done' && !review"
-            class="mt-4 mx-2"
-            color="success"
-            @click="showRatingModal = true"
-            >Beri Rating</VBtn>
+              v-if="selectedJob?.status == 'payed done' && !review"
+              class="mt-4 mx-2"
+              color="success"
+              @click="showRatingModal = true"
+            >Beri Review</VBtn>
               
             <VBtn
               class="mt-4 mx-2"
@@ -471,7 +471,7 @@ onMounted(async() => {
           </div>
 
           <div class="d-flex justify-end my-3">
-            <VBtn color="success" @click="createRating">Kirim Rating</VBtn>
+            <VBtn color="success" @click="createRating">Kirim Review</VBtn>
           </div>
         </CForm>
       </div>
