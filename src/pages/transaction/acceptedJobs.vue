@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue';
 import avatar1 from '@images/avatars/avatar-1.png'
 import sweetAlert from '@/utils/sweetAlert';
 import CardJob from '@/layouts/components/CardJob.vue';
+import ReviewModal from '@/components/form/ReviewModal.vue';
 
 
 // avatars creator
@@ -15,21 +16,21 @@ const xlDemo = ref(false)
 
 const acceptedJobs = ref([])
 const detailJobs = ref()
-const userId = localStorage.getItem('userId')
 const userName = ref([])
 const isCancelable = computed(() => 
-  ['pending', 'request'].includes(detailJobs.value?.status)
+['pending', 'request'].includes(detailJobs.value?.status)
 )
 const showRatingModal = ref(false)
+const userId = localStorage.getItem('userId')
+const receiverId = computed(() => detailJobs.value?.idCreator)
+const jobId = computed(() => detailJobs.value?._id)
 
-const rating = ref(0)
-const comment = ref('')
+// event ketika review berhasil dikirim
+function handleReviewSubmitted(data) {
+  console.log('Review tersimpan:', data)
+  // bisa tambahkan logika refresh data job, dll.
+}
 
-// untuk validasi required
-const errors = ref({
-  rating: '',
-  comment: ''
-})
 async function getAcceptedJobs(technicianId){
   try {
     const response = await apiFetch(`/jobs/${technicianId}/accepted-jobs`)
@@ -163,49 +164,6 @@ async function getReviewByJobId(jobId, userId){
   }
 }
 
-const createRating = async() => {
-  // reset pesan error dulu
-  errors.value.rating = ''
-  errors.value.comment = ''
-  let valid = true
-
-  if (!rating.value || rating.value === 0) {
-    errors.value.rating = 'Rating wajib diisi.'
-    valid = false
-  }
-
-  if (!comment.value.trim()) {
-    errors.value.comment = 'Komentar wajib diisi.'
-    valid = false
-  }
-
-  if (!valid) return
-  const data = {
-    senderId: userId,
-    receiverId: detailJobs.value.idCreator,
-    jobId: detailJobs.value._id,
-    rating: rating.value,
-    comment: comment.value
-  }
-
-  xlDemo.value = false
-  showRatingModal.value = false
-  try {
-    const response = await apiFetch(`/review/create-review`, {
-      method: 'POST',
-      headers:{
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
-
-    sweetAlert.success(response.data.message)
-
-    
-  } catch (error) {
-    sweetAlert.error(error.message)
-  }
-}
 
 async function handleTechnicianRequest(){
   xlDemo.value = false
@@ -392,7 +350,7 @@ onMounted(async()=>{
             v-if="detailJobs?.status == 'payed done' && !review"
             class=" me-4"
             color="success"
-            @click="showRatingModal = true"
+            @click="showRatingModal = true; xlDemo = false"
           >Beri Review
         </VBtn>
 
@@ -409,38 +367,13 @@ onMounted(async()=>{
     </div>
   </div>
 </transition>
-<!-- Modal Pop-up Rating -->
-  <VDialog v-model="showRatingModal" max-width="800">
-    <VCard style="font-family: 'Poppins';">
-      <VCardTitle class="d-flex justify-between align-center">
-        <span>Form Rating</span>
-      </VCardTitle>
-
-      <div class="d-flex justify-center">
-        <CForm style="width: 90%;">
-          <CRating v-model="rating" allowClear class="my-2" />
-          <div v-if="errors.rating" class="text-danger text-sm mt-1">
-            {{ errors.rating }}
-          </div>
-          <CFormTextarea
-            id="comment"
-            label="Komentar review"
-            rows="4"
-            text="Must be 8-20 words long."
-            v-model="comment"
-            required
-          ></CFormTextarea>
-          <div v-if="errors.comment" class="text-danger text-sm mt-1">
-            {{ errors.comment }}
-          </div>
-
-          <div class="d-flex justify-end my-3">
-            <VBtn color="success" @click="createRating">Kirim Review</VBtn>
-          </div>
-        </CForm>
-      </div>
-    </VCard>
-  </VDialog>
+  <ReviewModal
+    v-model:show="showRatingModal"
+    :sender-id="userId"
+    :receiver-id="receiverId"
+    :job-id="jobId"
+    @review-submitted="handleReviewSubmitted"
+  />
 </template>
 
 <style scoped>

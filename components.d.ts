@@ -14,6 +14,7 @@ declare module 'vue' {
     LoginRegisterLayout: typeof import('./src/components/LoginRegisterLayout.vue')['default']
     MoreBtn: typeof import('./src/@core/components/MoreBtn.vue')['default']
     MultiStepForm: typeof import('./src/components/form/MultiStepForm.vue')['default']
+    ReviewModal: typeof import('./src/components/form/ReviewModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     TemplateAlertFailed: typeof import('./src/components/alert/TemplateAlertFailed.vue')['default']
