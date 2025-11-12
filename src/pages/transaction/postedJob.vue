@@ -209,6 +209,12 @@ async function getReviewByJobId(jobId, userId){
   }
 }
 
+const formatDate = (date) => {
+  if (!date || typeof date !== 'string') return '-'
+  return date.split('T')[0]
+}
+
+
 onMounted(async() => {
   await getPostedJobs()
   
@@ -300,9 +306,8 @@ onMounted(async() => {
             <div class="deadline-box mt-3">
               <label class="deadline-label">📅 Deadline Pengerjaan:</label>
               <p class="deadline-value">
-                {{ selectedJob?.deadline?.start_date?.split('T')[0] }}
-                →
-                {{ selectedJob?.deadline?.end_date?.split('T')[0] }}
+                {{ formatDate(selectedJob?.deadline?.start_date) }} →
+                {{ formatDate(selectedJob?.deadline?.end_date) }}
               </p>
             </div>
 

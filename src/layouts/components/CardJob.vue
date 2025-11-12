@@ -22,30 +22,37 @@ const stripHtml = (text) => text?.replace(/<[^>]*>/g, '').trim() ?? ''
 
 const formattedSubtext = computed(() => {
   const result = props.subtext1.map((item) => {
-    // Jika item adalah Proxy (reactive), ambil nilai mentahnya    
     const rawItem = toRaw(item)
 
-    // Jika objek tanggal
-    if (rawItem && typeof rawItem === 'object' && rawItem.start_date && rawItem.end_date) {
-      return `${formatDate(rawItem.start_date)} - ${formatDate(rawItem.end_date)}`
+    // 🔹 Jika objek deadline
+    if (rawItem && typeof rawItem === 'object' && 'start_date' in rawItem && 'end_date' in rawItem) {
+      const start = rawItem.start_date ? formatDate(rawItem.start_date) : '-'
+      const end = rawItem.end_date ? formatDate(rawItem.end_date) : '-'
+      return `${start} → ${end}`
     }
 
-    // Jika angka → format rupiah
+    // 🔹 Jika angka → format rupiah
     if (typeof rawItem === 'number') {
       return `Rp ${rawItem.toLocaleString('id-ID')}`
     }
 
-    // Jika string dengan tag HTML, hilangkan tag-nya
+    // 🔹 Jika string → hapus tag HTML
     if (typeof rawItem === 'string') {
       return rawItem.replace(/<[^>]*>/g, '').trim()
     }
 
-    // Default
+    // 🔹 Jika null atau undefined
+    if (rawItem === null || rawItem === undefined) {
+      return '-'
+    }
+
+    // 🔹 Default fallback
     return String(rawItem)
   })
 
   return result.join(', ')
 })
+
 
 // Fungsi bantu format tanggal
 function formatDate(dateStr) {

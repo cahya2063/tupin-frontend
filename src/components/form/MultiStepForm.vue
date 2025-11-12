@@ -1,6 +1,6 @@
 <script setup>
 import { apiFetch } from '@/utils/api'
-import { onMounted, ref, useId, computed } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
 import InlineEditor from '@ckeditor/ckeditor5-build-inline'
 import Swal from 'sweetalert2';
@@ -28,11 +28,10 @@ const stepperRef = ref()
 const currentStep = ref(1)
 const finish = ref(false)
 const validationState = ref(0)
-const uid = useId()
 
 const userId = localStorage.getItem('userId')
 
-const steps = ['Judul', 'Kategori', 'Keahlian', 'Deadline', 'Pengalaman', 'Budget', 'Gambar', 'Deskripsi']
+const steps = ['Judul', 'Kategori', 'Keahlian', 'Deadline', 'Pengalaman', 'Budget', 'Metode pembayaran', 'Gambar', 'Deskripsi']
 
 // langsung flat
 const options = ref([])
@@ -57,6 +56,7 @@ const vStartDate = ref(null)
 const vEndDate = ref(null)
 const experience = ref('Medioker')
 const budget = ref()
+const payment = ref('cash')
 const description = ref('')
 const photoFile = ref(null) // file akan disimpan di sini
 
@@ -84,6 +84,7 @@ async function postJob() {
   )
   formData.append('experiences', experience.value)
   formData.append('budget', budget.value)
+  formData.append('payment_method', payment.value)
   formData.append('description', description.value)
   formData.append('userId', userId)
 
@@ -93,8 +94,7 @@ async function postJob() {
 
   const response = await apiFetch('/jobs', {
     method: 'POST',
-    body: formData, // langsung FormData
-    // ❌ jangan set Content-Type
+    body: formData,
   })
   if(response.status === 201){
     Swal.fire({
@@ -175,17 +175,22 @@ onMounted(async () => {
       </template>
 
       <template #step-3="{ formRef }">
-        <form class="row g-3 pt-3" novalidate :ref="formRef">
+        <form class="row g-3 pt-3" :class="{ 'was-validated': validationState === 2 }" novalidate :ref="formRef">
           <CCol :md="4">
             <div class="title">
               skill apa yang kamu butuhkan?
             </div>
           </CCol>
           <CCol :md="6">
+            <label class="form-label fw-semibold">
+              Skill yang dibutuhkan <span class="text-danger">*</span>
+            </label>
             <CMultiSelect
               :options="options"
               multiple
               @change="skills = $event.map(opt => opt.value)"
+              novalidate
+              required
             />
           </CCol>
         </form>
@@ -274,6 +279,20 @@ onMounted(async () => {
       <template #step-7="{ formRef }">
         <form class="row g-3 pt-3" novalidate :ref="formRef">
           <CCol :md="4">
+            <div class="title">
+                Tunai atau Non-Tunai?
+            </div>
+          </CCol>
+          <CCol :md="6" class="py-3">
+            <CFormCheck class="category-radio" type="radio" id="flexRadioVModel6" inline label="cash" value="cash" v-model="payment"/>
+            <CFormCheck class="category-radio" type="radio" id="flexRadioVModel7" inline label="gateway" value="gateway" v-model="payment"/>
+          </CCol>
+        </form>
+      </template>
+
+      <template #step-8="{ formRef }">
+        <form class="row g-3 pt-3" novalidate :ref="formRef">
+          <CCol :md="4">
             <div class="title">Upload gambar alatmu</div>
           </CCol>
           <CCol :md="6" class="py-3">
@@ -282,7 +301,7 @@ onMounted(async () => {
         </form>
       </template>
 
-      <template #step-8="{ formRef }">
+      <template #step-9="{ formRef }">
         <form class="row g-3 pt-3" novalidate :ref="formRef">
           <CCol :md="4">
             <div class="title">
