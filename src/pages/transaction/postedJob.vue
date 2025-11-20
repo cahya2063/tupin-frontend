@@ -6,6 +6,7 @@ import CardJob from '@/layouts/components/CardJob.vue';
 import sweetAlert from '@/utils/sweetAlert';
 import { CForm } from '@coreui/vue-pro';
 import ReviewModal from '@/components/form/ReviewModal.vue';
+import Payment from '@/components/form/Payment.vue';
 
 const headers = [
   { title: 'User', key: 'username' },
@@ -130,7 +131,7 @@ async function handleApproveRequest(){
   const result = await sweetAlert.confirm({
     title: 'Setujui Request?',
     text: 'Apakah anda yakin ingin menyetujui teknisi yang mengajukan request untuk memperbaiki alatmu?',
-    confirmText: 'Ya, cancel!',
+    confirmText: 'Ya, Setujui!',
     cancelText: 'Batal'
   })
 
@@ -178,8 +179,11 @@ async function handleCancel() {
   }
 }
 
-const openDetail = (job) => {
+const openDetail = async(job) => {
   selectedJob.value = job
+  const profile = await apiFetch(`/profile/${job.idCreator}`)
+  selectedJob.value.creatorName = profile.data.user.nama
+  selectedJob.value.creatorEmail = profile.data.user.email
   showSidebar.value = true
 }
 
@@ -332,11 +336,17 @@ onMounted(async() => {
               Selesai diperbaiki?
             </VBtn>
 
-            <VBtn
+            <!-- <VBtn
             v-if="selectedJob?.status == 'completed'"
             class="mt-4 mx-2"
             color="success"
-            >Bayar</VBtn>
+            >Bayar</VBtn> -->
+            <Payment
+              v-show="selectedJob?.status == 'completed'"
+              :name="selectedJob?.creatorName"
+              :email="selectedJob?.creatorEmail"
+              :amount="selectedJob?.budget"
+            />
             
             <VBtn
               v-if="selectedJob?.status == 'payed done' && !review"
