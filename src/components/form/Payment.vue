@@ -43,7 +43,7 @@ async function payGateway(){
                 console.log('result : ', result);
             },
             onClose: function(result){
-                sweetAlert.info('Anda menutup popup pembayaran tanpa menyelesaikan pembayaran')
+                sweetAlert.warning('Anda menutup popup pembayaran tanpa menyelesaikan pembayaran')
             }
         })
     } catch (error) {
