@@ -9,7 +9,7 @@ const props = defineProps({
     amount: Number,
 });
 
-
+const splitRuleId = ref('splitru_fd9ed2a8-fb35-4e3e-868a-6ea37d3a749b')
 async function payGateway(){
     try {
         const data = {
@@ -50,12 +50,47 @@ async function payGateway(){
         console.error(error);
     }
 }
+
+async function payXendit(){
+    try {
+        const data = {
+            amount: props.amount,
+            customer_email: props.email,
+            split_rule_id: splitRuleId.value
+        }
+        console.log('data : ', data);
+        
+        const response = await apiFetch('/payment/create-invoice-with-split',{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        console.log('response xendit : ', response);
+
+        const payUrl = response.data.invoice.invoice_url
+        window.location.href = payUrl
+        
+    } catch (error) {
+        sweetAlert.error('gagal membuat invoice', error.message)
+        console.error(error);
+    }
+}
+
 </script>
 <template>
   <div>
     <VBtn 
-    color="success"
-    variant="elevated" class="mt-4 mx-2"
-    @click="payGateway">Bayar Sekarang</VBtn>
+        color="success"
+        variant="elevated" class="mt-4 mx-2"
+        @click="payGateway">Bayar Midtrans
+    </VBtn>
+    <VBtn 
+        color="success"
+        variant="elevated" class="mt-4 mx-2"
+        @click="payXendit">Bayar Xendit
+    </VBtn>
+
   </div>
 </template>
