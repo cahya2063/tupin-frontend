@@ -10,6 +10,7 @@ const props = defineProps({
 });
 
 const splitRuleId = ref('splitru_fd9ed2a8-fb35-4e3e-868a-6ea37d3a749b')
+const idTeknisi = ref('69314fd69fc63a5eced63052')
 async function payGateway(){
     try {
         const data = {
@@ -55,8 +56,8 @@ async function payXendit(){
     try {
         const data = {
             amount: props.amount,
-            customer_email: props.email,
-            split_rule_id: splitRuleId.value
+            email: props.email,
+            teknisiAccountId: idTeknisi.value // sub-account teknisi
         }
         console.log('data : ', data);
         
