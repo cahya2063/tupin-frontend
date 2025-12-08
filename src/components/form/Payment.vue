@@ -61,7 +61,7 @@ async function payXendit(){
         }
         console.log('data : ', data);
         
-        const response = await apiFetch('/payment/create-invoice-with-split',{
+        const response = await apiFetch('/payment/create-invoice',{
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
