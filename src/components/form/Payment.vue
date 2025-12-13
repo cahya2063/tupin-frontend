@@ -68,6 +68,7 @@ async function payXendit(){
         }
         console.log('data : ', data);
         
+        
         const response = await apiFetch('/payment/create-invoice',{
             method: 'POST',
             headers: {
