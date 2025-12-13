@@ -33,7 +33,8 @@ function handleReviewSubmitted(data) {
 }
 // avatars creator
 const avatars = ref({}) 
-// avatars untuk invites per job
+
+// avatars untuk teknisi per job
 const invitesAvatars = ref({})  
 
 const isCancelable = computed(() => 
@@ -54,6 +55,7 @@ async function getPostedJobs(){
   }
 }
 
+// fungsi untuk ambil avatar profile
 const getProfile = async (id, type = 'creator', jobId = null) => {
   if (!id) return
 
@@ -76,6 +78,21 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
       userId: id,
       avatar: response.data.user.avatar,
     })
+  }
+}
+
+async function getSubAccountId(teknisiId){
+  try{
+    const response = await apiFetch(`/profile/${teknisiId}`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    return response.data.user.subAccountId
+  }catch (error){
+    sweetAlert.error(error.message)
   }
 }
 
@@ -182,8 +199,10 @@ async function handleCancel() {
 const openDetail = async(job) => {
   selectedJob.value = job
   const profile = await apiFetch(`/profile/${job.idCreator}`)
+  const subAccountId = await getSubAccountId(selectedJob.value.selectedTechnician)
   selectedJob.value.creatorName = profile.data.user.nama
   selectedJob.value.creatorEmail = profile.data.user.email
+  selectedJob.value.subAccountId = subAccountId
   showSidebar.value = true
 }
 
@@ -346,6 +365,10 @@ onMounted(async() => {
               :name="selectedJob?.creatorName"
               :email="selectedJob?.creatorEmail"
               :amount="selectedJob?.budget"
+              :sub-account-id="selectedJob.subAccountId"
+              :job-id="selectedJob?._id"
+              :payer-id="selectedJob?.idCreator"
+              :receiver-id="selectedJob?.selectedTechnician"
             />
             
             <VBtn

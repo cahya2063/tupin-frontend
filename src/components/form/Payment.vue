@@ -7,9 +7,14 @@ const props = defineProps({
     name: String,
     email: String,
     amount: Number,
+    subAccountId: String,
+    jobId: String,
+    payerId: String,
+    receiverId: String
 });
 
-const splitRuleId = ref('splitru_fd9ed2a8-fb35-4e3e-868a-6ea37d3a749b')
+// const splitRuleId = ref('splitru_fd9ed2a8-fb35-4e3e-868a-6ea37d3a749b')
+// const idTeknisi = ref(props.subAccountId)
 async function payGateway(){
     try {
         const data = {
@@ -56,12 +61,16 @@ async function payXendit(){
     try {
         const data = {
             amount: props.amount,
-            customer_email: props.email,
-            split_rule_id: splitRuleId.value
+            payer_email: props.email,
+            subAccountId: props.subAccountId, // sub-account teknisi
+            jobId: props.jobId,
+            payerId: props.payerId,
+            receiverId: props.receiverId
         }
         console.log('data : ', data);
         
-        const response = await apiFetch('/payment/create-invoice-with-split',{
+        
+        const response = await apiFetch('/payment/create-invoice',{
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
