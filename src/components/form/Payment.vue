@@ -7,10 +7,14 @@ const props = defineProps({
     name: String,
     email: String,
     amount: Number,
+    subAccountId: String,
+    jobId: String,
+    payerId: String,
+    receiverId: String
 });
 
-const splitRuleId = ref('splitru_fd9ed2a8-fb35-4e3e-868a-6ea37d3a749b')
-const idTeknisi = ref('69314fd69fc63a5eced63052')
+// const splitRuleId = ref('splitru_fd9ed2a8-fb35-4e3e-868a-6ea37d3a749b')
+// const idTeknisi = ref(props.subAccountId)
 async function payGateway(){
     try {
         const data = {
@@ -56,8 +60,11 @@ async function payXendit(){
     try {
         const data = {
             amount: props.amount,
-            email: props.email,
-            teknisiAccountId: idTeknisi.value // sub-account teknisi
+            payer_email: props.email,
+            subAccountId: props.subAccountId, // sub-account teknisi
+            jobId: props.jobId,
+            payerId: props.payerId,
+            receiverId: props.receiverId
         }
         console.log('data : ', data);
         
