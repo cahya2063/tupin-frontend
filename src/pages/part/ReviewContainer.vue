@@ -1,5 +1,5 @@
 <script setup>
-import { apiFetch } from '@/utils/api';
+import { apiFetch, getProfile } from '@/utils/api';
 import sweetAlert from '@/utils/sweetAlert';
 import avatar1 from '@images/avatars/avatar-1.png'
 import { onMounted } from 'vue';
@@ -13,14 +13,6 @@ const props = defineProps({
 // Data dummy ulasan
 const reviews = ref([])
 
-async function getProfile(id){
-  try {
-    const response = await apiFetch(`/profile/${id}`)
-    return response.data.user
-  } catch (error) {
-    sweetAlert.error(error.message)
-  }
-}
 async function getReviewByUserId(id){
   try {    
     const response = await apiFetch(`/review/${id}/get-review`)

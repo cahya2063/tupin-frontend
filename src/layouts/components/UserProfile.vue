@@ -1,5 +1,5 @@
 <script setup>
-import { apiFetch } from '@/utils/api'
+import { apiFetch, getProfile } from '@/utils/api'
 import avatar1 from '@images/avatars/avatar-1.png'
 import { onMounted, ref } from 'vue'
 
@@ -15,22 +15,6 @@ function logout() {
   localStorage.removeItem('userId')
   localStorage.removeItem('role')
   router.push('/login')
-}
-
-async function getProfile(userId){
-  try {
-    
-    const response = await apiFetch(`/profile/${userId}`,{
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    return response.data.user
-  } catch (error) {
-    console.error(error);
-    
-  }
 }
 
 onMounted(async()=>{

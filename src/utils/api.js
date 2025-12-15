@@ -32,3 +32,18 @@ export async function apiFetch(url, options = {}) {
   }
 }
 
+export async function getProfile(userId){
+  try {
+    
+    const response = await apiFetch(`/profile/${userId}`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    return response.data.user
+  } catch (error) {
+    console.error(error);
+    
+  }
+}
