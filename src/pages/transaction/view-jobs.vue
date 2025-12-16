@@ -1,5 +1,5 @@
 <script setup>
-import { apiFetch } from '@/utils/api';
+import { apiFetch, getProfile } from '@/utils/api';
 import { onMounted, ref } from 'vue';
 import avatar1 from '@images/avatars/avatar-1.png'
 import CardJob from '@/layouts/components/CardJob.vue';
@@ -66,21 +66,7 @@ const getAvatar = async (id, type = 'creator', jobId = null) => {
   }
 }
 
-async function getProfile(userId){
-  try {
-    
-    const response = await apiFetch(`/profile/${userId}`,{
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    return response.data.user
-  } catch (error) {
-    console.error(error);
-    
-  }
-}
+
 async function getDetailJobs(id) {
   const response = await apiFetch(`/jobs/${id}`)
   detailJobs.value = response.data.job

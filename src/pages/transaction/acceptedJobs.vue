@@ -1,5 +1,5 @@
 <script setup>
-import { apiFetch } from '@/utils/api';
+import { apiFetch, getProfile } from '@/utils/api';
 import { onMounted, ref } from 'vue';
 import avatar1 from '@images/avatars/avatar-1.png'
 import sweetAlert from '@/utils/sweetAlert';
@@ -54,21 +54,6 @@ async function getAcceptedJobs(technicianId){
   }
 }
 
-async function getProfile(userId){
-  try {
-    
-    const response = await apiFetch(`/profile/${userId}`,{
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    return response.data.user
-  } catch (error) {
-    console.error(error);
-    
-  }
-}
 
 async function getDetailJobs(id) {
   try {

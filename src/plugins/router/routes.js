@@ -32,11 +32,15 @@ export const routes = [
         path: 'accepted-jobs',
         component: ()=> import('@/pages/transaction/acceptedJobs.vue')
       },
-      // bawaan template
+      {
+        path: 'wallet',
+        component: ()=> import('@/pages/transaction/wallet.vue')
+      },
       {
         path: 'account-settings',
         component: () => import('@/pages/account-settings.vue'),
       },
+      // bawaan template
       {
         path: 'typography',
         component: () => import('@/pages/typography.vue'),
