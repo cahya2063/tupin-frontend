@@ -7,6 +7,7 @@ const balance = ref(0)
 const amount = ref('')
 const error = ref('')
 const showSuccess = ref(false)
+const subAccountId = ref('')
 
 const technician = ref()
 
@@ -34,38 +35,31 @@ async function getBalance(subAccountId){
 
 
 
-const withdraw = () => {
-    console.log('test');
+const withdraw = async() => {
+  const channelName = 'BCA'
+  console.log(`debug payout : ${userId}, ${balance.value}, ${channelName}, ${withdrawAmount.value}`);
+  const request = {
+    technicianId: userId,
+    amount: withdrawAmount.value,
+    channelName,
+  }
+    const response = await apiFetch('/payment/create-payout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request)
+    })
+    console.log('response : ', response.data);
     
-//   if (!withdrawAmount.value || withdrawAmount.value <= 0) {
-//     error.value = 'Masukkan nominal yang valid'
-//     return
-//   }
 
-//   if (withdrawAmount.value < 10000) {
-//     error.value = 'Minimal penarikan Rp 10.000'
-//     return
-//   }
-
-//   if (withdrawAmount.value > saldo.value) {
-//     error.value = 'Saldo tidak mencukupi'
-//     return
-//   }
-
-//   error.value = ''
-//   showSuccess.value = true
-//   saldo.value -= withdrawAmount.value
-
-//   setTimeout(() => {
-//     showSuccess.value = false
-//     amount.value = ''
-//   }, 2500)
 }
 
 onMounted(async()=>{
     const profile = await getProfile(userId)
 
-    const response = await getBalance(profile.subAccountId)
+    subAccountId.value = profile.subAccountId
+    const response = await getBalance(subAccountId.value)
     balance.value = response.balance
     
     
