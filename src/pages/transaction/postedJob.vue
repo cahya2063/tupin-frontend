@@ -199,10 +199,12 @@ async function handleCancel() {
 const openDetail = async(job) => {
   selectedJob.value = job
   const profile = await apiFetch(`/profile/${job.idCreator}`)
-  const subAccountId = await getSubAccountId(selectedJob.value.selectedTechnician)
+  if(selectedJob.value.selectedTechnician){
+    const subAccountId = await getSubAccountId(selectedJob.value.selectedTechnician)
+    selectedJob.value.subAccountId = subAccountId
+  }
   selectedJob.value.creatorName = profile.data.user.nama
   selectedJob.value.creatorEmail = profile.data.user.email
-  selectedJob.value.subAccountId = subAccountId
   showSidebar.value = true
 }
 

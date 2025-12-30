@@ -20,6 +20,11 @@ const menuItems = computed(() => {
         icon: 'ri-briefcase-line',
         to: '/posted-jobs',
       },
+      {
+        title: 'Riwayat Pembayaran',
+        icon: 'ri-history-line',
+        to: '/payment-history',
+      }
     ]
   }
 
@@ -81,13 +86,7 @@ const menuItems = computed(() => {
       to: '/chat-view',
     }"
   />
-  <VerticalNavLink
-    :item="{
-      title: 'History Pembayaran',
-      icon: 'ri-history-line',
-      to: '/payment-history',
-    }"
-  />
+
   <VerticalNavLink
     :item="{
       title: 'Calendar',

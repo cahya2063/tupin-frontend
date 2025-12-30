@@ -38,7 +38,8 @@ export const routes = [
       },
       {
         path: 'payment-history',
-        component: ()=> import('@/pages/transaction/paymentHistory.vue')
+        component: ()=> import('@/pages/transaction/paymentHistory.vue'),
+        // meta: { roles: ['client'] }
       },
       {
         path: 'account-settings',

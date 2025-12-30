@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { routes } from './routes'
+// import sweetAlert from '@/utils/sweetAlert'
+// import {jwtDecode} from 'jwt-decode' // ✅ WAJIB
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,10 +20,20 @@ router.beforeEach((to, from, next) => {
       path: '/login',
     })
   }
-    if (token && (to.path === '/login' || to.path === '/register' || to.path === '/')) {
-      // Kalau sudah login → redirect ke dashboard
-      return next({ path: '/dashboard' })
-    }
+  if (token && (to.path === '/login' || to.path === '/register' || to.path === '/')) {
+    // Kalau sudah login → redirect ke dashboard
+    return next({ path: '/dashboard' })
+  }
+  // if (to.meta?.roles) {
+  //   const decoded = jwtDecode(token)
+  //   const userRole = decoded.role
+  //   console.log('userRole : ', userRole);
+    
+  //   if (!to.meta.roles.includes(userRole)) {
+  //     sweetAlert.error('Unauthorized access')
+  //     return next('/dashboard')
+  //   }
+  // }
 
   next()
 })
