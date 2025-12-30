@@ -33,8 +33,6 @@ async function getBalance(subAccountId){
     
 }
 
-
-
 const withdraw = async() => {
   const channelName = 'BCA'
   console.log(`debug payout : ${userId}, ${balance.value}, ${channelName}, ${withdrawAmount.value}`);

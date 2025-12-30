@@ -95,7 +95,7 @@ const toggleShow = () => {
               variant="elevated"
             >
               {{ status }}
-            </VChip>
+        </VChip>
     </div>
 
     <div class="title">{{ title }}</div>

@@ -83,6 +83,13 @@ const menuItems = computed(() => {
   />
   <VerticalNavLink
     :item="{
+      title: 'History Pembayaran',
+      icon: 'ri-history-line',
+      to: '/payment-history',
+    }"
+  />
+  <VerticalNavLink
+    :item="{
       title: 'Calendar',
       icon: 'ri-calendar-line',
       href: 'https://demos.themeselection.com/materio-vuetify-vuejs-admin-template/demo-1/apps/calendar',
