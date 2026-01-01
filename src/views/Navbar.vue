@@ -1,10 +1,10 @@
 <script setup>
-import { ref } from 'vue';
+import { ref } from 'vue'
 
-const isMenuOpen = ref(false);
+const isMenuOpen = ref(false)
 
 function toggleMenu() {
-  isMenuOpen.value = !isMenuOpen.value;
+  isMenuOpen.value = !isMenuOpen.value
 }
 </script>
 
@@ -16,7 +16,12 @@ function toggleMenu() {
       alt="logo"
       width="300"
     />
-    <button class="hamburger" @click="toggleMenu">☰</button>
+    <button
+      class="hamburger"
+      @click="toggleMenu"
+    >
+      ☰
+    </button>
 
     <!-- Hanya untuk desktop -->
     <ul class="desktop-menu">
@@ -24,26 +29,56 @@ function toggleMenu() {
       <li><a href="#">Link</a></li>
       <li><a href="#">Profile</a></li>
       <li><a href="#">Menu</a></li>
-      <li><RouterLink to="/login" class="login">Login</RouterLink></li>
+      <li>
+        <RouterLink
+          to="/login"
+          class="login"
+          >Login</RouterLink
+        >
+      </li>
 
-      <li><RouterLink to="/register" class="register">Register</RouterLink></li>
+      <li>
+        <RouterLink
+          to="/register"
+          class="register"
+          >Register</RouterLink
+        >
+      </li>
     </ul>
   </div>
 
   <!-- Sidebar (mobile only) -->
-  <div class="sidebar" :class="{ open: isMenuOpen }">
-    <button class="close-btn" @click="toggleMenu">✕</button>
+  <div
+    class="sidebar"
+    :class="{ open: isMenuOpen }"
+  >
+    <button
+      class="close-btn"
+      @click="toggleMenu"
+    >
+      ✕
+    </button>
     <ul>
       <li><a href="#">Home</a></li>
       <li><a href="#">Link</a></li>
       <li><a href="#">Profile</a></li>
       <li><a href="#">Menu</a></li>
       <li><RouterLink to="/login">Login</RouterLink></li>
-      <li><RouterLink to="/register" class="register">Register</RouterLink></li>
+      <li>
+        <RouterLink
+          to="/register"
+          class="register"
+          >Register</RouterLink
+        >
+      </li>
     </ul>
   </div>
 
-  <div v-if="isMenuOpen" class="overlay" @click="toggleMenu"></div>
+  <div
+    v-if="isMenuOpen"
+    class="overlay"
+    @click="toggleMenu"
+  ></div>
 </template>
 
 <style scoped>
@@ -132,9 +167,9 @@ a {
 }
 
 .sidebar ul {
-  display: flex;           /* Aktifkan flex container */
-  flex-wrap: wrap;         /* Biar kalau sempit bisa turun ke baris baru */
-  gap: 20px;               /* Jarak antar item */
+  display: flex; /* Aktifkan flex container */
+  flex-wrap: wrap; /* Biar kalau sempit bisa turun ke baris baru */
+  gap: 20px; /* Jarak antar item */
   padding: 0;
   margin-top: 60px;
   list-style: none;
@@ -198,4 +233,3 @@ a {
   }
 }
 </style>
-

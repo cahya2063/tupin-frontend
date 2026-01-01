@@ -42,21 +42,11 @@ const desserts = [
   <VTable density="compact">
     <thead>
       <tr>
-        <th class="text-uppercase">
-          Dessert (100g serving)
-        </th>
-        <th class="text-center text-uppercase">
-          Calories
-        </th>
-        <th class="text-center text-uppercase">
-          Fat (g)
-        </th>
-        <th class="text-center text-uppercase">
-          Carbs (g)
-        </th>
-        <th class="text-center text-uppercase">
-          Protein (g)
-        </th>
+        <th class="text-uppercase">Dessert (100g serving)</th>
+        <th class="text-center text-uppercase">Calories</th>
+        <th class="text-center text-uppercase">Fat (g)</th>
+        <th class="text-center text-uppercase">Carbs (g)</th>
+        <th class="text-center text-uppercase">Protein (g)</th>
       </tr>
     </thead>
     <tbody>

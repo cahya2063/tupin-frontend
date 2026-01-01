@@ -23,7 +23,10 @@ const props = defineProps({
   },
 })
 
-const isPositive = controlledComputed(() => props.change, () => Math.sign(props.change) === 1)
+const isPositive = controlledComputed(
+  () => props.change,
+  () => Math.sign(props.change) === 1,
+)
 </script>
 
 <template>
@@ -54,9 +57,7 @@ const isPositive = controlledComputed(() => props.change, () => Math.sign(props.
               :icon="isPositive ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"
               size="24"
             />
-            <span class="text-base">
-              {{ Math.abs(props.change) }}%
-            </span>
+            <span class="text-base"> {{ Math.abs(props.change) }}% </span>
           </div>
         </div>
       </div>

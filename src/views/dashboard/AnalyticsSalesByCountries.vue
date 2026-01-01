@@ -114,9 +114,7 @@ const moreList = [
               <h6 class="text-h6 mb-1">
                 {{ data.sales }}
               </h6>
-              <div class="text-body-2 text-disabled text-end">
-                Sales
-              </div>
+              <div class="text-body-2 text-disabled text-end">Sales</div>
             </div>
           </template>
         </VListItem>
@@ -125,8 +123,8 @@ const moreList = [
   </VCard>
 </template>
 
-  <style lang="scss" scoped>
-  .card-list {
-    --v-card-list-gap: 0.875rem;
-  }
-  </style>
+<style lang="scss" scoped>
+.card-list {
+  --v-card-list-gap: 0.875rem;
+}
+</style>

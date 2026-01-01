@@ -35,8 +35,7 @@ async function loginUser() {
     const result = response.data
     alertMessage.value = result.message
     statusCode.value = response.status
-    
-    
+
     if (response.status === 200 && result.token) {
       localStorage.setItem('token', result.token)
       localStorage.setItem('userId', result.data.id)
@@ -55,42 +54,73 @@ async function loginUser() {
 <template>
   <div class="container-form">
     <p class="teks-login-3">Login Aplikasi</p>
-    <TemplateAlertSuccess v-show="statusCode == 200" :message="alertMessage" :duration="5"/>
-    <TemplateAlertFailed v-show="statusCode != 200" :message="alertMessage" :duration="5"/>
+    <TemplateAlertSuccess
+      v-show="statusCode == 200"
+      :message="alertMessage"
+      :duration="5"
+    />
+    <TemplateAlertFailed
+      v-show="statusCode != 200"
+      :message="alertMessage"
+      :duration="5"
+    />
 
     <p>
       Belum punya akun?
-      <RouterLink to="/register" class="router">Daftar</RouterLink>
+      <RouterLink
+        to="/register"
+        class="router"
+        >Daftar</RouterLink
+      >
     </p>
 
-    <form @submit.prevent="loginUser" method="post">
-      <TemplateForm v-model="email" name="email" type="email" width="65%" placeholder="Masukkan emailmu..." />
-      <TemplateForm v-model="password" name="password" type="password" width="65%" placeholder="Masukkan passwordmu..." />
+    <form
+      @submit.prevent="loginUser"
+      method="post"
+    >
+      <TemplateForm
+        v-model="email"
+        name="email"
+        type="email"
+        width="65%"
+        placeholder="Masukkan emailmu..."
+      />
+      <TemplateForm
+        v-model="password"
+        name="password"
+        type="password"
+        width="65%"
+        placeholder="Masukkan passwordmu..."
+      />
       <br />
-      <TemplateButton content="Login" width="66%" height="50px" />
+      <TemplateButton
+        content="Login"
+        width="66%"
+        height="50px"
+      />
     </form>
   </div>
 </template>
 
 <style scoped>
-.container-form{
-    display: flex;
-    flex-direction: column;
-    margin-block: auto;
-    width: 95%;
-    height: 480px;
-    background-color: #dae0e461;
-    margin-inline: auto;
-    border-radius: 15px;
-    text-align: center;
-    padding-top: 30px;
+.container-form {
+  display: flex;
+  flex-direction: column;
+  margin-block: auto;
+  width: 95%;
+  height: 480px;
+  background-color: #dae0e461;
+  margin-inline: auto;
+  border-radius: 15px;
+  text-align: center;
+  padding-top: 30px;
 }
-.teks-login-3{
-    margin-block: 20px;
-    font-size: 20px;
-    color: black;
+.teks-login-3 {
+  margin-block: 20px;
+  font-size: 20px;
+  color: black;
 }
-.router{
-    text-decoration: none;
+.router {
+  text-decoration: none;
 }
 </style>

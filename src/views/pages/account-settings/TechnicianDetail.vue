@@ -1,17 +1,15 @@
 <script setup>
-import { useRoute } from 'vue-router';
+import { useRoute } from 'vue-router'
 import avatar1 from '@images/avatars/avatar-1.png'
-import { apiFetch } from '@/utils/api';
-import { ref } from 'vue';
-import Swal from 'sweetalert2';
-import ReviewContainer from '@/pages/part/ReviewContainer.vue';
+import { apiFetch } from '@/utils/api'
+import { ref } from 'vue'
+import Swal from 'sweetalert2'
+import ReviewContainer from '@/pages/part/ReviewContainer.vue'
 
 const route = useRoute()
-const technicianId = route.params.id      // dari :id di path
-const jobId = route.query.jobId           // dari query ?jobId=...
+const technicianId = route.params.id // dari :id di path
+const jobId = route.query.jobId // dari query ?jobId=...
 const detailJobs = ref()
-
-
 
 const accountDataLocal = ref({
   id: '',
@@ -44,10 +42,6 @@ async function getProfile() {
       zip_code: response.data.user.zip_code || '',
       avatar: response.data.user.avatar || null, // default avatar jika kosong
     }
-
-
-    
-    
   } catch (err) {
     console.error(err.message)
   }
@@ -56,40 +50,38 @@ async function getProfile() {
 async function getDetailJobs(id) {
   const response = await apiFetch(`/jobs/${id}`)
   detailJobs.value = response.data.job
-  
 }
 
-async function chooseTechnician(technicianId, jobId){
-  try{
+async function chooseTechnician(technicianId, jobId) {
+  try {
     const data = {
       clientId: localStorage.getItem('userId'),
-      technicianId: technicianId
+      technicianId: technicianId,
     }
-    
+
     const response = await apiFetch(`/jobs/${jobId}/choose-technician`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     })
-    if(response.status == 200){
-
+    if (response.status == 200) {
       Swal.fire({
         title: 'Sukses',
         text: response.data.message,
         icon: 'success',
         confirmButtonText: 'OK',
-        confirmButtonColor: '#16a34a'
+        confirmButtonColor: '#16a34a',
       })
-    }    
-  }catch(error){
+    }
+  } catch (error) {
     Swal.fire({
       title: 'Gagal',
       text: 'gagal menyetujui teknisi',
       icon: 'error',
       confirmButtonText: 'OK',
-      confirmButtonColor: '#dc2626'
+      confirmButtonColor: '#dc2626',
     })
   }
 }
@@ -98,11 +90,10 @@ onMounted(async () => {
   getProfile()
   getDetailJobs(jobId)
 })
-
 </script>
 
 <template>
-    <VRow>
+  <VRow>
     <VCol cols="12">
       <VCard title="Account Details">
         <VCardText class="d-flex">
@@ -111,11 +102,8 @@ onMounted(async () => {
             rounded="lg"
             size="100"
             class="me-6"
-            :image="accountDataLocal.avatar 
-    ? `http://localhost:3000${accountDataLocal.avatar}` 
-    : avatar1"
+            :image="accountDataLocal.avatar ? `http://localhost:3000${accountDataLocal.avatar}` : avatar1"
           />
-
         </VCardText>
 
         <VDivider />
@@ -125,7 +113,10 @@ onMounted(async () => {
           <VForm class="mt-6">
             <VRow>
               <!-- 👉 ID -->
-              <VCol md="6" cols="12">
+              <VCol
+                md="6"
+                cols="12"
+              >
                 <VTextField
                   v-model="accountDataLocal.id"
                   label="ID"
@@ -135,7 +126,10 @@ onMounted(async () => {
               </VCol>
 
               <!-- 👉 Name -->
-              <VCol md="6" cols="12">
+              <VCol
+                md="6"
+                cols="12"
+              >
                 <VTextField
                   v-model="accountDataLocal.name"
                   label="Nama"
@@ -145,7 +139,10 @@ onMounted(async () => {
               </VCol>
 
               <!-- 👉 Email -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.email"
                   label="E-mail"
@@ -155,10 +152,11 @@ onMounted(async () => {
                 />
               </VCol>
 
-              
-
               <!-- 👉 Phone -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.phone_number"
                   label="No. Handphone"
@@ -168,7 +166,10 @@ onMounted(async () => {
               </VCol>
 
               <!-- 👉 Address -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.address"
                   label="Alamat"
@@ -178,7 +179,10 @@ onMounted(async () => {
               </VCol>
 
               <!-- 👉 village -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.village"
                   label="Desa/Kelurahan"
@@ -188,7 +192,10 @@ onMounted(async () => {
               </VCol>
 
               <!-- 👉 subdistrict -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.subdistrict"
                   label="Kecamatan"
@@ -198,7 +205,10 @@ onMounted(async () => {
               </VCol>
 
               <!-- 👉 city -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VSelect
                   v-model="accountDataLocal.city"
                   label="Kabupaten"
@@ -209,16 +219,28 @@ onMounted(async () => {
               </VCol>
 
               <!-- 👉 Zip Code -->
-              <VCol cols="12" md="6" v-if="!detailJobs?.selectedTechnician">
+              <VCol
+                cols="12"
+                md="6"
+                v-if="!detailJobs?.selectedTechnician"
+              >
                 <VBtn @click="chooseTechnician(accountDataLocal.id, jobId)">Accept</VBtn>
               </VCol>
 
-              <VCol cols="12" md="6" v-else>
-                <VAlert type="info" variant="tonal" border="start" color="primary">
+              <VCol
+                cols="12"
+                md="6"
+                v-else
+              >
+                <VAlert
+                  type="info"
+                  variant="tonal"
+                  border="start"
+                  color="primary"
+                >
                   Teknisi sudah dipilih untuk job ini.
                 </VAlert>
               </VCol>
-
             </VRow>
           </VForm>
         </VCardText>
@@ -230,14 +252,10 @@ onMounted(async () => {
       <VCard title="Data Sertifikat">
         <VCardText>
           <div>
-            <VCheckbox
-              
-              label="I confirm my account deactivation"
-            />
+            <VCheckbox label="I confirm my account deactivation" />
           </div>
 
           <VBtn
-            
             color="error"
             class="mt-3"
           >
@@ -246,10 +264,6 @@ onMounted(async () => {
         </VCardText>
       </VCard>
     </VCol>
-    <ReviewContainer :userId="accountDataLocal.id"/>
+    <ReviewContainer :userId="accountDataLocal.id" />
   </VRow>
 </template>
-
-
-
-

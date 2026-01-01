@@ -12,8 +12,6 @@ import CardStatisticsVertical from '@core/components/cards/CardStatisticsVertica
 
 import { apiFetch } from '@/utils/api'
 
-
-
 const totalProfit = {
   title: 'Total Profit',
   color: 'secondary',

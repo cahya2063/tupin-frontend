@@ -95,9 +95,7 @@ const checkbox = ref(false)
         cols="12"
         class="d-flex gap-4"
       >
-        <VBtn type="submit">
-          Submit
-        </VBtn>
+        <VBtn type="submit"> Submit </VBtn>
 
         <VBtn
           type="reset"

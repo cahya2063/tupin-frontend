@@ -57,22 +57,16 @@ const moreList = [
 
     <VCardText>
       <div class="d-flex align-center">
-        <h3 class="text-h3">
-          $24,895
-        </h3>
+        <h3 class="text-h3">$24,895</h3>
 
         <VIcon
           size="24"
           icon="ri-arrow-up-s-line"
           color="success"
         />
-        <div class="text-success">
-          10%
-        </div>
+        <div class="text-success">10%</div>
       </div>
-      <div class="text-body-1 mb-12">
-        Compared to $84,325 last year
-      </div>
+      <div class="text-body-1 mb-12">Compared to $84,325 last year</div>
 
       <VList class="card-list">
         <VListItem

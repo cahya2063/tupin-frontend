@@ -46,7 +46,8 @@ const moreList = [
   <VCard title="Transactions">
     <template #subtitle>
       <p class="text-body-1 mb-0">
-        <span class="d-inline-block font-weight-medium text-high-emphasis">Total 48.5% Growth</span> <span class="text-high-emphasis">😎</span> this month
+        <span class="d-inline-block font-weight-medium text-high-emphasis">Total 48.5% Growth</span>
+        <span class="text-high-emphasis">😎</span> this month
       </p>
     </template>
 
