@@ -1,21 +1,19 @@
 <script setup>
-import { apiFetch } from '@/utils/api';
-import { onMounted, ref } from 'vue';
+import { apiFetch } from '@/utils/api'
+import { onMounted, ref } from 'vue'
 
 const payment = ref([])
 const selectedInvoice = ref(null)
-const isActive = ref(false);
-async function getInvoices(userId){
-    
-    const response = await apiFetch(`/payment/get-invoice/${userId}`)
-    payment.value = response.data
-    
+const isActive = ref(false)
+async function getInvoices(userId) {
+  const response = await apiFetch(`/payment/get-invoice/${userId}`)
+  payment.value = response.data
 }
-const openDetailInvoice = (invoice) => {
+const openDetailInvoice = invoice => {
   selectedInvoice.value = invoice
   isActive.value = true
 }
-const paymentUrl = (url)=>{
+const paymentUrl = url => {
   window.location.href = url
 }
 function formatDate(dateString) {
@@ -24,17 +22,14 @@ function formatDate(dateString) {
   const day = date.getDate().toString().padStart(2, '0')
   const year = date.getFullYear()
 
-  const monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
-  ]
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
   const month = monthNames[date.getMonth()]
 
   return `${day} - ${month} - ${year}`
 }
 function getStatusColor(status) {
-    switch (status) {
+  switch (status) {
     case 'SETTLED':
       return 'success'
     case 'PENDING':
@@ -50,29 +45,31 @@ function getStatusColor(status) {
 // const openDetailInvoice = (id)=>{
 //   isActive.value = true
 //   console.log(`test${id}`);
-  
+
 // }
 
-onMounted(async()=>{
-    const userId = localStorage.getItem('userId');
-    // console.log('userId : ', userId);
-    
-    await getInvoices(userId);
-    console.log('invoice : ',payment.value.invoices);
+onMounted(async () => {
+  const userId = localStorage.getItem('userId')
+  // console.log('userId : ', userId);
+
+  await getInvoices(userId)
+  console.log('invoice : ', payment.value.invoices)
 })
 </script>
 
 <template>
-<div class="container">
-
-    <CCard class="payment-card" v-for="(item, i) in payment.invoices">
+  <div class="container">
+    <CCard
+      class="payment-card"
+      v-for="(item, i) in payment.invoices"
+    >
       <CCardBody @click="openDetailInvoice(item)">
         <!-- Header -->
         <div class="header">
           <span class="month">{{ item.external_id }}</span>
           <span class="date">{{ formatDate(item.created) }}</span>
         </div>
-  
+
         <!-- Content -->
         <div class="content">
           <div class="row">
@@ -86,12 +83,12 @@ onMounted(async()=>{
               {{ item.status }}
             </VChip>
           </div>
-  
+
           <div class="row">
             <span class="label">Penerima : </span>
             <span class="value">{{ item.merchant_name }}</span>
           </div>
-  
+
           <div class="row right">
             <span class="label">Total Pembayaran</span>
             <span class="value amount">Rp {{ item.amount.toLocaleString('id-ID') }}</span>
@@ -101,128 +98,136 @@ onMounted(async()=>{
     </CCard>
 
     <VDialog
-  v-model="isActive"
-  transition="dialog-bottom-transition"
-  width="500"
->
-  <VCard v-if="selectedInvoice" class="rounded-lg">
-    <VToolbar color="primary" class="px-4">
-      <VIcon icon="mdi-receipt-text-outline" class="mr-3"></VIcon>
-      <VToolbarTitle class="font-weight-bold">Detail Pembayaran</VToolbarTitle>
-      <!-- <VSpacer></VSpacer> -->
-      <!-- <VBtn icon="mdi-close" variant="text" @click="isActive = false"></VBtn> -->
-    </VToolbar>
-
-    <VCardText class="pa-6">
-      <div class="d-flex justify-space-between align-center mb-6">
-        <span class="text-subtitle-1 text-grey-darken-1">Status Transaksi</span>
-        <VChip
-          :color="getStatusColor(selectedInvoice.status)"
-          class="font-weight-bold"
-          variant="flat"
+      v-model="isActive"
+      transition="dialog-bottom-transition"
+      width="500"
+    >
+      <VCard
+        v-if="selectedInvoice"
+        class="rounded-lg"
+      >
+        <VToolbar
+          color="primary"
+          class="px-4"
         >
-          {{ selectedInvoice.status }}
-        </VChip>
-      </div>
+          <VIcon
+            icon="mdi-receipt-text-outline"
+            class="mr-3"
+          ></VIcon>
+          <VToolbarTitle class="font-weight-bold">Detail Pembayaran</VToolbarTitle>
+          <!-- <VSpacer></VSpacer> -->
+          <!-- <VBtn icon="mdi-close" variant="text" @click="isActive = false"></VBtn> -->
+        </VToolbar>
 
-      <VList lines="two" class="pa-0">
-        <VListItem class="px-0">
-          <template v-slot:prepend>
-            <VIcon color="primary">mdi-identifier</VIcon>
-          </template>
-          <VListItemTitle class="text-caption text-grey">Invoice ID</VListItemTitle>
-          <VListItemSubtitle class="text-body-1 font-weight-medium text-black">
-            {{ selectedInvoice.external_id }}
-          </VListItemSubtitle>
-        </VListItem>
+        <VCardText class="pa-6">
+          <div class="d-flex justify-space-between align-center mb-6">
+            <span class="text-subtitle-1 text-grey-darken-1">Status Transaksi</span>
+            <VChip
+              :color="getStatusColor(selectedInvoice.status)"
+              class="font-weight-bold"
+              variant="flat"
+            >
+              {{ selectedInvoice.status }}
+            </VChip>
+          </div>
 
-        <VDivider class="my-1"></VDivider>
+          <VList
+            lines="two"
+            class="pa-0"
+          >
+            <VListItem class="px-0">
+              <template v-slot:prepend>
+                <VIcon color="primary">mdi-identifier</VIcon>
+              </template>
+              <VListItemTitle class="text-caption text-grey">Invoice ID</VListItemTitle>
+              <VListItemSubtitle class="text-body-1 font-weight-medium text-black">
+                {{ selectedInvoice.external_id }}
+              </VListItemSubtitle>
+            </VListItem>
 
-        <VListItem class="px-0">
-          <template v-slot:prepend>
-            <VIcon color="primary">mdi-storefront-outline</VIcon>
-          </template>
-          <VListItemTitle class="text-caption text-grey">Penerima</VListItemTitle>
-          <VListItemSubtitle class="text-body-1 font-weight-medium text-black">
-            {{ selectedInvoice.merchant_name }}
-          </VListItemSubtitle>
-        </VListItem>
+            <VDivider class="my-1"></VDivider>
 
-        <VDivider class="my-1"></VDivider>
+            <VListItem class="px-0">
+              <template v-slot:prepend>
+                <VIcon color="primary">mdi-storefront-outline</VIcon>
+              </template>
+              <VListItemTitle class="text-caption text-grey">Penerima</VListItemTitle>
+              <VListItemSubtitle class="text-body-1 font-weight-medium text-black">
+                {{ selectedInvoice.merchant_name }}
+              </VListItemSubtitle>
+            </VListItem>
 
-        <VListItem class="px-0">
-          <template v-slot:prepend>
-            <VIcon color="primary">mdi-storefront-outline</VIcon>
-          </template>
-          <VListItemTitle class="text-caption text-grey">Metode Pembayaran</VListItemTitle>
-          <VListItemSubtitle class="text-body-1 font-weight-medium text-black">
-            {{ selectedInvoice.payment_method }}
-          </VListItemSubtitle>
-        </VListItem>
+            <VDivider class="my-1"></VDivider>
 
-        <VDivider class="my-1"></VDivider>
+            <VListItem class="px-0">
+              <template v-slot:prepend>
+                <VIcon color="primary">mdi-storefront-outline</VIcon>
+              </template>
+              <VListItemTitle class="text-caption text-grey">Metode Pembayaran</VListItemTitle>
+              <VListItemSubtitle class="text-body-1 font-weight-medium text-black">
+                {{ selectedInvoice.payment_method }}
+              </VListItemSubtitle>
+            </VListItem>
 
-        <VListItem class="px-0">
-          <template v-slot:prepend>
-            <VIcon color="primary">mdi-cash-multiple</VIcon>
-          </template>
-          <VListItemTitle class="text-caption text-grey">Total Pembayaran</VListItemTitle>
-          <VListItemSubtitle class="text-h6 font-weight-bold text-primary">
-            Rp {{ selectedInvoice.amount.toLocaleString('id-ID') }}
-          </VListItemSubtitle>
-        </VListItem>
+            <VDivider class="my-1"></VDivider>
 
-        <VDivider class="my-1"></VDivider>
+            <VListItem class="px-0">
+              <template v-slot:prepend>
+                <VIcon color="primary">mdi-cash-multiple</VIcon>
+              </template>
+              <VListItemTitle class="text-caption text-grey">Total Pembayaran</VListItemTitle>
+              <VListItemSubtitle class="text-h6 font-weight-bold text-primary">
+                Rp {{ selectedInvoice.amount.toLocaleString('id-ID') }}
+              </VListItemSubtitle>
+            </VListItem>
 
-        <VRow class="mt-2">
-          <VCol cols="6">
-            <div class="text-caption text-grey">Channel</div>
-            <div class="text-body-2 font-weight-medium">{{ selectedInvoice.payment_channel }}</div>
-          </VCol>
-          <VCol cols="6">
-            <div class="text-caption text-grey">Tanggal</div>
-            <div class="text-body-2 font-weight-medium">{{ formatDate(selectedInvoice.created) }}</div>
-          </VCol>
-        </VRow>
-      </VList>
+            <VDivider class="my-1"></VDivider>
 
-      <div class="mt-6 pa-3 bg-grey-lighten-4 rounded border-dashed">
-        <div class="text-caption text-grey mb-1">Deskripsi</div>
-        <div class="text-body-2 italic">{{ selectedInvoice.description || '-' }}</div>
-      </div>
-    </VCardText>
+            <VRow class="mt-2">
+              <VCol cols="6">
+                <div class="text-caption text-grey">Channel</div>
+                <div class="text-body-2 font-weight-medium">{{ selectedInvoice.payment_channel }}</div>
+              </VCol>
+              <VCol cols="6">
+                <div class="text-caption text-grey">Tanggal</div>
+                <div class="text-body-2 font-weight-medium">{{ formatDate(selectedInvoice.created) }}</div>
+              </VCol>
+            </VRow>
+          </VList>
 
-    <VDivider></VDivider>
+          <div class="mt-6 pa-3 bg-grey-lighten-4 rounded border-dashed">
+            <div class="text-caption text-grey mb-1">Deskripsi</div>
+            <div class="text-body-2 italic">{{ selectedInvoice.description || '-' }}</div>
+          </div>
+        </VCardText>
 
-    
-    <VCardActions class="pa-4 btn-container">
-      <VBtn
-        block
-        color="primary"
-        variant="elevated"
-        size="large"
-        @click="isActive = false"
-      >
-        Selesai
-      </VBtn>
-      <VBtn
-        block
-        v-show="selectedInvoice.status == 'PENDING'"
-        color="primary"
-        variant="elevated"
-        size="large"
-        @click="paymentUrl(selectedInvoice.url)"
-      >
-        Bayar
-      </VBtn>
-    </VCardActions>
-  </VCard>
-</VDialog>
+        <VDivider></VDivider>
 
-    
-</div>
+        <VCardActions class="pa-4 btn-container">
+          <VBtn
+            block
+            color="primary"
+            variant="elevated"
+            size="large"
+            @click="isActive = false"
+          >
+            Selesai
+          </VBtn>
+          <VBtn
+            block
+            v-show="selectedInvoice.status == 'PENDING'"
+            color="primary"
+            variant="elevated"
+            size="large"
+            @click="paymentUrl(selectedInvoice.url)"
+          >
+            Bayar
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+  </div>
 </template>
-
 
 <style scoped>
 :deep(.job-status-chip) {
@@ -290,9 +295,8 @@ onMounted(async()=>{
   color: #3ff00e;
   font-weight: 600;
 }
-.btn-container{
+.btn-container {
   display: flex;
   flex-direction: column;
 }
-
 </style>

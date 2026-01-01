@@ -26,7 +26,7 @@ const recentDevices = ref([
   },
 ])
 
-const selectedNotification = ref('Only when I\'m online')
+const selectedNotification = ref("Only when I'm online")
 </script>
 
 <template>
@@ -39,18 +39,10 @@ const selectedNotification = ref('Only when I\'m online')
     <VTable class="text-no-wrap">
       <thead>
         <tr>
-          <th scope="col">
-            Type
-          </th>
-          <th scope="col">
-            EMAIL
-          </th>
-          <th scope="col">
-            BROWSER
-          </th>
-          <th scope="col">
-            App
-          </th>
+          <th scope="col">Type</th>
+          <th scope="col">EMAIL</th>
+          <th scope="col">BROWSER</th>
+          <th scope="col">App</th>
         </tr>
       </thead>
       <tbody>
@@ -77,9 +69,7 @@ const selectedNotification = ref('Only when I\'m online')
 
     <VCardText>
       <VForm @submit.prevent="() => {}">
-        <p class="text-base font-weight-medium">
-          When should we send you notifications?
-        </p>
+        <p class="text-base font-weight-medium">When should we send you notifications?</p>
 
         <VRow>
           <VCol
@@ -95,9 +85,7 @@ const selectedNotification = ref('Only when I\'m online')
         </VRow>
 
         <div class="d-flex flex-wrap gap-4 mt-4">
-          <VBtn type="submit">
-            Save Changes
-          </VBtn>
+          <VBtn type="submit"> Save Changes </VBtn>
           <VBtn
             color="secondary"
             variant="outlined"

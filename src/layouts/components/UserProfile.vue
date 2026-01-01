@@ -17,10 +17,9 @@ function logout() {
   router.push('/login')
 }
 
-onMounted(async()=>{
+onMounted(async () => {
   const profile = await getProfile(userId)
   nama.value = profile.nama
-  
 })
 </script>
 
@@ -134,7 +133,11 @@ onMounted(async()=>{
           <!-- 👉 Logout -->
           <VListItem @click="logout">
             <template #prepend>
-              <VIcon class="me-2" icon="ri-logout-box-r-line" size="22" />
+              <VIcon
+                class="me-2"
+                icon="ri-logout-box-r-line"
+                size="22"
+              />
             </template>
             <VListItemTitle>Logout</VListItemTitle>
           </VListItem>

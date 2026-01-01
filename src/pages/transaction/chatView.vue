@@ -1,38 +1,38 @@
 <script setup>
-import { apiFetch } from "@/utils/api";
-import { onMounted, ref } from "vue";
-import { io } from "socket.io-client";
-import sweetAlert from "@/utils/sweetAlert";
+import { apiFetch } from '@/utils/api'
+import { onMounted, ref } from 'vue'
+import { io } from 'socket.io-client'
+import sweetAlert from '@/utils/sweetAlert'
 
 // mentrigger event connection di server
-const socket = io("http://localhost:3000");
+const socket = io('http://localhost:3000')
 
-const userId = localStorage.getItem("userId");
-const userRole = localStorage.getItem("role");
+const userId = localStorage.getItem('userId')
+const userRole = localStorage.getItem('role')
 
-const chats = ref([]);
-const selectedChat = ref(null);
-const messages = ref([]);
-const newMessage = ref("");
+const chats = ref([])
+const selectedChat = ref(null)
+const messages = ref([])
+const newMessage = ref('')
 const isMobileView = ref(false)
 const showChat = ref(false)
 
 async function getProfile(userId) {
   try {
-    const response = await apiFetch(`/profile/${userId}`);
-    return response.data;
+    const response = await apiFetch(`/profile/${userId}`)
+    return response.data
   } catch (error) {
-    console.error("Gagal mengambil profil:", error);
+    console.error('Gagal mengambil profil:', error)
   }
 }
 
 async function getChatByUserId(userId) {
   try {
-    const response = await apiFetch(`/chats/${userId}`);
-    return response.data.chats;
+    const response = await apiFetch(`/chats/${userId}`)
+    return response.data.chats
   } catch (error) {
-    console.error("Gagal ambil chat:", error);
-    return [];
+    console.error('Gagal ambil chat:', error)
+    return []
   }
 }
 
@@ -40,15 +40,15 @@ onMounted(async () => {
   // Ambil data chat
   const data = await getChatByUserId(userId)
   chats.value = await Promise.all(
-    data.map(async (item) => {
+    data.map(async item => {
       const profileClient = await getProfile(item.clientId)
       const profileTeknisi = await getProfile(item.technicianId)
       return {
         ...item,
-        client: { nama: profileClient?.user?.nama || "Client" },
-        teknisi: { nama: profileTeknisi?.user?.nama || "Teknisi" },
+        client: { nama: profileClient?.user?.nama || 'Client' },
+        teknisi: { nama: profileTeknisi?.user?.nama || 'Teknisi' },
       }
-    })
+    }),
   )
 
   // Cek ukuran layar
@@ -57,35 +57,33 @@ onMounted(async () => {
   }
 
   checkScreen()
-  window.addEventListener("resize", checkScreen)
+  window.addEventListener('resize', checkScreen)
 
-  socket.on("receive_message", (msg) => {
-
+  socket.on('receive_message', msg => {
     // Hindari duplikasi: kalau pesan terakhir punya teks & sender sama, abaikan
-    const lastMsg = messages.value[messages.value.length - 1];
+    const lastMsg = messages.value[messages.value.length - 1]
     if (lastMsg && lastMsg.message === msg.message && lastMsg.senderId === msg.senderId) {
-      return;
+      return
     }
-    
+
     if (selectedChat.value && msg.chatId === selectedChat.value._id) {
-      messages.value.push(msg);
+      messages.value.push(msg)
     }
   })
 })
-
 
 async function selectChat(chat) {
   selectedChat.value = chat
 
   // mentrigger event join room di server
-  socket.emit("join_room", chat._id)
+  socket.emit('join_room', chat._id)
   const response = await apiFetch(`/messages/read/${chat._id}`)
   messages.value = response.data.chat_message
   if (isMobileView.value) showChat.value = true
 }
 
 async function sendMessage() {
-  if (!newMessage.value.trim() || !selectedChat.value) return;
+  if (!newMessage.value.trim() || !selectedChat.value) return
 
   const msg = {
     chatId: selectedChat.value._id,
@@ -93,29 +91,29 @@ async function sendMessage() {
     message: newMessage.value,
     messageType: 'message',
     createdAt: new Date(),
-  };
-  
+  }
+
   // mentrigger event send_message di server
-  socket.emit("send_message", msg);
+  socket.emit('send_message', msg)
 
   await apiFetch(`/messages/send`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(msg),
-  });
+  })
 
-  newMessage.value = "";
+  newMessage.value = ''
 }
 
-async function shareLocation(){
-  if(!selectedChat.value) return
+async function shareLocation() {
+  if (!selectedChat.value) return
 
-  if(!navigator.geolocation){
+  if (!navigator.geolocation) {
     sweetAlert.error('browsermu tidak mendukung geolokasi')
   }
 
-  navigator.geolocation.getCurrentPosition(async (position)=>{
-    const {latitude, longitude} = position.coords
+  navigator.geolocation.getCurrentPosition(async position => {
+    const { latitude, longitude } = position.coords
 
     // const msg = {
     //   chatId: selectedChat.value._id,
@@ -127,21 +125,20 @@ async function shareLocation(){
     const msg = {
       chatId: selectedChat.value._id,
       senderId: userId,
-      messageType: "location",
-      message: "Berbagi lokasi saat ini",
+      messageType: 'location',
+      message: 'Berbagi lokasi saat ini',
       latitude,
       longitude,
       createdAt: new Date(),
-    };
+    }
 
-    
-    console.log('data lokasi : ', msg);
-    await apiFetch(`/messages/send`,{
+    console.log('data lokasi : ', msg)
+    await apiFetch(`/messages/send`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(msg)
+      body: JSON.stringify(msg),
     })
     socket.emit('send_message', msg)
   })
@@ -149,18 +146,24 @@ async function shareLocation(){
 
 function formatDate(date) {
   return new Date(date).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 </script>
 
 <template>
   <div class="chat-wrapper">
     <!-- Sidebar -->
-    <aside class="sidebar" v-show="!isMobileView || (isMobileView && !showChat)">
+    <aside
+      class="sidebar"
+      v-show="!isMobileView || (isMobileView && !showChat)"
+    >
       <div class="search-bar">
-        <input type="text" placeholder="Search..." />
+        <input
+          type="text"
+          placeholder="Search..."
+        />
       </div>
 
       <h3 class="section-title">Chats</h3>
@@ -174,7 +177,7 @@ function formatDate(date) {
           <div class="avatar"></div>
           <div class="chat-meta">
             <h4>
-              {{ userRole == "technician" ? chat.client?.nama : chat.teknisi?.nama }}
+              {{ userRole == 'technician' ? chat.client?.nama : chat.teknisi?.nama }}
             </h4>
             <p class="last">Klik untuk membuka percakapan</p>
           </div>
@@ -191,51 +194,56 @@ function formatDate(date) {
     >
       <header class="chat-header">
         <div class="user-info">
-          <button v-if="isMobileView" class="back-btn" @click="showChat = false">←</button>
+          <button
+            v-if="isMobileView"
+            class="back-btn"
+            @click="showChat = false"
+          >
+            ←
+          </button>
           <div class="avatar header"></div>
           <div>
-            <h4>{{ userRole == "technician" ? selectedChat.client?.nama : selectedChat.teknisi?.nama }}</h4>
-            <small>{{userRole == 'technician' ? `client` : `teknisi`}}</small>
+            <h4>{{ userRole == 'technician' ? selectedChat.client?.nama : selectedChat.teknisi?.nama }}</h4>
+            <small>{{ userRole == 'technician' ? `client` : `teknisi` }}</small>
           </div>
         </div>
       </header>
 
       <div class="chat-body">
         <div
-            v-for="msg in messages"
-            :key="msg._id"
-            :class="['msg', msg.senderId === userId ? 'sent' : 'received']"
-          >
-            <!-- Jika pesan tipe location -->
-            <template v-if="msg.messageType === 'location'">
-              <p>{{ msg.message }}</p>
-              <iframe
-                :src="`https://www.google.com/maps?q=${msg.latitude},${msg.longitude}&hl=es;z=14&output=embed`"
-                width="250"
-                height="150"
-                style="border:0; border-radius: 8px; margin-top: 5px;"
-                allowfullscreen=""
-                loading="lazy"
-              ></iframe>
-              <br />
-              <a
-                :href="`https://www.google.com/maps?q=${msg.latitude},${msg.longitude}`"
-                target="_blank"
-                style="color: black;"
-                class="map-link"
-              >
-                Buka di Google Maps ↗
-              </a>
-            </template>
+          v-for="msg in messages"
+          :key="msg._id"
+          :class="['msg', msg.senderId === userId ? 'sent' : 'received']"
+        >
+          <!-- Jika pesan tipe location -->
+          <template v-if="msg.messageType === 'location'">
+            <p>{{ msg.message }}</p>
+            <iframe
+              :src="`https://www.google.com/maps?q=${msg.latitude},${msg.longitude}&hl=es;z=14&output=embed`"
+              width="250"
+              height="150"
+              style="border: 0; border-radius: 8px; margin-top: 5px"
+              allowfullscreen=""
+              loading="lazy"
+            ></iframe>
+            <br />
+            <a
+              :href="`https://www.google.com/maps?q=${msg.latitude},${msg.longitude}`"
+              target="_blank"
+              style="color: black"
+              class="map-link"
+            >
+              Buka di Google Maps ↗
+            </a>
+          </template>
 
-            <!-- Jika pesan biasa -->
-            <template v-else>
-              <p>{{ msg.message }}</p>
-            </template>
+          <!-- Jika pesan biasa -->
+          <template v-else>
+            <p>{{ msg.message }}</p>
+          </template>
 
-            <small>{{ formatDate(msg.createdAt) }}</small>
-          </div>
-
+          <small>{{ formatDate(msg.createdAt) }}</small>
+        </div>
       </div>
 
       <footer class="chat-footer">
@@ -246,13 +254,19 @@ function formatDate(date) {
           @keyup.enter="sendMessage"
         />
         <button @click="shareLocation">
-          <i class="ri-map-pin-line" style="font-size: 24px;"></i>
+          <i
+            class="ri-map-pin-line"
+            style="font-size: 24px"
+          ></i>
         </button>
         <button @click="sendMessage">Send ➤</button>
       </footer>
     </main>
 
-    <main class="chat-area empty" v-else-if="!isMobileView">
+    <main
+      class="chat-area empty"
+      v-else-if="!isMobileView"
+    >
       <p>Pilih percakapan untuk memulai</p>
     </main>
   </div>
@@ -272,7 +286,7 @@ function formatDate(date) {
     0 20px 20px rgba(0, 0, 0, 0.1);
 
   overflow: hidden; /* Tambahkan ini agar radius diterapkan ke anak */
-  font-family: "Inter", sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 /* Sidebar */
@@ -307,7 +321,8 @@ function formatDate(date) {
   margin: 1rem;
 }
 
-.chat-list, .contact-list {
+.chat-list,
+.contact-list {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -321,7 +336,8 @@ function formatDate(date) {
   transition: background 0.3s;
 }
 
-.chat-list li.active, .chat-list li:hover {
+.chat-list li.active,
+.chat-list li:hover {
   background: #a855f71a;
 }
 
@@ -484,12 +500,12 @@ function formatDate(date) {
   color: #999;
   font-size: 1.1rem;
 }
-@media(min-width: 992px){
-  .sidebar{
+@media (min-width: 992px) {
+  .sidebar {
     left: 0px;
   }
 }
-@media(max-width: 992px) {
+@media (max-width: 992px) {
   .chat-wrapper {
     position: relative; /* pastikan anak-anak bisa absolute penuh */
     width: 100%;
@@ -539,6 +555,4 @@ function formatDate(date) {
     color: #a855f7;
   }
 }
-
-
 </style>

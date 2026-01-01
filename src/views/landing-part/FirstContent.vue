@@ -1,32 +1,48 @@
 <script setup>
-import gambar from '@assets/landing-page/image.png';
+import gambar from '@assets/landing-page/image.png'
 </script>
 
 <template>
   <div class="first-content">
     <div class="left-content">
-      <p class="text-1" style="color: black;">Sebuah cara baru</p>
-      <p class="text-2" style="color: black;">Untuk bekerja</p>
-      <p class="text-3" style="color: black;">
-        Kelola dan kembangkan tenaga kerja anda <br />secara fleksible di — satu
-        platform
+      <p
+        class="text-1"
+        style="color: black"
+      >
+        Sebuah cara baru
+      </p>
+      <p
+        class="text-2"
+        style="color: black"
+      >
+        Untuk bekerja
+      </p>
+      <p
+        class="text-3"
+        style="color: black"
+      >
+        Kelola dan kembangkan tenaga kerja anda <br />secara fleksible di — satu platform
       </p>
     </div>
     <div class="right-content">
-      <img :src="gambar" alt="" class="image-right-content" />
+      <img
+        :src="gambar"
+        alt=""
+        class="image-right-content"
+      />
     </div>
   </div>
   <div class="subs">
-    <p class="p-subs" style="color: black;">
-
-        Dipercaya lebih dari <b>10k+</b> pencari kerja dan <b>20k+</b> pengguna
+    <p
+      class="p-subs"
+      style="color: black"
+    >
+      Dipercaya lebih dari <b>10k+</b> pencari kerja dan <b>20k+</b> pengguna
     </p>
   </div>
 </template>
 
 <style scoped>
-
-
 .first-content {
   display: flex;
   /* align-items: center; */
@@ -37,7 +53,7 @@ import gambar from '@assets/landing-page/image.png';
 }
 .right-content {
   display: flex;
-  align-items: center;   /* ⬅️ Ini memastikan gambar juga align tengah */
+  align-items: center; /* ⬅️ Ini memastikan gambar juga align tengah */
   justify-content: right; /* Opsional: Biar gambar ke tengah horizontal */
   width: 100%;
 }
@@ -61,14 +77,13 @@ import gambar from '@assets/landing-page/image.png';
   display: flex;
   margin-inline: auto;
 }
-.p-subs{
-    margin-inline: auto;
+.p-subs {
+  margin-inline: auto;
 }
 .image-right-content {
   display: flex;
   width: 500px;
   /* margin-inline: auto; */
-  
 }
 @media (max-width: 862px) {
   .first-content {

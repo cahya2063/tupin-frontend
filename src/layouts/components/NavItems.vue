@@ -24,7 +24,7 @@ const menuItems = computed(() => {
         title: 'Riwayat Pembayaran',
         icon: 'ri-history-line',
         to: '/payment-history',
-      }
+      },
     ]
   }
 
@@ -38,13 +38,13 @@ const menuItems = computed(() => {
       {
         title: 'Accepted Jobs',
         icon: 'ri-tools-line',
-        to: 'accepted-jobs'
+        to: 'accepted-jobs',
       },
       {
         title: 'Wallet',
         icon: 'ri-wallet-line',
-        to: '/wallet'
-      }
+        to: '/wallet',
+      },
     ]
   }
 
@@ -66,7 +66,7 @@ const menuItems = computed(() => {
         to: '/dashboard',
       }"
     />
-  </VerticalNavGroup>  
+  </VerticalNavGroup>
 
   <!-- 👉 Apps & Pages -->
   <VerticalNavSectionTitle
@@ -75,10 +75,10 @@ const menuItems = computed(() => {
     }"
   />
   <VerticalNavLink
-      v-for="item in menuItems"
-      :key="item.title"
-      :item="item"
-    />
+    v-for="item in menuItems"
+    :key="item.title"
+    :item="item"
+  />
   <VerticalNavLink
     :item="{
       title: 'Chat',

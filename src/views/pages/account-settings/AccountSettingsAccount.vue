@@ -4,16 +4,12 @@ import { apiFetch } from '@/utils/api'
 import avatar1 from '@images/avatars/avatar-1.png'
 import { ref } from 'vue'
 
-
 const userId = localStorage.getItem('userId')
 const role = localStorage.getItem('role')
-
 
 onMounted(async () => {
   getProfile()
 })
-
-
 
 const accountData = {
   avatarImg: avatar1,
@@ -32,7 +28,6 @@ const accountData = {
   currency: 'USD',
 }
 
-
 const refInputEl = ref()
 const accountDataLocal = ref({
   id: '',
@@ -49,14 +44,12 @@ const accountDataLocal = ref({
 })
 const isAccountDeactivated = ref(false)
 
-
-
 async function updateProfile() {
   try {
     const response = await apiFetch(`/profile/${userId}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         nama: accountDataLocal.value.name,
@@ -66,10 +59,9 @@ async function updateProfile() {
         subdistrict: accountDataLocal.value.subdistrict,
         city: accountDataLocal.value.city,
         zip_code: accountDataLocal.value.zip_code,
-      })
-      
+      }),
     })
-      alert(response.data.message)
+    alert(response.data.message)
   } catch (error) {
     console.error(error)
     alert('Gagal update profile ❌')
@@ -93,9 +85,7 @@ async function getProfile() {
       avatar: response.data.user.avatar || null, // default avatar jika kosong
     }
 
-    console.log('profile', accountDataLocal.value);
-    
-    
+    console.log('profile', accountDataLocal.value)
   } catch (err) {
     console.error(err.message)
   }
@@ -120,7 +110,7 @@ const changeAvatar = async file => {
 
     // update preview avatar
     accountDataLocal.value.avatar = response.data.avatar
-    
+
     alert('Avatar berhasil diperbarui ✅')
   } catch (error) {
     console.error(error)
@@ -132,7 +122,6 @@ const changeAvatar = async file => {
 const resetAvatar = () => {
   accountDataLocal.value.avatar = accountData.avatarImg
 }
-
 
 // Event klik tombol ulasan (sementara hanya alert)
 // const addReview = () => {
@@ -150,9 +139,7 @@ const resetAvatar = () => {
             rounded="lg"
             size="100"
             class="me-6"
-            :image="accountDataLocal.avatar 
-    ? `http://localhost:3000${accountDataLocal.avatar}` 
-    : avatar1"
+            :image="accountDataLocal.avatar ? `http://localhost:3000${accountDataLocal.avatar}` : avatar1"
           />
 
           <!-- 👉 Upload Photo -->
@@ -176,7 +163,7 @@ const resetAvatar = () => {
                 accept=".jpeg,.png,.jpg,GIF"
                 hidden
                 @input="changeAvatar"
-              >
+              />
 
               <VBtn
                 type="reset"
@@ -192,9 +179,7 @@ const resetAvatar = () => {
               </VBtn>
             </div>
 
-            <p class="text-body-1 mb-0">
-              Allowed JPG, GIF or PNG. Max size of 800K
-            </p>
+            <p class="text-body-1 mb-0">Allowed JPG, GIF or PNG. Max size of 800K</p>
           </form>
         </VCardText>
 
@@ -205,7 +190,10 @@ const resetAvatar = () => {
           <VForm class="mt-6">
             <VRow>
               <!-- 👉 ID -->
-              <VCol md="6" cols="12">
+              <VCol
+                md="6"
+                cols="12"
+              >
                 <VTextField
                   v-model="accountDataLocal.id"
                   label="ID"
@@ -215,7 +203,10 @@ const resetAvatar = () => {
               </VCol>
 
               <!-- 👉 Name -->
-              <VCol md="6" cols="12">
+              <VCol
+                md="6"
+                cols="12"
+              >
                 <VTextField
                   v-model="accountDataLocal.name"
                   label="Nama"
@@ -224,7 +215,10 @@ const resetAvatar = () => {
               </VCol>
 
               <!-- 👉 Email -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.email"
                   label="E-mail"
@@ -233,10 +227,11 @@ const resetAvatar = () => {
                 />
               </VCol>
 
-              
-
               <!-- 👉 Phone -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.phone_number"
                   label="No. Handphone"
@@ -245,7 +240,10 @@ const resetAvatar = () => {
               </VCol>
 
               <!-- 👉 Address -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.address"
                   label="Alamat"
@@ -254,7 +252,10 @@ const resetAvatar = () => {
               </VCol>
 
               <!-- 👉 village -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.village"
                   label="Desa/Kelurahan"
@@ -263,7 +264,10 @@ const resetAvatar = () => {
               </VCol>
 
               <!-- 👉 subdistrict -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.subdistrict"
                   label="Kecamatan"
@@ -272,7 +276,10 @@ const resetAvatar = () => {
               </VCol>
 
               <!-- 👉 city -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VSelect
                   v-model="accountDataLocal.city"
                   label="Kabupaten"
@@ -282,7 +289,10 @@ const resetAvatar = () => {
               </VCol>
 
               <!-- 👉 Zip Code -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.zip_code"
                   label="Kode pos"
@@ -291,7 +301,10 @@ const resetAvatar = () => {
               </VCol>
 
               <!-- 👉 Form Actions -->
-              <VCol cols="12" class="d-flex flex-wrap gap-4">
+              <VCol
+                cols="12"
+                class="d-flex flex-wrap gap-4"
+              >
                 <VBtn @click="updateProfile">Save changes</VBtn>
 
                 <VBtn
@@ -309,19 +322,18 @@ const resetAvatar = () => {
       </VCard>
     </VCol>
 
-    <VCol cols="12" v-show="role=='technician'">
+    <VCol
+      cols="12"
+      v-show="role == 'technician'"
+    >
       <!-- 👉 Data Sertifikat -->
       <VCard title="Data Sertifikat">
         <VCardText>
           <div>
-            <VCheckbox
-              
-              label="I confirm my account deactivation"
-            />
+            <VCheckbox label="I confirm my account deactivation" />
           </div>
 
           <VBtn
-            
             color="error"
             class="mt-3"
           >
@@ -330,8 +342,7 @@ const resetAvatar = () => {
         </VCardText>
       </VCard>
     </VCol>
-    
-    
-    <ReviewContainer :userId="accountDataLocal.id"/>
+
+    <ReviewContainer :userId="accountDataLocal.id" />
   </VRow>
 </template>

@@ -1,12 +1,12 @@
 <script setup>
-import { apiFetch } from '@/utils/api';
-import { onMounted, ref, computed } from 'vue';
+import { apiFetch } from '@/utils/api'
+import { onMounted, ref, computed } from 'vue'
 import avatar1 from '@images/avatars/avatar-1.png'
-import CardJob from '@/layouts/components/CardJob.vue';
-import sweetAlert from '@/utils/sweetAlert';
-import { CForm } from '@coreui/vue-pro';
-import ReviewModal from '@/components/form/ReviewModal.vue';
-import Payment from '@/components/form/Payment.vue';
+import CardJob from '@/layouts/components/CardJob.vue'
+import sweetAlert from '@/utils/sweetAlert'
+import { CForm } from '@coreui/vue-pro'
+import ReviewModal from '@/components/form/ReviewModal.vue'
+import Payment from '@/components/form/Payment.vue'
 
 const headers = [
   { title: 'User', key: 'username' },
@@ -32,15 +32,13 @@ function handleReviewSubmitted(data) {
   // bisa tambahkan logika refresh data job, dll.
 }
 // avatars creator
-const avatars = ref({}) 
+const avatars = ref({})
 
 // avatars untuk teknisi per job
-const invitesAvatars = ref({})  
+const invitesAvatars = ref({})
 
-const isCancelable = computed(() => 
-  ['pending', 'request'].includes(selectedJob.value?.status)
-)
-async function getPostedJobs(){
+const isCancelable = computed(() => ['pending', 'request'].includes(selectedJob.value?.status))
+async function getPostedJobs() {
   const response = await apiFetch(`/jobs/uploaded/${userId}`)
   jobs.value = response.data.jobs
 
@@ -61,7 +59,7 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
 
   if (type === 'creator') {
     if (avatars.value[id]) return
-    const response = await apiFetch(`/profile/${id}`)    
+    const response = await apiFetch(`/profile/${id}`)
     avatars.value[id] = response.data.user.avatar
   }
 
@@ -81,28 +79,28 @@ const getProfile = async (id, type = 'creator', jobId = null) => {
   }
 }
 
-async function getSubAccountId(teknisiId){
-  try{
-    const response = await apiFetch(`/profile/${teknisiId}`,{
+async function getSubAccountId(teknisiId) {
+  try {
+    const response = await apiFetch(`/profile/${teknisiId}`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
 
     return response.data.user.subAccountId
-  }catch (error){
+  } catch (error) {
     sweetAlert.error(error.message)
   }
 }
 
-async function approveJobRequest(jobId){
+async function approveJobRequest(jobId) {
   try {
     const response = await apiFetch(`/jobs/${jobId}/approve-job-request`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
     // console.log('response approve : ', response.data);
     return response.data
@@ -111,14 +109,14 @@ async function approveJobRequest(jobId){
   }
 }
 
-async function completeJob(jobId, status){
+async function completeJob(jobId, status) {
   try {
     const response = await apiFetch(`/jobs/${jobId}/is-job-completed`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({status})
+      body: JSON.stringify({ status }),
     })
     // console.log('response complete : ', response.data);
     return response.data
@@ -131,34 +129,32 @@ async function cancelJob(jobId) {
     const response = await apiFetch(`/jobs/${jobId}/cancel-jobs`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    console.log('response cancel : ', response.data);
+    console.log('response cancel : ', response.data)
     return response.data
-    
   } catch (error) {
-    console.error('gagal melakukan cancel job');
-    
+    console.error('gagal melakukan cancel job')
   }
 }
 
-async function handleApproveRequest(){
+async function handleApproveRequest() {
   showSidebar.value = false
   const result = await sweetAlert.confirm({
     title: 'Setujui Request?',
     text: 'Apakah anda yakin ingin menyetujui teknisi yang mengajukan request untuk memperbaiki alatmu?',
     confirmText: 'Ya, Setujui!',
-    cancelText: 'Batal'
+    cancelText: 'Batal',
   })
 
-  if(result.isConfirmed){
+  if (result.isConfirmed) {
     const approveData = await approveJobRequest(selectedJob.value._id)
     // console.log(approveData);
     sweetAlert.success(approveData.message)
   }
 }
-async function handleIsJobCompleted(){
+async function handleIsJobCompleted() {
   showSidebar.value = false
   const result = await sweetAlert.confirm({
     title: 'Selesaikan Job?',
@@ -166,15 +162,14 @@ async function handleIsJobCompleted(){
     confirmText: 'Ya, selesai!',
     showCancelButton: false,
     showDenyButton: true,
-    denyText: 'Belum selesai'
+    denyText: 'Belum selesai',
   })
 
-  if(result.isConfirmed){
+  if (result.isConfirmed) {
     const completedJob = await completeJob(selectedJob.value._id, 'completed')
     // console.log(approveData);
     sweetAlert.success(completedJob.message)
-  }
-  else if(result.isDenied){
+  } else if (result.isDenied) {
     const uncompletedJob = await completeJob(selectedJob.value._id, 'uncompleted')
     sweetAlert.warning(uncompletedJob.message, 'Job Belum Selesai')
   }
@@ -186,7 +181,7 @@ async function handleCancel() {
     title: 'Cancel Jobs?',
     text: 'Apakah anda yakin ingin cancel Job?',
     confirmText: 'Ya, cancel!',
-    cancelText: 'Batal'
+    cancelText: 'Batal',
   })
 
   if (result.isConfirmed) {
@@ -196,10 +191,10 @@ async function handleCancel() {
   }
 }
 
-const openDetail = async(job) => {
+const openDetail = async job => {
   selectedJob.value = job
   const profile = await apiFetch(`/profile/${job.idCreator}`)
-  if(selectedJob.value.selectedTechnician){
+  if (selectedJob.value.selectedTechnician) {
     const subAccountId = await getSubAccountId(selectedJob.value.selectedTechnician)
     selectedJob.value.subAccountId = subAccountId
   }
@@ -223,31 +218,27 @@ const openApplicants = async () => {
 
 const review = ref()
 
-
-async function getReviewByJobId(jobId, userId){
-  try {    
+async function getReviewByJobId(jobId, userId) {
+  try {
     const response = await apiFetch(`/review/${jobId}/${userId}/get-review-byJobId`)
     return response.data.review
-    
   } catch (error) {
     sweetAlert.error(error.message)
   }
 }
 
-const formatDate = (date) => {
+const formatDate = date => {
   if (!date || typeof date !== 'string') return '-'
   return date.split('T')[0]
 }
 
-
-onMounted(async() => {
+onMounted(async () => {
   await getPostedJobs()
-  
-  jobs.value.forEach(async(e, i)=>{
+
+  jobs.value.forEach(async (e, i) => {
     const response = await getReviewByJobId(e._id, e.idCreator)
     review.value = response
-    console.log('data review : ', review.value);
-    
+    console.log('data review : ', review.value)
   })
 })
 </script>
@@ -277,7 +268,9 @@ onMounted(async() => {
       <VCol cols="12">
         <div class="text-center py-10">
           <h3>Kamu belum pernah upload job nihh 😔</h3>
-          <p class="text-subtitle-2 text-grey-darken-1">Kalau kamu memiliki keluhan pada peralatanmu beri tahu kami ya!!</p>
+          <p class="text-subtitle-2 text-grey-darken-1">
+            Kalau kamu memiliki keluhan pada peralatanmu beri tahu kami ya!!
+          </p>
         </div>
       </VCol>
     </template>
@@ -285,22 +278,39 @@ onMounted(async() => {
 
   <!-- Sidebar kanan untuk detail job -->
   <transition name="slide-fade">
-    <div v-if="showSidebar" class="slide-modal-overlay" @click.self="showSidebar = false">
+    <div
+      v-if="showSidebar"
+      class="slide-modal-overlay"
+      @click.self="showSidebar = false"
+    >
       <div class="slide-modal-content">
         <div class="slide-modal-header">
           <h4>{{ selectedJob.title }}</h4>
-          <button class="close-btn" @click="showSidebar = false">×</button>
+          <button
+            class="close-btn"
+            @click="showSidebar = false"
+          >
+            ×
+          </button>
         </div>
 
         <div class="slide-modal-body">
-        <h5 style="color: red;" v-if="selectedJob?.status == `progress` ">tunggu teknisi sedang perbaiki alatmu</h5>
+          <h5
+            style="color: red"
+            v-if="selectedJob?.status == `progress`"
+          >
+            tunggu teknisi sedang perbaiki alatmu
+          </h5>
           <CImage
-          :src="`http://localhost:3000/uploads/jobs/${selectedJob?.photo}`"
-          rounded
-          width="100%"
-          class="job-detail-image"
-        />
-          <div v-if="selectedJob" class="job-detail">
+            :src="`http://localhost:3000/uploads/jobs/${selectedJob?.photo}`"
+            rounded
+            width="100%"
+            class="job-detail-image"
+          />
+          <div
+            v-if="selectedJob"
+            class="job-detail"
+          >
             <p class="text-muted mb-2"><strong>Kategori:</strong> {{ selectedJob.category }}</p>
             <p class="text-muted mb-3"><strong>Status:</strong> {{ selectedJob.status }}</p>
 
@@ -310,7 +320,7 @@ onMounted(async() => {
             </div>
 
             <div class="info-box mb-4">
-              💰 <strong>Budget:</strong> Rp {{ selectedJob.budget?.toLocaleString('id-ID') }}<br>
+              💰 <strong>Budget:</strong> Rp {{ selectedJob.budget?.toLocaleString('id-ID') }}<br />
               🧰 <strong>Pengalaman:</strong> {{ selectedJob.experiences }}
             </div>
 
@@ -336,15 +346,20 @@ onMounted(async() => {
               </p>
             </div>
 
-            <VBtn color="primary" variant="elevated" class="mt-4 mx-2" @click="openApplicants">
+            <VBtn
+              color="primary"
+              variant="elevated"
+              class="mt-4 mx-2"
+              @click="openApplicants"
+            >
               Lihat Pelamar
             </VBtn>
-            <VBtn 
+            <VBtn
               v-if="selectedJob?.status == 'request'"
               class="mt-4 mx-2"
               color="success"
               @click="handleApproveRequest"
-              >
+            >
               Setujui perbaikan
             </VBtn>
 
@@ -372,14 +387,18 @@ onMounted(async() => {
               :payer-id="selectedJob?.idCreator"
               :receiver-id="selectedJob?.selectedTechnician"
             />
-            
+
             <VBtn
               v-if="selectedJob?.status == 'payed done' && !review"
               class="mt-4 mx-2"
               color="success"
-              @click="showRatingModal = true; showSidebar=false"
-            >Beri Review</VBtn>
-              
+              @click="
+                showRatingModal = true
+                showSidebar = false
+              "
+              >Beri Review</VBtn
+            >
+
             <VBtn
               class="mt-4 mx-2"
               v-if="isCancelable"
@@ -396,7 +415,10 @@ onMounted(async() => {
   </transition>
 
   <!-- Modal Pop-up Pelamar -->
-  <VDialog v-model="showApplicantsModal" max-width="800">
+  <VDialog
+    v-model="showApplicantsModal"
+    max-width="800"
+  >
     <VCard>
       <VCardTitle class="d-flex justify-between align-center">
         <span>Daftar Pelamar</span>
@@ -415,7 +437,9 @@ onMounted(async() => {
               <VAvatar size="36">
                 <VImg :src="item.avatar ? `http://localhost:3000${item.avatar}` : avatar1" />
               </VAvatar>
-              <div><strong>{{ item.nama }}</strong></div>
+              <div>
+                <strong>{{ item.nama }}</strong>
+              </div>
             </div>
           </template>
 
@@ -480,7 +504,7 @@ onMounted(async() => {
   border-radius: 12px;
   padding: 16px 20px;
   text-align: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
@@ -515,7 +539,6 @@ onMounted(async() => {
     transform: translateY(0);
   }
 }
-
 
 /* Overlay blur */
 .slide-modal-overlay {
@@ -620,5 +643,4 @@ onMounted(async() => {
 .slide-fade-leave-to {
   opacity: 0;
 }
-
 </style>

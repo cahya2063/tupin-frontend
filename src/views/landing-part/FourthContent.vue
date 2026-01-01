@@ -6,7 +6,6 @@ import hoursImage from '@assets/landing-page/fourth-content/24-hours.png'
 import partnerImage from '@assets/landing-page/fourth-content/partner.png'
 import indonesiaImage from '@assets/landing-page/fourth-content/indonesia.png'
 
-
 import { onMounted } from 'vue'
 
 onMounted(() => {
@@ -21,9 +20,9 @@ onMounted(() => {
   const counItem = items.length
   const rotateAdd = 360 / counItem
 
-  function show(){
+  function show() {
     image.style.setProperty('--rotate', rotate + 'deg')
-    contents.forEach((content, key)=>{
+    contents.forEach((content, key) => {
       if (key == active) {
         content.classList.add('active')
       } else {
@@ -32,15 +31,15 @@ onMounted(() => {
     })
   }
 
-  function nextSlider(){
+  function nextSlider() {
     active = active + 1 > counItem - 1 ? 0 : active + 1
     rotate += rotateAdd
     show()
   }
   next.onclick = nextSlider
 
-  function prevSlider(){
-    active = active - 1 < 0 ? counItem -1 : active -1
+  function prevSlider() {
+    active = active - 1 < 0 ? counItem - 1 : active - 1
     rotate -= rotateAdd
     show()
   }
@@ -52,36 +51,35 @@ onMounted(() => {
 
   // mousemove efek
   const items1 = document.querySelectorAll('.content-1')
-  items1.forEach(item =>{
-    item.addEventListener('mousemove', (e)=>{
+  items1.forEach(item => {
+    item.addEventListener('mousemove', e => {
       let positionPx = e.x - item.getBoundingClientRect().left
-      let PositionX = (positionPx / item.offsetWidth)*100
+      let PositionX = (positionPx / item.offsetWidth) * 100
       let positionPy = e.y - item.getBoundingClientRect().top
-      let PositionY = (positionPy / item.offsetHeight)*100
-      item.style.setProperty('--rX', (0.5)*(50 - PositionY)+ 'deg')
-      item.style.setProperty('--rY', (0.5)*(50 - PositionX)+ 'deg')
+      let PositionY = (positionPy / item.offsetHeight) * 100
+      item.style.setProperty('--rX', 0.5 * (50 - PositionY) + 'deg')
+      item.style.setProperty('--rY', 0.5 * (50 - PositionX) + 'deg')
     })
-    item.addEventListener('mouseout', ()=>{
+    item.addEventListener('mouseout', () => {
       item.style.setProperty('--rX', '0deg')
       item.style.setProperty('--rY', '0deg')
     })
   })
 })
-
 </script>
 
 <template>
-<div class="slider">
-    <div class="title">
-      kenapa betulin?
-    </div>
+  <div class="slider">
+    <div class="title">kenapa betulin?</div>
     <!-- ==========content deskripsi========== -->
     <div class="content">
       <!-- ========content 6 item======= -->
       <div class="item active">
         <h1>Dampak perekonomian</h1>
         <div class="desc">
-           kontribusi pada perekonomian Indonesia. Mulai dari kemudahan dalam mengelola bisnis hingga mempercepat proses layanan, aplikasi ini membantu usaha kecil dan menengah berkembang lebih cepat. Dengan begitu, peluang usaha dan lapangan kerja baru pun terbuka lebih luas.
+          kontribusi pada perekonomian Indonesia. Mulai dari kemudahan dalam mengelola bisnis hingga mempercepat proses
+          layanan, aplikasi ini membantu usaha kecil dan menengah berkembang lebih cepat. Dengan begitu, peluang usaha
+          dan lapangan kerja baru pun terbuka lebih luas.
         </div>
         <button>selengkapnya</button>
       </div>
@@ -89,7 +87,9 @@ onMounted(() => {
       <div class="item">
         <h1>Kemitraan</h1>
         <div class="desc">
-           kemitraan dengan banyak pengusaha perbaikan berpengalaman. Dengan layanan yang terintegrasi, pengguna dapat mengakses ahli terbaik di bidangnya, sehingga mempercepat pertumbuhan usaha kecil dan menengah serta menciptakan lebih banyak lapangan kerja.
+          kemitraan dengan banyak pengusaha perbaikan berpengalaman. Dengan layanan yang terintegrasi, pengguna dapat
+          mengakses ahli terbaik di bidangnya, sehingga mempercepat pertumbuhan usaha kecil dan menengah serta
+          menciptakan lebih banyak lapangan kerja.
         </div>
         <button>selengkapnya</button>
       </div>
@@ -97,7 +97,9 @@ onMounted(() => {
       <div class="item">
         <h1>Pelayanan</h1>
         <div class="desc">
-          tersedia layanan perbaikan 24 jam, sehingga pelanggan dapat mengandalkan dukungan kapan pun diperlukan. Dengan kemitraan bersama pengusaha perbaikan berpengalaman dan akses layanan yang terus-menerus, aplikasi ini menawarkan solusi yang cepat dan efisien untuk berbagai kebutuhan pelanggan.
+          tersedia layanan perbaikan 24 jam, sehingga pelanggan dapat mengandalkan dukungan kapan pun diperlukan. Dengan
+          kemitraan bersama pengusaha perbaikan berpengalaman dan akses layanan yang terus-menerus, aplikasi ini
+          menawarkan solusi yang cepat dan efisien untuk berbagai kebutuhan pelanggan.
         </div>
         <button>selengkapnya</button>
       </div>
@@ -105,7 +107,9 @@ onMounted(() => {
       <div class="item">
         <h1>No. 1</h1>
         <div class="desc">
-           nomor satu di Banyuwangi, dengan pelayanan 24 jam dan dukungan dari pengusaha perbaikan berpengalaman. Aplikasi ini memberikan solusi terbaik dan paling dapat diandalkan untuk berbagai kebutuhan perbaikan, memastikan setiap masalah ditangani dengan cepat dan profesional.
+          nomor satu di Banyuwangi, dengan pelayanan 24 jam dan dukungan dari pengusaha perbaikan berpengalaman.
+          Aplikasi ini memberikan solusi terbaik dan paling dapat diandalkan untuk berbagai kebutuhan perbaikan,
+          memastikan setiap masalah ditangani dengan cepat dan profesional.
         </div>
         <button>selengkapnya</button>
       </div>
@@ -113,7 +117,9 @@ onMounted(() => {
       <div class="item">
         <h1>penjemputan</h1>
         <div class="desc">
-           menawarkan layanan penjemputan barang rusak yang akan diperbaiki, sehingga pelanggan tidak perlu repot-repot mengantarkan barang ke tempat perbaikan. Dengan layanan ini, kenyamanan dan kemudahan menjadi prioritas, membuat proses perbaikan menjadi lebih efisien dan bebas hassle.
+          menawarkan layanan penjemputan barang rusak yang akan diperbaiki, sehingga pelanggan tidak perlu repot-repot
+          mengantarkan barang ke tempat perbaikan. Dengan layanan ini, kenyamanan dan kemudahan menjadi prioritas,
+          membuat proses perbaikan menjadi lebih efisien dan bebas hassle.
         </div>
         <button>selengkapnya</button>
       </div>
@@ -121,31 +127,50 @@ onMounted(() => {
       <div class="item">
         <h1>Menghemat waktu</h1>
         <div class="desc">
-          anda tidak perlu lagi mencari tempat perbaikan terbaik. Semua sudah terintegrasi dalam sistem, sehingga pelanggan bisa langsung mendapatkan layanan dari pengusaha perbaikan yang berpengalaman tanpa harus repot membandingkan pilihan.
-          
+          anda tidak perlu lagi mencari tempat perbaikan terbaik. Semua sudah terintegrasi dalam sistem, sehingga
+          pelanggan bisa langsung mendapatkan layanan dari pengusaha perbaikan yang berpengalaman tanpa harus repot
+          membandingkan pilihan.
         </div>
         <button>selengkapnya</button>
       </div>
     </div>
     <!-- =============content images============= -->
     <div class="images">
-      <div class="item" style="--i: 1">
-        <img :src="sandClockImage">
+      <div
+        class="item"
+        style="--i: 1"
+      >
+        <img :src="sandClockImage" />
       </div>
-      <div class="item" style="--i: 2">
-        <img :src="locationImage">
+      <div
+        class="item"
+        style="--i: 2"
+      >
+        <img :src="locationImage" />
       </div>
-      <div class="item" style="--i: 3">
-        <img :src="medalImage">
+      <div
+        class="item"
+        style="--i: 3"
+      >
+        <img :src="medalImage" />
       </div>
-      <div class="item" style="--i: 4">
-        <img :src="hoursImage">
+      <div
+        class="item"
+        style="--i: 4"
+      >
+        <img :src="hoursImage" />
       </div>
-      <div class="item" style="--i: 5">
-        <img :src="partnerImage">
+      <div
+        class="item"
+        style="--i: 5"
+      >
+        <img :src="partnerImage" />
       </div>
-      <div class="item" style="--i: 6">
-        <img :src="indonesiaImage">
+      <div
+        class="item"
+        style="--i: 6"
+      >
+        <img :src="indonesiaImage" />
       </div>
     </div>
 
@@ -155,8 +180,8 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.slider{
-    margin-top: 50px;
+.slider {
+  margin-top: 50px;
   position: relative;
   top: 10px;
   width: 100%;
@@ -165,7 +190,7 @@ onMounted(() => {
   overflow: hidden;
   margin-bottom: 20px;
 }
-.slider::before{
+.slider::before {
   position: absolute;
   width: 50%;
   height: 100vh;
@@ -174,20 +199,20 @@ onMounted(() => {
   left: 0;
   background-color: white;
 }
-.slider .title{
+.slider .title {
   font-family: 'Pacifico', cursive;
   position: absolute;
   top: 5%;
   right: 60%;
   text-align: right;
-  color: #AA38D1;
+  color: #aa38d1;
   font-size: 150px;
   width: 40%;
-  line-height: .9em;
-  text-shadow: 3px 5px 0 #FC79FF;
+  line-height: 0.9em;
+  text-shadow: 3px 5px 0 #fc79ff;
   transform: rotate(-5deg);
 }
-.slider .content{
+.slider .content {
   color: #ffffff;
   position: absolute;
   top: 10%;
@@ -196,12 +221,12 @@ onMounted(() => {
   width: 350px;
 }
 
-.slider .content h1{
+.slider .content h1 {
   color: #e88735;
   font-size: xx-large;
 }
 
-.slider .content button{
+.slider .content button {
   margin-top: 20px;
   padding: 10px 30px;
   border-radius: 20px;
@@ -211,36 +236,37 @@ onMounted(() => {
   float: right;
 }
 
-.content .item{
+.content .item {
   display: none;
 }
-.content .item.active{
+.content .item.active {
   display: block;
 }
-@keyframes showContent{
+@keyframes showContent {
   from {
     opacity: 0;
     transform: translateY(100px);
-  }to { 
+  }
+  to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-.content .item.item.active h1{
+.content .item.item.active h1 {
   opacity: 0;
-  animation: showContent .5s ease-in-out 1 forwards;
+  animation: showContent 0.5s ease-in-out 1 forwards;
 }
-.content .item.item.active .desc{
+.content .item.item.active .desc {
   opacity: 0;
   color: black;
   font-family: 'Poppins';
-  animation: showContent .5s .3s ease-in-out 1 forwards;
+  animation: showContent 0.5s 0.3s ease-in-out 1 forwards;
 }
-.content .item.item.active button{
+.content .item.item.active button {
   opacity: 0;
-  animation: showContent .5s .6s ease-in-out 1 forwards;
+  animation: showContent 0.5s 0.6s ease-in-out 1 forwards;
 }
-.images{
+.images {
   position: absolute;
   bottom: -10%;
   left: 50%;
@@ -268,29 +294,31 @@ onMounted(() => {
   height: 350px;
 }
 
-#prev, #next{
-position: absolute;
-border: none;
-top: 50%;
-left: 500px;
-font-size: 100px;
-font-family: cursive;
-background-color: transparent;
-color: black;
-font-weight: bold;
-opacity: 0.3;
+#prev,
+#next {
+  position: absolute;
+  border: none;
+  top: 50%;
+  left: 500px;
+  font-size: 100px;
+  font-family: cursive;
+  background-color: transparent;
+  color: black;
+  font-weight: bold;
+  opacity: 0.3;
 }
 
-#next{
-left: unset;
-right: 500px;
+#next {
+  left: unset;
+  right: 500px;
 }
-#prev:hover, #next:hover{
-opacity: 1;
+#prev:hover,
+#next:hover {
+  opacity: 1;
 }
-@media(max-width: 1427px){
-    .slider{
-        display: none;
-    }
+@media (max-width: 1427px) {
+  .slider {
+    display: none;
+  }
 }
 </style>

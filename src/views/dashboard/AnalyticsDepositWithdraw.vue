@@ -92,7 +92,8 @@ const withdraws = [
               <a
                 href="javascript:void(0)"
                 class="text-primary"
-              >View All</a>
+                >View All</a
+              >
             </h6>
           </template>
         </VCardItem>
@@ -144,7 +145,8 @@ const withdraws = [
               <a
                 href="javascript:void(0)"
                 class="text-primary"
-              >View All</a>
+                >View All</a
+              >
             </h6>
           </template>
         </VCardItem>
