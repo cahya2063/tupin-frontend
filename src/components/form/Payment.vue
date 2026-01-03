@@ -80,7 +80,8 @@ async function payXendit() {
     const payUrl = response.data.invoices.invoice_url
     // const payUrl = response.data.data.actions[0].value
 
-    window.location.href = payUrl
+    // ✅ buka di tab baru
+    window.open(payUrl, '_blank')
   } catch (error) {
     sweetAlert.error('gagal membuat invoice', error.message)
     console.error(error)
