@@ -25,7 +25,6 @@ declare module 'vue' {
     TemplateSecondContent: typeof import('./src/components/landing-page/TemplateSecondContent.vue')['default']
     TemplateSlider: typeof import('./src/components/landing-page/TemplateSlider.vue')['default']
     TemplateStrength: typeof import('./src/components/landing-page/TemplateStrength.vue')['default']
-    TemplateSweetAlert: typeof import('./src/components/alert/TemplateSweetAlert.vue')['default']
     ThemeSwitcher: typeof import('./src/@core/components/ThemeSwitcher.vue')['default']
     UpgradeToPro: typeof import('./src/components/UpgradeToPro.vue')['default']
     VueApexCharts: typeof import('vue3-apexcharts')['default']
