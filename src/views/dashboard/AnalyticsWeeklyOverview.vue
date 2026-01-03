@@ -7,9 +7,9 @@ const vuetifyTheme = useTheme()
 const options = computed(() => {
   const currentTheme = ref(vuetifyTheme.current.value.colors)
   const variableTheme = ref(vuetifyTheme.current.value.variables)
-  const disabledColor = `rgba(${ hexToRgb(currentTheme.value['on-surface']) },${ variableTheme.value['disabled-opacity'] })`
-  const borderColor = `rgba(${ hexToRgb(String(variableTheme.value['border-color'])) },${ variableTheme.value['border-opacity'] })`
-  
+  const disabledColor = `rgba(${hexToRgb(currentTheme.value['on-surface'])},${variableTheme.value['disabled-opacity']})`
+  const borderColor = `rgba(${hexToRgb(String(variableTheme.value['border-color']))},${variableTheme.value['border-opacity']})`
+
   return {
     chart: {
       offsetY: -10,
@@ -48,15 +48,7 @@ const options = computed(() => {
       active: { filter: { type: 'none' } },
     },
     xaxis: {
-      categories: [
-        'Sun',
-        'Mon',
-        'Tue',
-        'Wed',
-        'Thu',
-        'Fri',
-        'Sat',
-      ],
+      categories: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
       tickPlacement: 'on',
       labels: { show: false },
       crosshairs: { opacity: 0 },
@@ -71,7 +63,7 @@ const options = computed(() => {
           colors: disabledColor,
           fontSize: '13px',
         },
-        formatter: value => `${ value > 999 ? `${ (value / 1000).toFixed(0) }` : value }k`,
+        formatter: value => `${value > 999 ? `${(value / 1000).toFixed(0)}` : value}k`,
       },
     },
     responsive: [
@@ -87,17 +79,11 @@ const options = computed(() => {
   }
 })
 
-const series = [{
-  data: [
-    37,
-    57,
-    45,
-    75,
-    57,
-    40,
-    65,
-  ],
-}]
+const series = [
+  {
+    data: [37, 57, 45, 75, 57, 40, 65],
+  },
+]
 
 const moreList = [
   {
@@ -136,17 +122,13 @@ const moreList = [
       />
 
       <div class="d-flex align-center mb-5 gap-x-4">
-        <h4 class="text-h4">
-          45%
-        </h4>
+        <h4 class="text-h4">45%</h4>
         <p class="mb-0">
           Your sales performance is 45% <span class="text-high-emphasis">😎</span> better compared to last month
         </p>
       </div>
 
-      <VBtn block>
-        Details
-      </VBtn>
+      <VBtn block> Details </VBtn>
     </VCardText>
   </VCard>
 </template>

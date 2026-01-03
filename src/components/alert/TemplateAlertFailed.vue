@@ -1,6 +1,10 @@
 <template>
   <transition name="fade">
-    <div v-if="show" class="custom-alert" role="alert">
+    <div
+      v-if="show"
+      class="custom-alert"
+      role="alert"
+    >
       {{ message }} (closing in {{ countDown }}s)
     </div>
   </transition>
@@ -11,18 +15,19 @@ export default {
   props: {
     message: {
       type: String,
-      default: ''
+      default: '',
     },
-    duration: { // lama alert tampil
+    duration: {
+      // lama alert tampil
       type: Number,
-      default: 5
-    }
+      default: 5,
+    },
   },
   data() {
     return {
       show: false,
       countDown: this.duration,
-      timer: null
+      timer: null,
     }
   },
   watch: {
@@ -39,14 +44,14 @@ export default {
           }
         }, 1000)
       }
-    }
+    },
   },
   methods: {
     closeAlert() {
       this.show = false
       clearInterval(this.timer)
-    }
-  }
+    },
+  },
 }
 </script>
 
@@ -62,10 +67,14 @@ export default {
 }
 
 /* animasi fade */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.5s ease, transform 0.5s ease;
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
 }
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
   transform: translateY(-10px);
 }

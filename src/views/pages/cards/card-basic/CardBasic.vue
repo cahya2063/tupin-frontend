@@ -10,12 +10,7 @@ import pages3 from '@images/pages/3.png'
 import pages5 from '@images/pages/5.jpg'
 import pages6 from '@images/pages/6.jpg'
 
-const avatars = [
-  avatar1,
-  avatar2,
-  avatar3,
-  avatar4,
-]
+const avatars = [avatar1, avatar2, avatar3, avatar4]
 
 const isCardDetailsVisible = ref(false)
 </script>
@@ -39,7 +34,8 @@ const isCardDetailsVisible = ref(false)
         </VCardItem>
 
         <VCardText>
-          Cancun is back, better than ever! Over a hundred Mexico resorts have reopened and the state tourism minister predicts Cancun will draw as many visitors in 2006 as it did two years ago.
+          Cancun is back, better than ever! Over a hundred Mexico resorts have reopened and the state tourism minister
+          predicts Cancun will draw as many visitors in 2006 as it did two years ago.
         </VCardText>
       </VCard>
     </VCol>
@@ -64,12 +60,8 @@ const isCardDetailsVisible = ref(false)
           <!-- Title, Subtitle & Action Button -->
           <div class="d-flex justify-space-between flex-wrap pt-8">
             <div class="me-2 mb-2">
-              <VCardTitle class="pa-0">
-                Robert Meyer
-              </VCardTitle>
-              <VCardSubtitle class="text-caption pa-0">
-                London, UK
-              </VCardSubtitle>
+              <VCardTitle class="pa-0"> Robert Meyer </VCardTitle>
+              <VCardSubtitle class="text-caption pa-0"> London, UK </VCardSubtitle>
             </div>
             <VBtn>send request</VBtn>
           </div>
@@ -104,14 +96,10 @@ const isCardDetailsVisible = ref(false)
           <VCardTitle>Popular Uses Of The Internet</VCardTitle>
         </VCardItem>
 
-        <VCardText>
-          Although cards can support multiple actions, UI controls, and an overflow menu.
-        </VCardText>
+        <VCardText> Although cards can support multiple actions, UI controls, and an overflow menu. </VCardText>
 
         <VCardActions>
-          <VBtn @click="isCardDetailsVisible = !isCardDetailsVisible">
-            Details
-          </VBtn>
+          <VBtn @click="isCardDetailsVisible = !isCardDetailsVisible"> Details </VBtn>
 
           <VSpacer />
 
@@ -128,7 +116,10 @@ const isCardDetailsVisible = ref(false)
           <div v-show="isCardDetailsVisible">
             <VDivider />
             <VCardText>
-              I'm a thing. But, like most politicians, he promised more than he could deliver. You won't have time for sleeping, soldier, not with all the bed making you'll be doing. Then we'll go with that data file! Hey, you add a one and two zeros to that or we walk! You're going to do his laundry? I've got to find a way to escape.
+              I'm a thing. But, like most politicians, he promised more than he could deliver. You won't have time for
+              sleeping, soldier, not with all the bed making you'll be doing. Then we'll go with that data file! Hey,
+              you add a one and two zeros to that or we walk! You're going to do his laundry? I've got to find a way to
+              escape.
             </VCardText>
           </div>
         </VExpandTransition>
@@ -204,7 +195,8 @@ const isCardDetailsVisible = ref(false)
             </VCardText>
 
             <VCardText>
-              Before there was a United States of America, there were coffee houses, because how are you supposed to build.
+              Before there was a United States of America, there were coffee houses, because how are you supposed to
+              build.
             </VCardText>
 
             <VCardActions>
@@ -238,13 +230,9 @@ const isCardDetailsVisible = ref(false)
         </VCardItem>
 
         <VCardText>
-          <p class="font-weight-medium text-base">
-            $249.40
-          </p>
+          <p class="font-weight-medium text-base">$249.40</p>
 
-          <p class="mb-0">
-            3.1GHz 6-core 10th-generation Intel Core i5 processor, Turbo Boost up to 4.5GHz
-          </p>
+          <p class="mb-0">3.1GHz 6-core 10th-generation Intel Core i5 processor, Turbo Boost up to 4.5GHz</p>
         </VCardText>
 
         <VBtn
@@ -277,7 +265,10 @@ const isCardDetailsVisible = ref(false)
             </VCardItem>
 
             <VCardText>
-              Here, I focus on a range of items and features that we use in life without giving them a second thought such as Coca Cola, body muscles and holding ones own breath. Though, most of these notes are not fundamentally necessary, they are such that you can use them for a good laugh, at a drinks party or for picking up women or men.
+              Here, I focus on a range of items and features that we use in life without giving them a second thought
+              such as Coca Cola, body muscles and holding ones own breath. Though, most of these notes are not
+              fundamentally necessary, they are such that you can use them for a good laugh, at a drinks party or for
+              picking up women or men.
             </VCardText>
 
             <VCardText>
@@ -297,7 +288,6 @@ const isCardDetailsVisible = ref(false)
                 <p class="d-flex align-center mb-0">
                   <VIcon
                     color="primary"
-
                     icon="ri-user-line"
                   />
                   <span class="ms-3">15 Members</span>
@@ -347,12 +337,11 @@ const isCardDetailsVisible = ref(false)
               </p>
 
               <p class="text-sm">
-                5 Tips For Offshore <br> Software Development
+                5 Tips For Offshore <br />
+                Software Development
               </p>
 
-              <VBtn class="mt-8">
-                Contact Now
-              </VBtn>
+              <VBtn class="mt-8"> Contact Now </VBtn>
             </div>
           </VCol>
         </VRow>
@@ -367,11 +356,14 @@ const isCardDetailsVisible = ref(false)
     >
       <VCard title="Influencing The Influencer">
         <VCardText>
-          Computers have become ubiquitous in almost every facet of our lives. At work, desk jockeys spend hours in front of their desktops, while delivery people scan bar codes with handhelds and workers in the field stay in touch.
+          Computers have become ubiquitous in almost every facet of our lives. At work, desk jockeys spend hours in
+          front of their desktops, while delivery people scan bar codes with handhelds and workers in the field stay in
+          touch.
         </VCardText>
 
         <VCardText>
-          If you're in the market for new desktops, notebooks, or PDAs, there are a myriad of choices. Here's a rundown of some of the best systems available.
+          If you're in the market for new desktops, notebooks, or PDAs, there are a myriad of choices. Here's a rundown
+          of some of the best systems available.
         </VCardText>
 
         <VCardActions>
@@ -398,7 +390,8 @@ const isCardDetailsVisible = ref(false)
         </VCardText>
 
         <VCardText>
-          If you are looking for a new way to promote your business that won't cost you more money, maybe printing is one of the options you won't resist.
+          If you are looking for a new way to promote your business that won't cost you more money, maybe printing is
+          one of the options you won't resist.
         </VCardText>
 
         <VCardText>
@@ -432,21 +425,18 @@ const isCardDetailsVisible = ref(false)
             />
           </VAvatar>
 
-          <h6 class="text-h6">
-            Support
-          </h6>
+          <h6 class="text-h6">Support</h6>
         </VCardText>
 
         <VCardText>
           <p>
-            According to us blisters are a very common thing and we come across them very often in our daily lives. It is a very common occurrence like cold or fever depending upon your lifestyle.
+            According to us blisters are a very common thing and we come across them very often in our daily lives. It
+            is a very common occurrence like cold or fever depending upon your lifestyle.
           </p>
         </VCardText>
 
         <VCardText class="justify-center">
-          <VBtn variant="elevated">
-            Contact Now
-          </VBtn>
+          <VBtn variant="elevated"> Contact Now </VBtn>
         </VCardText>
       </VCard>
     </VCol>

@@ -18,7 +18,7 @@ const solidCardData = [
     cardBg: '#3B5998',
     title: 'Facebook Card',
     icon: 'ri-facebook-circle-line',
-    text: 'You\'ve read about the importance of being courageous, rebellious and imaginative. These are all vital ingredients.',
+    text: "You've read about the importance of being courageous, rebellious and imaginative. These are all vital ingredients.",
     avatarImg: avatar1,
     avatarName: 'Eugene Clarke',
     likes: '3.2k',

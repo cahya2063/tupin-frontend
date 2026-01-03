@@ -1,9 +1,9 @@
 <script setup>
-import { apiFetch, getProfile } from '@/utils/api';
-import { onMounted, ref } from 'vue';
+import { apiFetch, getProfile } from '@/utils/api'
+import { onMounted, ref } from 'vue'
 import avatar1 from '@images/avatars/avatar-1.png'
-import CardJob from '@/layouts/components/CardJob.vue';
-import Swal from 'sweetalert2';
+import CardJob from '@/layouts/components/CardJob.vue'
+import Swal from 'sweetalert2'
 
 const jobs = ref([])
 const detailJobs = ref()
@@ -12,9 +12,9 @@ const xlDemo = ref(false)
 const userName = ref([])
 
 // avatars creator
-const avatars = ref({}) 
+const avatars = ref({})
 // avatars untuk invites per job
-const invitesAvatars = ref({})  
+const invitesAvatars = ref({})
 
 async function getJobs() {
   const response = await apiFetch('/jobs')
@@ -66,14 +66,13 @@ const getAvatar = async (id, type = 'creator', jobId = null) => {
   }
 }
 
-
 async function getDetailJobs(id) {
   const response = await apiFetch(`/jobs/${id}`)
   detailJobs.value = response.data.job
 
   // Ambil profil creator berdasarkan idCreator dari job detail
-    const profile = await getProfile(detailJobs.value.idCreator)
-    userName.value = profile.nama // simpan nama creator
+  const profile = await getProfile(detailJobs.value.idCreator)
+  userName.value = profile.nama // simpan nama creator
 
   xlDemo.value = true
 }
@@ -83,7 +82,7 @@ async function applyJob(jobId) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId }),
-  });
+  })
 
   if (response.status === 201) {
     xlDemo.value = false
@@ -92,7 +91,7 @@ async function applyJob(jobId) {
       text: response.data.message,
       icon: 'success',
       confirmButtonText: 'OK',
-      confirmButtonColor: '#16a34a'
+      confirmButtonColor: '#16a34a',
     })
   } else {
     xlDemo.value = false
@@ -101,7 +100,7 @@ async function applyJob(jobId) {
       text: 'gagal melamar job',
       icon: 'error',
       confirmButtonText: 'OK',
-      confirmButtonColor: '#dc2626'
+      confirmButtonColor: '#dc2626',
     })
   }
 }
@@ -111,18 +110,14 @@ onMounted(() => {
 })
 </script>
 
-
 <template>
   <VRow class="jobs-container pa-4">
     <!-- Jika ada job open -->
     <template v-if="jobs.length > 0">
-      
       <div class="container-job">
-        
         <CardJob
-        v-for="(item, i) in jobs"
-        :key="i"
-        
+          v-for="(item, i) in jobs"
+          :key="i"
           :id="item._id"
           :title="item.title"
           :subtext1="[item.experiences, item.deadline, item.budget]"
@@ -151,83 +146,93 @@ onMounted(() => {
 
   <!-- Modal Detail -->
   <!-- Slide-over Modal -->
-<transition name="slide-fade">
-  <div v-if="xlDemo" class="slide-modal-overlay" @click.self="xlDemo = false">
-    <div class="slide-modal-content">
-      <div class="slide-modal-header">
-        <h4>{{ detailJobs?.title }}</h4>
-        <button class="close-btn" @click="xlDemo = false">×</button>
-      </div>
-
-      <div class="slide-modal-body">
-        <CImage
-          :src="`http://localhost:3000/uploads/jobs/${detailJobs?.photo}`"
-          rounded
-          width="100%"
-          class="job-detail-image"
-        />
-
-        <div class="category-text mt-3">
-          <strong>Kategori:</strong> {{ detailJobs?.category }}
+  <transition name="slide-fade">
+    <div
+      v-if="xlDemo"
+      class="slide-modal-overlay"
+      @click.self="xlDemo = false"
+    >
+      <div class="slide-modal-content">
+        <div class="slide-modal-header">
+          <h4>{{ detailJobs?.title }}</h4>
+          <button
+            class="close-btn"
+            @click="xlDemo = false"
+          >
+            ×
+          </button>
         </div>
 
-        <div class="description mt-3">
-          <h6>Deskripsi Kerusakan Alat:</h6>
-          <div v-html="detailJobs?.description"></div>
-        </div>
+        <div class="slide-modal-body">
+          <CImage
+            :src="`http://localhost:3000/uploads/jobs/${detailJobs?.photo}`"
+            rounded
+            width="100%"
+            class="job-detail-image"
+          />
 
-        <div class="info-box mb-4">
-              💰 <strong>Budget:</strong> Rp {{ detailJobs.budget?.toLocaleString('id-ID') }}<br>
-              🧰 <strong>Pengalaman:</strong> {{ detailJobs.experiences }}
-            </div>
+          <div class="category-text mt-3"><strong>Kategori:</strong> {{ detailJobs?.category }}</div>
 
-        <div class="skills mt-3">
-          <h6>Skill yang Dibutuhkan:</h6>
-          <div v-for="(skill, idx) in detailJobs?.skills" :key="idx" class="d-inline">
-            <VChip
-              color="green lighten-4"
-              text-color="green darken-2"
-              size="small"
-              class="text-capitalize me-2 mb-2"
+          <div class="description mt-3">
+            <h6>Deskripsi Kerusakan Alat:</h6>
+            <div v-html="detailJobs?.description"></div>
+          </div>
+
+          <div class="info-box mb-4">
+            💰 <strong>Budget:</strong> Rp {{ detailJobs.budget?.toLocaleString('id-ID') }}<br />
+            🧰 <strong>Pengalaman:</strong> {{ detailJobs.experiences }}
+          </div>
+
+          <div class="skills mt-3">
+            <h6>Skill yang Dibutuhkan:</h6>
+            <div
+              v-for="(skill, idx) in detailJobs?.skills"
+              :key="idx"
+              class="d-inline"
             >
-              {{ skill }}
-            </VChip>
+              <VChip
+                color="green lighten-4"
+                text-color="green darken-2"
+                size="small"
+                class="text-capitalize me-2 mb-2"
+              >
+                {{ skill }}
+              </VChip>
+            </div>
+          </div>
+
+          <div class="deadline-box mt-3">
+            <label class="deadline-label">📅 Deadline Pengerjaan:</label>
+            <p class="deadline-value">
+              {{ detailJobs?.deadline?.start_date?.split('T')[0] }}
+              →
+              {{ detailJobs?.deadline?.end_date?.split('T')[0] }}
+            </p>
           </div>
         </div>
 
-        <div class="deadline-box mt-3">
-          <label class="deadline-label">📅 Deadline Pengerjaan:</label>
-          <p class="deadline-value">
-            {{ detailJobs?.deadline?.start_date?.split('T')[0] }}
-            →
-            {{ detailJobs?.deadline?.end_date?.split('T')[0] }}
-          </p>
+        <div class="slide-modal-footer">
+          <VBtn
+            v-if="detailJobs?.invites?.includes(userId)"
+            variant="outlined"
+            color="error"
+            disabled
+          >
+            Anda sudah melamar
+          </VBtn>
+
+          <VBtn
+            v-else
+            color="primary"
+            variant="elevated"
+            @click="applyJob(detailJobs?._id)"
+          >
+            Apply Sekarang
+          </VBtn>
         </div>
       </div>
-
-      <div class="slide-modal-footer">
-        <VBtn
-          v-if="detailJobs?.invites?.includes(userId)"
-          variant="outlined"
-          color="error"
-          disabled
-        >
-          Anda sudah melamar
-        </VBtn>
-
-        <VBtn
-          v-else
-          color="primary"
-          variant="elevated"
-          @click="applyJob(detailJobs?._id)"
-        >
-          Apply Sekarang
-        </VBtn>
-      </div>
     </div>
-  </div>
-</transition>
-
+  </transition>
 </template>
 
 <style scoped>
@@ -253,7 +258,7 @@ onMounted(() => {
   border-radius: 12px;
   padding: 16px 20px;
   text-align: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
@@ -368,7 +373,7 @@ onMounted(() => {
 
 .job-detail-image {
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 /* Footer */
@@ -402,6 +407,4 @@ onMounted(() => {
 .slide-fade-leave-to {
   opacity: 0;
 }
-
 </style>
-

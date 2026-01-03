@@ -180,9 +180,7 @@ const recentDevices = [
 
           <!-- 👉 Password Requirements -->
           <VCardText>
-            <p class="text-base font-weight-medium mt-2">
-              Password Requirements:
-            </p>
+            <p class="text-base font-weight-medium mt-2">Password Requirements:</p>
 
             <ul class="d-flex flex-column gap-y-3">
               <li
@@ -223,20 +221,18 @@ const recentDevices = [
     <VCol cols="12">
       <VCard title="Two-steps verification">
         <VCardText>
-          <p class="font-weight-semibold">
-            Two factor authentication is not enabled yet.
-          </p>
+          <p class="font-weight-semibold">Two factor authentication is not enabled yet.</p>
           <p>
-            Two-factor authentication adds an additional layer of security to your account by requiring more than just a password to log in.
+            Two-factor authentication adds an additional layer of security to your account by requiring more than just a
+            password to log in.
             <a
               href="javascript:void(0)"
               class="text-decoration-none"
-            >Learn more.</a>
+              >Learn more.</a
+            >
           </p>
 
-          <VBtn>
-            Enable two-factor authentication
-          </VBtn>
+          <VBtn> Enable two-factor authentication </VBtn>
         </VCardText>
       </VCard>
     </VCol>
@@ -261,7 +257,14 @@ const recentDevices = [
                     <VSelect
                       label="Choose the API key type you want to create"
                       placeholder="Select API key type"
-                      :items="['Full Control', 'Modify', 'Read & Execute', 'List Folder Contents', 'Read Only', 'Read & Write']"
+                      :items="[
+                        'Full Control',
+                        'Modify',
+                        'Read & Execute',
+                        'List Folder Contents',
+                        'Read Only',
+                        'Read & Write',
+                      ]"
                     />
                   </VCol>
 
@@ -288,14 +291,16 @@ const recentDevices = [
           </VCol>
         </VRow>
       </VCard>
-    <!-- !SECTION -->
+      <!-- !SECTION -->
     </VCol>
 
     <VCol cols="12">
       <!-- SECTION: API Keys List -->
       <VCard title="API Key List &amp; Access">
         <VCardText>
-          An API key is a simple encrypted string that identifies an application without any principal. They are useful for accessing public data anonymously, and are used to associate API requests with your project for quota and billing.
+          An API key is a simple encrypted string that identifies an application without any principal. They are useful
+          for accessing public data anonymously, and are used to associate API requests with your project for quota and
+          billing.
         </VCardText>
 
         <!-- 👉 Server Status -->

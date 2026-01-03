@@ -42,21 +42,11 @@ const desserts = [
   <VTable theme="dark">
     <thead>
       <tr>
-        <th class="text-uppercase text--primary">
-          Dessert (100g serving)
-        </th>
-        <th class="text-center text-uppercase text--primary">
-          Calories
-        </th>
-        <th class="text-center text-uppercase text--primary">
-          Fat (g)
-        </th>
-        <th class="text-center text-uppercase text--primary">
-          Carbs (g)
-        </th>
-        <th class="text-center text-uppercase text--primary">
-          Protein (g)
-        </th>
+        <th class="text-uppercase text--primary">Dessert (100g serving)</th>
+        <th class="text-center text-uppercase text--primary">Calories</th>
+        <th class="text-center text-uppercase text--primary">Fat (g)</th>
+        <th class="text-center text-uppercase text--primary">Carbs (g)</th>
+        <th class="text-center text-uppercase text--primary">Protein (g)</th>
       </tr>
     </thead>
     <tbody>
@@ -84,6 +74,6 @@ const desserts = [
 
 <style lang="scss">
 .v-table {
-  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity))
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
 }
 </style>

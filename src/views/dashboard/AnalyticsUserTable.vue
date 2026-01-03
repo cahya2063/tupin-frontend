@@ -161,7 +161,7 @@ const resolveUserRoleVariant = role => {
       color: 'primary',
       icon: 'ri-vip-crown-line',
     }
-  
+
   return {
     color: 'success',
     icon: 'ri-user-line',
@@ -170,13 +170,10 @@ const resolveUserRoleVariant = role => {
 
 const resolveUserStatusVariant = stat => {
   const statLowerCase = stat.toLowerCase()
-  if (statLowerCase === 'pending')
-    return 'warning'
-  if (statLowerCase === 'active')
-    return 'success'
-  if (statLowerCase === 'inactive')
-    return 'secondary'
-  
+  if (statLowerCase === 'pending') return 'warning'
+  if (statLowerCase === 'active') return 'success'
+  if (statLowerCase === 'inactive') return 'secondary'
+
   return 'primary'
 }
 </script>

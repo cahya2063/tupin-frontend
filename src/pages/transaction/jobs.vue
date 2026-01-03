@@ -9,19 +9,15 @@ import DemoFormLayoutVerticalFormWithIcons from '@/views/pages/form-layouts/Demo
 </script>
 
 <template>
-  <div class="title">
-    perbaiki barangmu di sini
+  <div class="title">perbaiki barangmu di sini</div>
+  <div class="form">
+    <MultiStepForm />
   </div>
-    <div class="form">
-
-      <MultiStepForm/>
-    </div>
-    
 </template>
 <style scoped>
-  .title{
-    font-size: 40px;
-    font-weight: 700;
-    margin-bottom: 40px;
-  }
+.title {
+  font-size: 40px;
+  font-weight: 700;
+  margin-bottom: 40px;
+}
 </style>

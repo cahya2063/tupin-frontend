@@ -27,7 +27,10 @@ const props = defineProps({
   },
 })
 
-const isPositive = controlledComputed(() => props.change, () => Math.sign(props.change) === 1)
+const isPositive = controlledComputed(
+  () => props.change,
+  () => Math.sign(props.change) === 1,
+)
 </script>
 
 <template>

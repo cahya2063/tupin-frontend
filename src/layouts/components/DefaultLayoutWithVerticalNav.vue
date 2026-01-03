@@ -33,10 +33,10 @@ async function getNotificationsByUserId() {
   }
 }
 
-async function readNotification(notificationId){
+async function readNotification(notificationId) {
   try {
     const response = await apiFetch(`/notifications/read/${notificationId}`, {
-      method: 'GET' // atau PATCH sesuai backend
+      method: 'GET', // atau PATCH sesuai backend
     })
 
     // refresh notifikasi setelah dibaca
@@ -45,22 +45,22 @@ async function readNotification(notificationId){
     console.error('Gagal update notifikasi:', err)
   }
 }
-async function getDetailJobs(jobId){
+async function getDetailJobs(jobId) {
   try {
     const response = await apiFetch(`/jobs/${jobId}`)
     return response.data.job
   } catch (error) {
     console.error('Gagal ambil detail job:', error)
-    return null;
+    return null
   }
 }
-async function deleteNotification(notificationId){
+async function deleteNotification(notificationId) {
   try {
     const response = await apiFetch(`/notifications/delete/${notificationId}`, {
       method: 'DELETE',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
     sweetAlert.success(response.data.message)
   } catch (error) {
@@ -92,7 +92,6 @@ onMounted(() => {
 })
 </script>
 
-
 <template>
   <VerticalNavLayout>
     <!-- 👉 navbar -->
@@ -109,16 +108,23 @@ onMounted(() => {
         <VSpacer />
 
         <!-- 👉 Notifikasi -->
-        <CDropdown variant="nav-item" :popper="true">
+        <CDropdown
+          variant="nav-item"
+          :popper="true"
+        >
           <CDropdownToggle :caret="false">
             <VIcon icon="ri-notification-line" />
             <span
               v-if="unreadCount > 0"
               class="notif-badge"
-            >{{ unreadCount }}</span>
+              >{{ unreadCount }}</span
+            >
           </CDropdownToggle>
 
-          <CDropdownMenu class="p-2" style="width: 20rem; max-height: 24rem; overflow-y: auto;">
+          <CDropdownMenu
+            class="p-2"
+            style="width: 20rem; max-height: 24rem; overflow-y: auto"
+          >
             <template v-if="notifications.length">
               <CCard
                 v-for="notif in notifications"
@@ -127,9 +133,7 @@ onMounted(() => {
                 @click="handleNotifClick(notif)"
               >
                 <CCardBody>
-                  <CCardTitle class="text-sm font-weight-bold mb-1">
-                    📢 Notifikasi
-                  </CCardTitle>
+                  <CCardTitle class="text-sm font-weight-bold mb-1"> 📢 Notifikasi </CCardTitle>
                   <CCardText class="text-xs text-muted">
                     {{ notif.message }}
                   </CCardText>
@@ -160,13 +164,15 @@ onMounted(() => {
         <CModal
           alignment="center"
           :visible="visibleVerticallyCenteredDemo"
-          @close="() => { visibleVerticallyCenteredDemo = false }"
+          @close="
+            () => {
+              visibleVerticallyCenteredDemo = false
+            }
+          "
           aria-labelledby="VerticallyCenteredExample"
         >
           <CModalHeader>
-            <CModalTitle id="VerticallyCenteredExample">
-              Detail Notifikasi
-            </CModalTitle>
+            <CModalTitle id="VerticallyCenteredExample"> Detail Notifikasi </CModalTitle>
           </CModalHeader>
           <CModalBody>
             <div v-if="selectedNotif">
@@ -175,15 +181,25 @@ onMounted(() => {
             </div>
           </CModalBody>
           <CModalFooter>
-            <CButton color="danger" v-show="selectedNotif.isRead == true" @click="deleteNotification(selectedNotif._id)">
+            <CButton
+              color="danger"
+              v-show="selectedNotif.isRead == true"
+              @click="deleteNotification(selectedNotif._id)"
+            >
               Hapus
             </CButton>
-            <CButton color="secondary" @click="() => { visibleVerticallyCenteredDemo = false }">
+            <CButton
+              color="secondary"
+              @click="
+                () => {
+                  visibleVerticallyCenteredDemo = false
+                }
+              "
+            >
               Tutup
             </CButton>
           </CModalFooter>
         </CModal>
-
 
         <NavbarThemeSwitcher class="me-2" />
         <UserProfile />
@@ -191,11 +207,15 @@ onMounted(() => {
     </template>
 
     <template #vertical-nav-header="{ toggleIsOverlayNavActive }">
-      <RouterLink to="/" class="app-logo app-title-wrapper">
-        <div class="d-flex" v-html="logo" />
-        <h1 class="font-weight-medium leading-normal text-xl text-uppercase">
-          Materio
-        </h1>
+      <RouterLink
+        to="/"
+        class="app-logo app-title-wrapper"
+      >
+        <div
+          class="d-flex"
+          v-html="logo"
+        />
+        <h1 class="font-weight-medium leading-normal text-xl text-uppercase">Materio</h1>
       </RouterLink>
 
       <IconBtn
@@ -220,7 +240,6 @@ onMounted(() => {
   </VerticalNavLayout>
 </template>
 
-
 <style lang="scss" scoped>
 .notif-badge {
   position: absolute;
@@ -233,10 +252,8 @@ onMounted(() => {
   padding: 0.15rem 0.4rem;
 }
 @media (min-width: 1279px) {
-  .icon-nav{
-
+  .icon-nav {
     display: none;
   }
 }
 </style>
-

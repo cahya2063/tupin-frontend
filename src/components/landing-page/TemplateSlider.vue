@@ -29,39 +29,50 @@ function switchContent(key) {
 </script>
 
 <template>
-<div class="container-slider" style="color: black;">
-        <div class="switch-image-container">
-            <img :src="currentContent.image" alt="" class="img-description"/>
-        </div>
-        <div class="container-switch">
-          <div class="btn-container">
-            <button
-                type="button"
-                class="switch-btn"
-                :class="{ active: currentKey === 'desc' }"
-                @click="switchContent('desc')"
-            >Deskripsi</button>
-            <button
-                type="button"
-                class="switch-btn"
-                :class="{ active: currentKey === 'scan' }"
-                @click="switchContent('scan')"
-            >Scan</button>
-            <button
-                type="button"
-                class="switch-btn"
-                :class="{ active: currentKey === 'history' }"
-                @click="switchContent('history')"
-            >Sejarah</button>
-            </div>
-          <div class="switch-teks">
-             {{ currentContent.text }}
-          </div>
-        </div>
+  <div
+    class="container-slider"
+    style="color: black"
+  >
+    <div class="switch-image-container">
+      <img
+        :src="currentContent.image"
+        alt=""
+        class="img-description"
+      />
     </div>
-
+    <div class="container-switch">
+      <div class="btn-container">
+        <button
+          type="button"
+          class="switch-btn"
+          :class="{ active: currentKey === 'desc' }"
+          @click="switchContent('desc')"
+        >
+          Deskripsi
+        </button>
+        <button
+          type="button"
+          class="switch-btn"
+          :class="{ active: currentKey === 'scan' }"
+          @click="switchContent('scan')"
+        >
+          Scan
+        </button>
+        <button
+          type="button"
+          class="switch-btn"
+          :class="{ active: currentKey === 'history' }"
+          @click="switchContent('history')"
+        >
+          Sejarah
+        </button>
+      </div>
+      <div class="switch-teks">
+        {{ currentContent.text }}
+      </div>
+    </div>
+  </div>
 </template>
-
 
 <style scoped>
 .container-slider {
@@ -139,26 +150,23 @@ function switchContent(key) {
   margin-block: 10px;
 }
 
-
-@media(max-width: 1302px){
-    .container-slider{
-        width: 80%;
-        flex-direction: column;
-    }
+@media (max-width: 1302px) {
+  .container-slider {
+    width: 80%;
+    flex-direction: column;
+  }
 }
-@media(max-width: 524px){
-    .container-slider{
-        flex-direction: column;
-        width: 100%;
-    }
+@media (max-width: 524px) {
+  .container-slider {
+    flex-direction: column;
+    width: 100%;
+  }
 
-    .switch-image-container, 
-    .container-switch, 
-    .btn-container, 
-    .switch-teks{
-        width: 100%;
-    }
-
+  .switch-image-container,
+  .container-switch,
+  .btn-container,
+  .switch-teks {
+    width: 100%;
+  }
 }
-
 </style>
