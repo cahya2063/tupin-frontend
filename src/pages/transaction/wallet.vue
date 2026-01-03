@@ -37,30 +37,30 @@ const onlyNumber = event => {
   event.target.value = event.target.value.replace(/[^0-9]/g, '')
 }
 
-const validateForm = () => {
-  let isValid = true
+// const validateForm = () => {
+//   let isValid = true
 
-  // reset error
-  amountError.value = ''
-  accountError.value = ''
+//   // reset error
+//   amountError.value = ''
+//   accountError.value = ''
 
-  if (!amount.value || withdrawAmount.value <= 0) {
-    amountError.value = 'Nominal penarikan wajib diisi'
-    isValid = false
-  }
+//   if (!amount.value || withdrawAmount.value <= 0) {
+//     amountError.value = 'Nominal penarikan wajib diisi'
+//     isValid = false
+//   }
 
-  if (!accountNumber.value) {
-    accountError.value = 'Nomor rekening wajib diisi'
-    isValid = false
-  }
+//   if (!accountNumber.value) {
+//     accountError.value = 'Nomor rekening wajib diisi'
+//     isValid = false
+//   }
 
-  if (withdrawAmount.value > balance.value) {
-    amountError.value = 'Saldo tidak mencukupi'
-    isValid = false
-  }
+//   if (withdrawAmount.value > balance.value) {
+//     amountError.value = 'Saldo tidak mencukupi'
+//     isValid = false
+//   }
 
-  return isValid
-}
+//   return isValid
+// }
 
 async function getBalance(subAccountId) {
   const response = await apiFetch(`/payment/check-balance/${subAccountId}`)

@@ -215,6 +215,10 @@ const openApplicants = async () => {
 
   showApplicantsModal.value = true
 }
+const openReview = () => {
+  showRatingModal.value = true
+  showSidebar.value = false
+}
 
 const review = ref()
 
@@ -392,10 +396,7 @@ onMounted(async () => {
               v-if="selectedJob?.status == 'payed done' && !review"
               class="mt-4 mx-2"
               color="success"
-              @click="
-                showRatingModal = true
-                showSidebar = false
-              "
+              @click="openReview"
               >Beri Review</VBtn
             >
 

@@ -1,21 +1,47 @@
 <script setup>
 import { apiFetch } from '@/utils/api'
+import sweetAlert from '@/utils/sweetAlert'
 import { onMounted, ref } from 'vue'
 
-const payment = ref([])
+const payment = ref({
+  invoices: [],
+})
 const selectedInvoice = ref(null)
 const isActive = ref(false)
+const isModalDeleteActive = ref(false)
+
+const selectedDeleteInvoice = ref(null)
+
+const filteredInvoices = computed(() =>
+  payment.value.invoices.filter(i => i.isClientDelete === false)
+)
 async function getInvoices(userId) {
   const response = await apiFetch(`/payment/get-invoice/${userId}`)
   payment.value = response.data
+}
+
+async function deleteInvoices(invoiceId){
+  try {
+    isModalDeleteActive.value = false
+    console.log(`delete ${invoiceId}`);
+    
+    const response = await apiFetch(`/payment/delete-invoice/${invoiceId}`,{
+      method: 'DELETE'
+    })
+    sweetAlert.success(response.data.message)
+  } catch (error) {
+    sweetAlert.error(error.message)
+  }
+
+  
 }
 const openDetailInvoice = invoice => {
   selectedInvoice.value = invoice
   isActive.value = true
 }
-const paymentUrl = url => {
-  window.location.href = url
-}
+// const paymentUrl = url => {
+//   window.location.href = url
+// }
 function formatDate(dateString) {
   const date = new Date(dateString)
 
@@ -56,47 +82,111 @@ onMounted(async () => {
   console.log('invoice : ', payment.value.invoices)
 })
 </script>
-
 <template>
   <div class="container">
-    <CCard
-      class="payment-card"
-      v-for="(item, i) in payment.invoices"
-    >
-      <CCardBody @click="openDetailInvoice(item)">
-        <!-- Header -->
-        <div class="header">
-          <span class="month">{{ item.external_id }}</span>
-          <span class="date">{{ formatDate(item.created) }}</span>
-        </div>
-
-        <!-- Content -->
-        <div class="content">
-          <div class="row">
-            <span class="label">Status</span>
-            <VChip
-              :color="getStatusColor(item.status)"
-              size="small"
-              class="job-status-chip ms-2"
-              variant="outlined"
-            >
-              {{ item.status }}
-            </VChip>
+    <!-- DATA ADA -->
+    <template v-if="filteredInvoices.length > 0">
+      <CCard
+        v-for="item in filteredInvoices"
+        :key="item.external_id"
+        class="payment-card"
+      >
+        <CCardBody @click="openDetailInvoice(item)">
+          <!-- Header -->
+          <div class="header">
+            <span class="month">{{ item.external_id }}</span>
+            <span class="date">{{ formatDate(item.created) }}</span>
           </div>
 
-          <div class="row">
-            <span class="label">Penerima : </span>
-            <span class="value">{{ item.merchant_name }}</span>
-          </div>
+          <!-- Content -->
+          <div class="content">
+            <div class="row">
+              <span class="label">Status</span>
+              <VChip
+                :color="getStatusColor(item.status)"
+                size="small"
+                class="job-status-chip ms-2"
+                variant="outlined"
+              >
+                {{ item.status }}
+              </VChip>
+            </div>
 
-          <div class="row right">
-            <span class="label">Total Pembayaran</span>
-            <span class="value amount">Rp {{ item.amount.toLocaleString('id-ID') }}</span>
-          </div>
-        </div>
-      </CCardBody>
-    </CCard>
+            <div class="row">
+              <span class="label">Penerima : </span>
+              <span class="value">{{ item.merchant_name }}</span>
+            </div>
 
+
+            <div class="total-container mt-4 d-flex justify-space-between">
+
+              <div class="row right">
+                <span class="label">Total Pembayaran</span>
+                <span class="value amount"> Rp {{ item.amount.toLocaleString('id-ID') }} </span>
+              </div>
+              <VBtn 
+                    v-show="item.status == 'SETTLED'"
+                    @click.stop="
+                    selectedDeleteInvoice = item;
+                    isModalDeleteActive = true" 
+                    density="comfortable" icon="ri-delete-bin-line" color="error">
+                    
+              </VBtn>
+
+              
+            </div>
+          </div>
+        </CCardBody>
+      </CCard>
+      <v-dialog
+        v-model="isModalDeleteActive"
+        max-width="400"
+        persistent
+      >
+        <!-- <template v-slot:activator="{ props: activatorProps }">
+          <v-btn v-bind="activatorProps">
+            Open Dialog
+          </v-btn>
+        </template> -->
+
+        <v-card
+          prepend-icon="ri-delete-bin-line"
+          text="Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running."
+          title="Use Google's location service?"
+        >
+          <template v-slot:actions>
+            <v-spacer></v-spacer>
+
+            <v-btn @click="isModalDeleteActive = false">
+              Batal
+            </v-btn>
+
+            <v-btn class="bg-danger white" color="white" @click="deleteInvoices(selectedDeleteInvoice.external_id)">
+              Hapus
+            </v-btn>
+          </template>
+        </v-card>
+      </v-dialog>
+    </template>
+
+    <!-- DATA KOSONG -->
+    <template v-else>
+      <VRow
+        class="empty-state"
+        align="center"
+        justify="center"
+      >
+        <VCol
+          cols="12"
+          class="text-center"
+        >
+          <h3>Kamu belum pernah melakukan Pembayaran 💵</h3>
+          <p class="text-subtitle-2 text-grey-darken-1">Kalo Kamu sudah lakuin pembayaran cek disini ya!!</p>
+        </VCol>
+      </VRow>
+    </template>
+
+    <!-- DIALOG TETAP DI LUAR IF -->
     <VDialog
       v-model="isActive"
       transition="dialog-bottom-transition"
@@ -211,7 +301,7 @@ onMounted(async () => {
             size="large"
             @click="isActive = false"
           >
-            Selesai
+            Tutup
           </VBtn>
           <VBtn
             block
@@ -219,9 +309,23 @@ onMounted(async () => {
             color="primary"
             variant="elevated"
             size="large"
-            @click="paymentUrl(selectedInvoice.url)"
+            target="_blank"
+            @click="isActive = false"
+            :href="selectedInvoice.url"
           >
             Bayar
+          </VBtn>
+          <VBtn
+            block
+            v-show="selectedInvoice.status == 'PAID' || selectedInvoice.status == 'SETTLED'"
+            color="primary"
+            variant="elevated"
+            size="large"
+            target="_blank"
+            @click="isActive = false"
+            :href="selectedInvoice.url"
+          >
+            Lihat Bukti Pembayaran
           </VBtn>
         </VCardActions>
       </VCard>
@@ -240,6 +344,10 @@ onMounted(async () => {
   grid-template-columns: repeat(2, 1fr); /* 2 card per baris */
   gap: 20px;
   padding: 20px;
+}
+.empty-state {
+  grid-column: 1 / -1; /* Membuat elemen ini mengambil seluruh kolom */
+  min-height: 60vh;
 }
 .payment-card {
   width: 100%;
