@@ -15,13 +15,13 @@ import craftManImage from '@assets/login/image.png'
         class="teks-login-1"
         style="color: black"
       >
-        Lorem ipsum dolor sit amet.
+        Fixify
       </p>
       <p
         class="teks-login-2"
         style="color: black"
       >
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit amet earum fugit
+        Menghubungkan pelanggan dengan teknisi profesional untuk perbaikan.
       </p>
     </div>
     <div class="right-content">
@@ -56,15 +56,14 @@ import craftManImage from '@assets/login/image.png'
 .teks-login-1 {
   display: flex;
   margin-inline: auto;
-  margin-block: 0px;
   font-family: 'Quicksand';
   font-size: 25px;
   font-weight: 700;
-  width: 300px;
-  text-align: center;
+  width: 75px;
 }
 .teks-login-2 {
   width: 300px;
+  font-family: 'Quicksand';
   text-align: center;
   color: rgb(90, 109, 109);
 }

@@ -335,7 +335,7 @@ onMounted(async () => {
             class="me-4"
             color="success"
             @click="
-              showRatingModal = true
+              showRatingModal = true;
               xlDemo = false
             "
             >Beri Review
