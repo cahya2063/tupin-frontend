@@ -134,7 +134,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
+  <div class="stepper-wrapper">
     <CStepper
       :steps="steps"
       layout="vertical"
@@ -176,6 +176,16 @@ onMounted(async () => {
             </div>
           </CCol>
         </form>
+        <div class="d-flex btn-next-container gap-2 mt-4 me-4">
+          
+          <CButton
+            v-if="!finish && currentStep < steps.length"
+            color="primary"
+            @click="stepperRef?.next()"
+          >
+            Next
+          </CButton>
+        </div>
       </template>
 
       <template #step-2="{ formRef }">
@@ -236,29 +246,59 @@ onMounted(async () => {
             <div class="picked">Category : {{ category }}</div>
           </CCol>
         </form>
+        <div class="d-flex btn-next-container gap-2 mt-4">
+          <CButton
+            v-if="!finish && currentStep > 1"
+            color="secondary"
+            @click="stepperRef?.prev()"
+          >
+            Previous
+          </CButton>
+          <CButton
+            v-if="!finish && currentStep < steps.length"
+            color="primary"
+            @click="stepperRef?.next()"
+          >
+            Next
+          </CButton>
+          
+        </div>
       </template>
 
       <template #step-3="{ formRef }">
         <form
           class="row g-3 pt-3"
-          :class="{ 'was-validated': validationState === 2 }"
+          :class="{ 'was-validated': validationState === 3 }"
           novalidate
           :ref="formRef"
         >
-          <CCol :md="4">
-            <div class="title">skill apa yang kamu butuhkan?</div>
-          </CCol>
-          <CCol :md="6">
-            <label class="form-label fw-semibold"> Skill yang dibutuhkan <span class="text-danger">*</span> </label>
-            <CMultiSelect
-              :options="options"
-              multiple
-              @change="skills = $event.map(opt => opt.value)"
-              novalidate
-              required
-            />
-          </CCol>
+          <label class="form-label fw-semibold">
+            Skill yang dibutuhkan <span class="text-danger">*</span>
+          </label>
+
+          <CMultiSelect
+            :options="options"
+            multiple
+            v-model="skills"
+          />
         </form>
+        <div class="d-flex btn-next-container gap-2 mt-4">
+          <CButton
+            v-if="!finish && currentStep > 1"
+            color="secondary"
+            @click="stepperRef?.prev()"
+          >
+            Previous
+          </CButton>
+          <CButton
+            v-if="!finish && currentStep < steps.length"
+            color="primary"
+            @click="stepperRef?.next()"
+          >
+            Next
+          </CButton>
+          
+        </div>
       </template>
 
       <template #step-4="{ formRef }">
@@ -295,6 +335,23 @@ onMounted(async () => {
             </div>
           </CCol>
         </form>
+        <div class="d-flex btn-next-container gap-2 mt-4">
+          <CButton
+            v-if="!finish && currentStep > 1"
+            color="secondary"
+            @click="stepperRef?.prev()"
+          >
+            Previous
+          </CButton>
+          <CButton
+            v-if="!finish && currentStep < steps.length"
+            color="primary"
+            @click="stepperRef?.next()"
+          >
+            Next
+          </CButton>
+          
+        </div>
       </template>
 
       <template #step-5="{ formRef }">
@@ -347,6 +404,23 @@ onMounted(async () => {
             </div>
           </CCol>
         </form>
+        <div class="d-flex btn-next-container gap-2 mt-4">
+          <CButton
+            v-if="!finish && currentStep > 1"
+            color="secondary"
+            @click="stepperRef?.prev()"
+          >
+            Previous
+          </CButton>
+          <CButton
+            v-if="!finish && currentStep < steps.length"
+            color="primary"
+            @click="stepperRef?.next()"
+          >
+            Next
+          </CButton>
+          
+        </div>
       </template>
 
       <template #step-6="{ formRef }">
@@ -371,6 +445,23 @@ onMounted(async () => {
             />
           </CCol>
         </form>
+        <div class="d-flex btn-next-container gap-2 mt-4">
+          <CButton
+            v-if="!finish && currentStep > 1"
+            color="secondary"
+            @click="stepperRef?.prev()"
+          >
+            Previous
+          </CButton>
+          <CButton
+            v-if="!finish && currentStep < steps.length"
+            color="primary"
+            @click="stepperRef?.next()"
+          >
+            Next
+          </CButton>
+          
+        </div>
       </template>
 
       <template #step-7="{ formRef }">
@@ -406,6 +497,23 @@ onMounted(async () => {
             />
           </CCol>
         </form>
+        <div class="d-flex btn-next-container gap-2 mt-4">
+          <CButton
+            v-if="!finish && currentStep > 1"
+            color="secondary"
+            @click="stepperRef?.prev()"
+          >
+            Previous
+          </CButton>
+          <CButton
+            v-if="!finish && currentStep < steps.length"
+            color="primary"
+            @click="stepperRef?.next()"
+          >
+            Next
+          </CButton>
+          
+        </div>
       </template>
 
       <template #step-8="{ formRef }">
@@ -428,6 +536,23 @@ onMounted(async () => {
             />
           </CCol>
         </form>
+        <div class="d-flex btn-next-container gap-2 mt-4">
+          <CButton
+            v-if="!finish && currentStep > 1"
+            color="secondary"
+            @click="stepperRef?.prev()"
+          >
+            Previous
+          </CButton>
+          <CButton
+            v-if="!finish && currentStep < steps.length"
+            color="primary"
+            @click="stepperRef?.next()"
+          >
+            Next
+          </CButton>
+          
+        </div>
       </template>
 
       <template #step-9="{ formRef }">
@@ -463,34 +588,29 @@ onMounted(async () => {
             </div>
           </CCol>
         </form>
+        <div class="d-flex btn-next-container gap-2 mt-4">
+          <CButton
+            v-if="!finish && currentStep > 1"
+            color="secondary"
+            @click="stepperRef?.prev()"
+          >
+            Previous
+          </CButton>
+              <CButton
+            v-if="!finish && currentStep === steps.length"
+            color="primary"
+            @click="postJob"
+          >
+            Finish
+          </CButton>
+          
+        </div>
       </template>
     </CStepper>
     <div v-if="finish">All steps are complete—you're finished.</div>
 
-    <div class="d-flex gap-2 mt-4">
+    <div class="d-flex gap-2 mt-4">      
       <CButton
-        v-if="!finish && currentStep > 1"
-        color="secondary"
-        @click="stepperRef?.prev()"
-      >
-        Previous
-      </CButton>
-      <CButton
-        v-if="!finish && currentStep < steps.length"
-        color="primary"
-        @click="stepperRef?.next()"
-      >
-        Next
-      </CButton>
-      <CButton
-        v-if="!finish && currentStep === steps.length"
-        color="primary"
-        @click="postJob"
-      >
-        Finish
-      </CButton>
-      <CButton
-        v-if="finish"
         color="danger"
         @click="stepperRef?.reset()"
       >
@@ -501,6 +621,13 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.stepper-wrapper {
+  width: 85%;
+}
+.btn-next-container{
+  display: flex;
+  justify-content: end;
+}
 .title {
   font-size: 30px;
   font-weight: 500;
