@@ -49,7 +49,7 @@ async function registerUser() {
 
 <template>
   <div class="container-form">
-    <p class="teks-register-3">Registrasi</p>
+    <p class="teks-register-3"><b>Registrasi</b></p>
 
     <!-- alert kondisi -->
     <TemplateAlertSuccess
@@ -63,7 +63,7 @@ async function registerUser() {
       :duration="5"
     />
 
-    <p>
+    <p class="text-1">
       Sudah punya akun?
       <RouterLink
         to="/login"
@@ -122,8 +122,15 @@ async function registerUser() {
   padding-top: 30px;
 }
 .teks-register-3 {
+  font-family: 'Quicksand';
   margin-block: 20px;
-  font-size: 20px;
+  font-size: 40px;
+  color: black;
+}
+.text-1{
+  font-family: 'Quicksand';
+  margin-bottom: 20px;
+  font-size: 16px;
   color: black;
 }
 .router {

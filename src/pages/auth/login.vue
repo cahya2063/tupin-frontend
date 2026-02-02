@@ -53,7 +53,7 @@ async function loginUser() {
 
 <template>
   <div class="container-form">
-    <p class="teks-login-3">Login Aplikasi</p>
+    <p class="teks-login-3"><b>Login Aplikasi</b></p>
     <TemplateAlertSuccess
       v-show="statusCode == 200"
       :message="alertMessage"
@@ -65,7 +65,7 @@ async function loginUser() {
       :duration="5"
     />
 
-    <p>
+    <p class="text-1">
       Belum punya akun?
       <RouterLink
         to="/register"
@@ -116,8 +116,15 @@ async function loginUser() {
   padding-top: 30px;
 }
 .teks-login-3 {
+  font-family: 'Quicksand';
   margin-block: 20px;
-  font-size: 20px;
+  font-size: 40px;
+  color: black;
+}
+.text-1{
+  font-family: 'Quicksand';
+  margin-bottom: 20px;
+  font-size: 16px;
   color: black;
 }
 .router {
