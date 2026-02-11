@@ -132,7 +132,7 @@ async function shareLocation() {
       createdAt: new Date(),
     }
     
-    //test 2
+ // test 1
 
     console.log('data lokasi : ', msg)
     await apiFetch(`/messages/send`, {
