@@ -21,6 +21,11 @@ const menuItems = computed(() => {
         to: '/posted-jobs',
       },
       {
+        title: 'Teknisi terdekat',
+        icon: 'ri-user-search-line',
+        to: '/search-technician',
+      },
+      {
         title: 'Riwayat Pembayaran',
         icon: 'ri-history-line',
         to: '/payment-history',

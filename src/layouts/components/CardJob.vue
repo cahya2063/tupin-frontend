@@ -4,13 +4,13 @@ import { ref, computed, toRaw } from 'vue'
 const props = defineProps({
   id: String,
   title: String,
-  subtext1: Array,
+  deadline: Object,
   desc: String,
-  skills: Array,
+  // skills: Array,
   category: String,
   status: String,
   creator: String,
-  invitesAvatars: Object,
+  // invitesAvatars: Object,
   avatarPlaceholder: String, // untuk default avatar
 })
 
@@ -19,38 +19,38 @@ const showFull = ref(false)
 // 🔹 Fungsi bantu: hapus tag HTML
 const stripHtml = text => text?.replace(/<[^>]*>/g, '').trim() ?? ''
 
-const formattedSubtext = computed(() => {
-  const result = props.subtext1.map(item => {
-    const rawItem = toRaw(item)
+// const formattedSubtext = computed(() => {
+//   const result = props.deadline.map(item => {
+//     const rawItem = toRaw(item)
 
-    // 🔹 Jika objek deadline
-    if (rawItem && typeof rawItem === 'object' && 'start_date' in rawItem && 'end_date' in rawItem) {
-      const start = rawItem.start_date ? formatDate(rawItem.start_date) : '-'
-      const end = rawItem.end_date ? formatDate(rawItem.end_date) : '-'
-      return `${start} → ${end}`
-    }
+//     // 🔹 Jika objek deadline
+//     if (rawItem && typeof rawItem === 'object' && 'start_date' in rawItem && 'end_date' in rawItem) {
+//       const start = rawItem.start_date ? formatDate(rawItem.start_date) : '-'
+//       const end = rawItem.end_date ? formatDate(rawItem.end_date) : '-'
+//       return `${start} → ${end}`
+//     }
 
-    // 🔹 Jika angka → format rupiah
-    if (typeof rawItem === 'number') {
-      return `Rp ${rawItem.toLocaleString('id-ID')}`
-    }
+//     // 🔹 Jika angka → format rupiah
+//     if (typeof rawItem === 'number') {
+//       return `Rp ${rawItem.toLocaleString('id-ID')}`
+//     }
 
-    // 🔹 Jika string → hapus tag HTML
-    if (typeof rawItem === 'string') {
-      return rawItem.replace(/<[^>]*>/g, '').trim()
-    }
+//     // 🔹 Jika string → hapus tag HTML
+//     if (typeof rawItem === 'string') {
+//       return rawItem.replace(/<[^>]*>/g, '').trim()
+//     }
 
-    // 🔹 Jika null atau undefined
-    if (rawItem === null || rawItem === undefined) {
-      return '-'
-    }
+//     // 🔹 Jika null atau undefined
+//     if (rawItem === null || rawItem === undefined) {
+//       return '-'
+//     }
 
-    // 🔹 Default fallback
-    return String(rawItem)
-  })
+//     // 🔹 Default fallback
+//     return String(rawItem)
+//   })
 
-  return result.join(', ')
-})
+//   return result.join(', ')
+// })
 
 // Fungsi bantu format tanggal
 function formatDate(dateStr) {
@@ -95,7 +95,7 @@ const toggleShow = () => {
     </div>
 
     <div class="title">{{ title }}</div>
-    <div class="subtext-1">{{ formattedSubtext }}</div>
+    <!-- <div class="subtext-1">{{ formattedSubtext }}</div> -->
 
     <div class="desc">
       {{ displayedText }}
@@ -109,52 +109,17 @@ const toggleShow = () => {
       </template>
     </div>
 
-    <div class="skills">
-      <VChip
-        v-for="(skill, index) in skills"
-        :key="index"
-        color="primary"
-        size="small"
-        class="text-capitalize me-2 mb-2"
-      >
-        {{ skill }}
-      </VChip>
-    </div>
 
     <div class="category">
       <VChip
-        color="success"
+        color="success lighten-4"
+        text-color="green darken-2"
         size="small"
-        class="text-capitalize me-2 mb-2"
+        class="me-2"
       >
-        #{{ category }}
+        {{ category }}
       </VChip>
-    </div>
 
-    <!-- Jumlah teknisi -->
-    <div class="d-flex justify-space-between align-center mt-3">
-      <span class="font-weight-medium text-body-2 text-grey-darken-1">
-        {{ props.invitesAvatars[props.id]?.length || 0 }} teknisi berminat
-      </span>
-
-      <div class="v-avatar-group d-flex align-center">
-        <VAvatar
-          v-for="(invite, idx) in (props.invitesAvatars[props.id] || []).slice(0, 4)"
-          :key="idx"
-          :image="invite.avatar ? `http://localhost:3000${invite.avatar}` : props.avatarPlaceholder"
-          size="40"
-          class="me-1"
-        />
-
-        <VAvatar
-          v-if="(props.invitesAvatars[props.id]?.length || 0) > 4"
-          size="40"
-          color="grey lighten-2"
-          class="d-flex align-center justify-center text-body-2 font-weight-medium"
-        >
-          +{{ props.invitesAvatars[props.id].length - 4 }}
-        </VAvatar>
-      </div>
     </div>
   </div>
 </template>

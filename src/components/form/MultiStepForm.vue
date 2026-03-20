@@ -3,9 +3,16 @@ import { apiFetch } from '@/utils/api'
 import { onMounted, ref, computed } from 'vue'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue'
 import InlineEditor from '@ckeditor/ckeditor5-build-inline'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import { nextTick } from 'vue'
 import Swal from 'sweetalert2'
 
 // import 'ckeditor5/ckeditor5.css';
+
+const props = defineProps({
+  technicianId : String
+})
 
 // ===========CKEDITOR============//
 
@@ -43,41 +50,30 @@ const userId = localStorage.getItem('userId')
 const steps = [
   'Judul',
   'Kategori',
-  'Keahlian',
   'Deadline',
-  'Pengalaman',
-  'Budget',
-  'Metode pembayaran',
   'Gambar',
   'Deskripsi',
+  'Lokasi'
 ]
 
 // langsung flat
 const options = ref([])
 
-async function getSkills() {
-  const response = await apiFetch(`/skills`)
-  const flatSkills = response.data.skills.flatMap(item =>
-    item.skill.map(s => ({
-      value: s.value,
-      label: s.value,
-    })),
-  )
-
-  options.value = flatSkills
-}
 
 const title = ref('')
 const category = ref('Elektronik')
-const skills = ref([])
 const needDeadline = ref(false)
 const vStartDate = ref(null)
 const vEndDate = ref(null)
-const experience = ref('Medioker')
-const budget = ref()
-const payment = ref('cash')
+
 const description = ref('')
-const photoFile = ref(null) // file akan disimpan di sini
+const photoFile = ref(null) // simpan file disini
+
+const lat = ref(-8.2192) // default lokasi
+const lng = ref(114.3691)
+
+let map
+let marker
 
 // handle ambil file
 function handleFileUpload(e) {
@@ -93,7 +89,6 @@ async function postJob() {
 
   formData.append('title', title.value)
   formData.append('category', category.value)
-  formData.append('skills', JSON.stringify(skills.value))
   formData.append(
     'deadline',
     JSON.stringify({
@@ -101,16 +96,17 @@ async function postJob() {
       end_date: vEndDate.value ? toLocalISODate(vEndDate.value) : null,
     }),
   )
-  formData.append('experiences', experience.value)
-  formData.append('budget', budget.value)
-  formData.append('payment_method', payment.value)
   formData.append('description', description.value)
   formData.append('userId', userId)
+  formData.append('location', JSON.stringify({ lat: lat.value, lng: lng.value }))
+  formData.append('selectedTechnician', props.technicianId)
 
   if (photoFile.value) {
     formData.append('photo', photoFile.value)
   }
 
+  console.log('form data : ', formData);
+  
   const response = await apiFetch('/jobs', {
     method: 'POST',
     body: formData,
@@ -128,9 +124,68 @@ async function postJob() {
   }
 }
 
-onMounted(async () => {
-  getSkills()
+onMounted(()=>{
+  map = L.map('map').setView([lat.value, lng.value], 13)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap & Carto'
+  }).addTo(map)
+
+  marker = L.marker([lat.value, lng.value], {draggable: true}).addTo(map)
+
+  // event geser marker
+  marker.on('dragend', function(e){
+    const position  = marker.getLatLng()
+    lat.value = position.lat
+    lng.value = position.lng
+  })
+
+  // event klik map
+  map.on('click', function(e){
+    lat.value = e.latlng.lat
+    lng.value = e.latlng.lng
+
+    marker.setLatLng(e.latlng)
+  })
 })
+
+const getCurrentLocation = ()=>{
+  if(!navigator.geolocation){
+    Swal.fire({
+      title: 'Error',
+      text: 'Geolocation tidak didukung oleh browser Anda.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+    })
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position)=>{
+      lat.value = position.coords.latitude
+      lng.value = position.coords.longitude
+
+      map.flyTo([lat.value, lng.value], 15, {
+        animate: true,
+        duration: 1.5
+      })
+      marker.setLatLng([lat.value, lng.value])
+    },
+    ()=>{
+      Swal.fire({
+        title: 'Error',
+        text: 'Gagal mendapatkan lokasi. Pastikan Anda memberikan izin akses lokasi.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+      })
+    }
+  )
+}
+watch(currentStep, async (step) => {
+  if (step === 6) {
+    await nextTick()
+    map.invalidateSize()
+  }
+})
+
 </script>
 
 <template>
@@ -268,42 +323,6 @@ onMounted(async () => {
       <template #step-3="{ formRef }">
         <form
           class="row g-3 pt-3"
-          :class="{ 'was-validated': validationState === 3 }"
-          novalidate
-          :ref="formRef"
-        >
-          <label class="form-label fw-semibold">
-            Skill yang dibutuhkan <span class="text-danger">*</span>
-          </label>
-
-          <CMultiSelect
-            :options="options"
-            multiple
-            v-model="skills"
-          />
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4">
-          <CButton
-            v-if="!finish && currentStep > 1"
-            color="secondary"
-            @click="stepperRef?.prev()"
-          >
-            Previous
-          </CButton>
-          <CButton
-            v-if="!finish && currentStep < steps.length"
-            color="primary"
-            @click="stepperRef?.next()"
-          >
-            Next
-          </CButton>
-          
-        </div>
-      </template>
-
-      <template #step-4="{ formRef }">
-        <form
-          class="row g-3 pt-3"
           novalidate
           :ref="formRef"
         >
@@ -354,169 +373,7 @@ onMounted(async () => {
         </div>
       </template>
 
-      <template #step-5="{ formRef }">
-        <form
-          class="row g-3 pt-3"
-          novalidate
-          :ref="formRef"
-        >
-          <CCol :md="4">
-            <div class="title">Mau alatmu diperbaiki ahli?</div>
-          </CCol>
-          <CCol
-            :md="6"
-            class="py-3"
-          >
-            <div class="experience-container">
-              <div class="experience-btn-caption">mencari seseorang yang relatif baru di bidang ini</div>
-              <CFormCheck
-                type="radio"
-                value="Newbie"
-                v-model="experience"
-                name="flexRadioDefault"
-                id="flexRadioDefault1"
-                label="Newbie"
-              />
-            </div>
-            <div class="experience-container">
-              <div class="experience-btn-caption">mencari seseorang dengan pengalaman menengah</div>
-              <CFormCheck
-                type="radio"
-                value="Medioker"
-                v-model="experience"
-                name="flexRadioDefault"
-                id="flexRadioDefault2"
-                label="Medioker"
-                checked
-              />
-            </div>
-
-            <div class="experience-container">
-              <div class="experience-btn-caption">mencari seseorang ahli untuk menangani</div>
-              <CFormCheck
-                type="radio"
-                value="Expert"
-                v-model="experience"
-                name="flexRadioDefault"
-                id="flexRadioDefault1"
-                label="Expert"
-              />
-            </div>
-          </CCol>
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4">
-          <CButton
-            v-if="!finish && currentStep > 1"
-            color="secondary"
-            @click="stepperRef?.prev()"
-          >
-            Previous
-          </CButton>
-          <CButton
-            v-if="!finish && currentStep < steps.length"
-            color="primary"
-            @click="stepperRef?.next()"
-          >
-            Next
-          </CButton>
-          
-        </div>
-      </template>
-
-      <template #step-6="{ formRef }">
-        <form
-          class="row g-3 pt-3"
-          novalidate
-          :ref="formRef"
-        >
-          <CCol :md="4">
-            <div class="title">Mau alatmu diperbaiki ahli?</div>
-          </CCol>
-          <CCol
-            :md="6"
-            class="py-3"
-          >
-            <CFormInput
-              v-model="budget"
-              type="number"
-              id="input-budget"
-              label="Berapa budgetmu?"
-              placeholder="masukkan budgetmu..."
-            />
-          </CCol>
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4">
-          <CButton
-            v-if="!finish && currentStep > 1"
-            color="secondary"
-            @click="stepperRef?.prev()"
-          >
-            Previous
-          </CButton>
-          <CButton
-            v-if="!finish && currentStep < steps.length"
-            color="primary"
-            @click="stepperRef?.next()"
-          >
-            Next
-          </CButton>
-          
-        </div>
-      </template>
-
-      <template #step-7="{ formRef }">
-        <form
-          class="row g-3 pt-3"
-          novalidate
-          :ref="formRef"
-        >
-          <CCol :md="4">
-            <div class="title">Tunai atau Non-Tunai?</div>
-          </CCol>
-          <CCol
-            :md="6"
-            class="py-3"
-          >
-            <CFormCheck
-              class="category-radio"
-              type="radio"
-              id="flexRadioVModel6"
-              inline
-              label="cash"
-              value="cash"
-              v-model="payment"
-            />
-            <CFormCheck
-              class="category-radio"
-              type="radio"
-              id="flexRadioVModel7"
-              inline
-              label="gateway"
-              value="gateway"
-              v-model="payment"
-            />
-          </CCol>
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4">
-          <CButton
-            v-if="!finish && currentStep > 1"
-            color="secondary"
-            @click="stepperRef?.prev()"
-          >
-            Previous
-          </CButton>
-          <CButton
-            v-if="!finish && currentStep < steps.length"
-            color="primary"
-            @click="stepperRef?.next()"
-          >
-            Next
-          </CButton>
-          
-        </div>
-      </template>
-
-      <template #step-8="{ formRef }">
+      <template #step-4="{ formRef }">
         <form
           class="row g-3 pt-3"
           novalidate
@@ -555,7 +412,7 @@ onMounted(async () => {
         </div>
       </template>
 
-      <template #step-9="{ formRef }">
+      <template #step-5="{ formRef }">
         <form
           class="row g-3 pt-3"
           novalidate
@@ -596,6 +453,48 @@ onMounted(async () => {
           >
             Previous
           </CButton>
+          <CButton
+            v-if="!finish && currentStep < steps.length"
+            color="primary"
+            @click="stepperRef?.next()"
+          >
+            Next
+          </CButton>
+          
+        </div>
+      </template>
+
+      <template #step-6="{ formRef }">
+        <form
+          class="row g-3 pt-3"
+          novalidate
+          :ref="formRef"
+        >
+          <CCol :md="4">
+            <div class="title">Dimana lokasi perbaikannya?</div>
+          </CCol>
+          <CCol
+            :md="6"
+            class="py-3"
+          >
+            <div id="map" style="height: 400px;"></div>
+
+            <button @click.prevent="getCurrentLocation">
+              Ambil Lokasi Saya
+            </button>
+
+            <p>Latitude: {{ lat }}</p>
+            <p>Longitude: {{ lng }}</p>
+          </CCol>
+        </form>
+        <div class="d-flex btn-next-container gap-2 mt-4">
+          <CButton
+            v-if="!finish && currentStep > 1"
+            color="secondary"
+            @click="stepperRef?.prev()"
+          >
+            Previous
+          </CButton>
               <CButton
             v-if="!finish && currentStep === steps.length"
             color="primary"
@@ -606,6 +505,7 @@ onMounted(async () => {
           
         </div>
       </template>
+
     </CStepper>
     <div v-if="finish">All steps are complete—you're finished.</div>
 
@@ -658,12 +558,7 @@ onMounted(async () => {
   align-items: center; /* biar vertikalnya juga rapi */
   gap: 10px; /* kasih jarak antara teks dan switch */
 }
-.experience-container {
-  margin-bottom: 10px;
-}
-.experience-btn-caption {
-  color: rgb(165, 156, 156);
-}
+
 .ck-editor__editable_inline {
   width: 600px;
   min-height: 120px;

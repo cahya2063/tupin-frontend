@@ -9,7 +9,7 @@ export const routes = [
         component: () => import('@/pages/transaction/dashboard.vue'),
       },
       {
-        path: 'jobs',
+        path: 'jobs/:technicianId',
         component: () => import('@/pages/transaction/jobs.vue'),
       },
       {
@@ -22,7 +22,11 @@ export const routes = [
       },
       {
         path: 'technician-detail/:id',
-        component: ()=> import('@/views/pages/account-settings/TechnicianDetail.vue')
+        component: ()=> import('@/views/pages/account-settings/AccountMain.vue')
+      },
+      {
+        path: 'search-technician',
+        component: ()=> import('@/pages/transaction/searchTechnician.vue')
       },
       {
         path: 'chat-view',

@@ -235,7 +235,6 @@ const resetAvatar = () => {
                 <VTextField
                   v-model="accountDataLocal.phone_number"
                   label="No. Handphone"
-                  placeholder="085123456789"
                 />
               </VCol>
 
@@ -247,7 +246,6 @@ const resetAvatar = () => {
                 <VTextField
                   v-model="accountDataLocal.address"
                   label="Alamat"
-                  placeholder="Jl. Ikan Hiu no. 123"
                 />
               </VCol>
 
@@ -259,7 +257,6 @@ const resetAvatar = () => {
                 <VTextField
                   v-model="accountDataLocal.village"
                   label="Desa/Kelurahan"
-                  placeholder="Karangrejo"
                 />
               </VCol>
 
@@ -271,7 +268,6 @@ const resetAvatar = () => {
                 <VTextField
                   v-model="accountDataLocal.subdistrict"
                   label="Kecamatan"
-                  placeholder="Banyuwangi"
                 />
               </VCol>
 
@@ -296,7 +292,6 @@ const resetAvatar = () => {
                 <VTextField
                   v-model="accountDataLocal.zip_code"
                   label="Kode pos"
-                  placeholder="68411"
                 />
               </VCol>
 
@@ -346,3 +341,7 @@ const resetAvatar = () => {
     <ReviewContainer :userId="accountDataLocal.id" />
   </VRow>
 </template>
+
+<style scoped>
+
+</style>

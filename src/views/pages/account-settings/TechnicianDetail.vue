@@ -6,10 +6,15 @@ import { ref } from 'vue'
 import Swal from 'sweetalert2'
 import ReviewContainer from '@/pages/part/ReviewContainer.vue'
 
-const route = useRoute()
-const technicianId = route.params.id // dari :id di path
-const jobId = route.query.jobId // dari query ?jobId=...
-const detailJobs = ref()
+// const route = useRoute()
+// const technicianId = route.params.id // dari :id di path
+// const jobId = route.query.jobId // dari query ?jobId=...
+// const jobId = '693d1810c4cb04f41f21b527' // dari query ?jobId=...
+// const detailJobs = ref()
+
+const props = defineProps({
+  technicianId : String
+})
 
 const accountDataLocal = ref({
   id: '',
@@ -23,11 +28,16 @@ const accountDataLocal = ref({
   subdistrict: '',
   city: '',
   zip_code: '',
+  ratings : 0,
+  description: '',
+  skills: []
 })
 
 async function getProfile() {
   try {
-    const response = await apiFetch(`/profile/${technicianId}`)
+    const response = await apiFetch(`/profile/${props.technicianId}`)
+
+    
 
     accountDataLocal.value = {
       ...accountDataLocal.value,
@@ -41,102 +51,110 @@ async function getProfile() {
       city: response.data.user.city || '',
       zip_code: response.data.user.zip_code || '',
       avatar: response.data.user.avatar || null, // default avatar jika kosong
+      ratings: response.data.user.ratings || 0,
+      description: response.data.user.description || '',
+      skills: response.data.user.skills || [],
     }
   } catch (err) {
     console.error(err.message)
   }
 }
 
-async function getDetailJobs(id) {
-  const response = await apiFetch(`/jobs/${id}`)
-  detailJobs.value = response.data.job
-}
-
-async function chooseTechnician(technicianId, jobId) {
-  try {
-    const data = {
-      clientId: localStorage.getItem('userId'),
-      technicianId: technicianId,
-    }
-
-    const response = await apiFetch(`/jobs/${jobId}/choose-technician`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-    if (response.status == 200) {
-      Swal.fire({
-        title: 'Sukses',
-        text: response.data.message,
-        icon: 'success',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#16a34a',
-      })
-    }
-  } catch (error) {
-    Swal.fire({
-      title: 'Gagal',
-      text: 'gagal menyetujui teknisi',
-      icon: 'error',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#dc2626',
-    })
-  }
+async function getSkills(id){
+  const response = await apiFetch(`/skills/${id}`)
+  
+  return response.data.skill.label
 }
 
 onMounted(async () => {
-  getProfile()
-  getDetailJobs(jobId)
+  await getProfile()
+  accountDataLocal.value.skills = await Promise.all(
+    accountDataLocal.value.skills.map(async (skillId) => {
+      return await getSkills(skillId)
+    })
+  )
+  // getDetailJobs(jobId)
 })
 </script>
 
 <template>
+  
   <VRow>
     <VCol cols="12">
-      <VCard title="Account Details">
-        <VCardText class="d-flex">
-          <!-- 👉 Avatar -->
-          <VAvatar
-            rounded="lg"
-            size="100"
-            class="me-6"
-            :image="accountDataLocal.avatar ? `http://localhost:3000${accountDataLocal.avatar}` : avatar1"
-          />
-        </VCardText>
+      <VCard >
+        <VCardText class="profile-card d-flex">
+    
+    <!-- Avatar -->
+    <VAvatar
+      rounded="lg"
+      size="100"
+      class="me-6 avatar"
+      :image="accountDataLocal.avatar ? `http://localhost:3000${accountDataLocal.avatar}` : avatar1"
+    />
+
+    <!-- Info -->
+    <div class="d-flex flex-column gap-2 profile-info">
+      <div class="name">
+        {{ accountDataLocal.name }}
+      </div>
+
+      <v-rating
+        half-increments
+        hover
+        readonly
+        :length="5"
+        :size="29"
+        :model-value="accountDataLocal.ratings"
+        color="warning"
+        active-color="warning"
+      />
+
+      <div class="completed-job">
+        4 pekerjaan terselesaikan
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="action-buttons d-flex flex-column ms-auto gap-3">
+      <VBtn color="primary">
+        <VIcon start icon="ri-chat-3-line" />
+        Chat
+      </VBtn>
+
+      <VBtn color="success" :to="`/jobs/${accountDataLocal.id}`">
+        <VIcon start icon="ri-tools-line" />
+        Ajukan Perbaikan
+      </VBtn>
+    </div>
+
+  </VCardText>
 
         <VDivider />
+        <div class="skills d-flex flex-wrap gap-2 px-4">
+
+          <v-chip 
+            class="me-2"
+            v-for="(skill, index) in accountDataLocal.skills"
+            color="success lighten-4"
+            text-color="green darken-2"
+            >
+            {{ skill }}
+          </v-chip>
+          <!-- deskripsi -->
+              
+          <CFormTextarea
+            class="my-3"
+            placeholder="Disabled textarea"
+            aria-label="Disabled textarea example"
+            v-model="accountDataLocal.description"
+            disabled>
+          </CFormTextarea>
+        </div>
 
         <VCardText>
           <!-- 👉 Form -->
           <VForm class="mt-6">
             <VRow>
-              <!-- 👉 ID -->
-              <VCol
-                md="6"
-                cols="12"
-              >
-                <VTextField
-                  v-model="accountDataLocal.id"
-                  label="ID"
-                  placeholder="User ID"
-                  :readonly="true"
-                />
-              </VCol>
-
-              <!-- 👉 Name -->
-              <VCol
-                md="6"
-                cols="12"
-              >
-                <VTextField
-                  v-model="accountDataLocal.name"
-                  label="Nama"
-                  placeholder="John Doe"
-                  :readonly="true"
-                />
-              </VCol>
 
               <!-- 👉 Email -->
               <VCol
@@ -222,48 +240,59 @@ onMounted(async () => {
               <VCol
                 cols="12"
                 md="6"
-                v-if="!detailJobs?.selectedTechnician"
+                v-if="accountDataLocal.zip_code"
               >
-                <VBtn @click="chooseTechnician(accountDataLocal.id, jobId)">Accept</VBtn>
+              <VTextField
+                  v-model="accountDataLocal.zip_code"
+                  label="Kode Pos"
+                  :readonly="true"
+                />
               </VCol>
+
+             
 
               <VCol
                 cols="12"
                 md="6"
                 v-else
               >
-                <VAlert
-                  type="info"
-                  variant="tonal"
-                  border="start"
-                  color="primary"
-                >
-                  Teknisi sudah dipilih untuk job ini.
-                </VAlert>
               </VCol>
             </VRow>
           </VForm>
         </VCardText>
       </VCard>
     </VCol>
-
-    <VCol cols="12">
-      <!-- 👉 Data Sertifikat -->
-      <VCard title="Data Sertifikat">
-        <VCardText>
-          <div>
-            <VCheckbox label="I confirm my account deactivation" />
-          </div>
-
-          <VBtn
-            color="error"
-            class="mt-3"
-          >
-            Deactivate Account
-          </VBtn>
-        </VCardText>
-      </VCard>
-    </VCol>
     <ReviewContainer :userId="accountDataLocal.id" />
   </VRow>
 </template>
+
+<style scoped>
+.name{
+  font-size: 30px;
+  font-weight: 600;
+}
+@media (max-width: 618px) {
+
+  .profile-card {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .profile-info {
+    align-items: center;
+    text-align: center;
+  }
+
+  .avatar {
+    margin-right: 0 !important;
+    align-self: center;
+  }
+
+  .action-buttons {
+    flex-direction: row !important;
+    justify-content: center;
+    margin-left: 0 !important;
+  }
+
+}
+</style>
