@@ -1,4 +1,4 @@
-<script setup>
+<!-- <script setup>
 import { useRoute } from 'vue-router'
 import AccountSettingsAccount from '@/views/pages/account-settings/AccountSettingsAccount.vue'
 import AccountSettingsNotification from '@/views/pages/account-settings/AccountSettingsNotification.vue'
@@ -7,7 +7,6 @@ import AccountSettingsSecurity from '@/views/pages/account-settings/AccountSetti
 const route = useRoute()
 const activeTab = ref(route.params.tab)
 
-// tabs
 const tabs = [
   {
     title: 'Account',
@@ -53,20 +52,17 @@ const tabs = [
       class="mt-5 disable-tab-transition"
       :touch="false"
     >
-      <!-- Account -->
       <VWindowItem value="account">
         <AccountSettingsAccount />
       </VWindowItem>
 
-      <!-- Security -->
       <VWindowItem value="security">
         <AccountSettingsSecurity />
       </VWindowItem>
 
-      <!-- Notification -->
       <VWindowItem value="notification">
         <AccountSettingsNotification />
       </VWindowItem>
     </VWindow>
   </div>
-</template>
+</template> -->

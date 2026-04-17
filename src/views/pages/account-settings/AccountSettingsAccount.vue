@@ -2,131 +2,150 @@
 import ReviewContainer from '@/pages/part/ReviewContainer.vue'
 import { apiFetch } from '@/utils/api'
 import avatar1 from '@images/avatars/avatar-1.png'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useDestination } from '@/utils/tools'
+
+const { destinationList, handleSearch } = useDestination()
 
 const userId = localStorage.getItem('userId')
 const role = localStorage.getItem('role')
 
-onMounted(async () => {
-  getProfile()
-})
+const selectedDestination = ref([])
 
-const accountData = {
-  avatarImg: avatar1,
-  firstName: 'john',
-  lastName: 'Doe',
-  email: 'johnDoe@example.com',
-  org: 'ThemeSelection',
-  phone: '+1 (917) 543-9876',
-  address: '123 Main St, Banyuwangi, NY 10001',
-  zip: '10001',
-  city: 'Banyuwangi',
-  subdistrict: 'Banyuwangi',
-  village: 'Karangrejo',
-  language: 'English',
-  timezone: '(GMT-11:00) International Date Line West',
-  currency: 'USD',
-}
-
-const refInputEl = ref()
 const accountDataLocal = ref({
   id: '',
   name: '',
   email: '',
   avatar: '',
-  // field profile tambahan
   phone_number: '',
   address: '',
   village: '',
   subdistrict: '',
   city: '',
   zip_code: '',
+  receiverLocation: null,
 })
-const isAccountDeactivated = ref(false)
+
+const refInputEl = ref()
+
+onMounted(getProfile)
+
+// ================== API ==================
 
 async function updateProfile() {
   try {
-    const response = await apiFetch(`/profile/${userId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const dest = selectedDestination.value[0] || {}
+
+    const payload = {
+      nama: accountDataLocal.value.name,
+      phone_number: accountDataLocal.value.phone_number,
+      address: accountDataLocal.value.address,
+      village: accountDataLocal.value.village,
+      subdistrict: accountDataLocal.value.subdistrict,
+      city: accountDataLocal.value.city,
+      zip_code: dest.zipCode || accountDataLocal.value.zip_code,
+      receiverLocation: {
+        destinationId: dest.value,
+        destinationName: dest.label,
       },
-      body: JSON.stringify({
-        nama: accountDataLocal.value.name,
-        phone_number: accountDataLocal.value.phone_number,
-        address: accountDataLocal.value.address,
-        village: accountDataLocal.value.village,
-        subdistrict: accountDataLocal.value.subdistrict,
-        city: accountDataLocal.value.city,
-        zip_code: accountDataLocal.value.zip_code,
-      }),
+    }
+
+    const res = await apiFetch(`/profile/${userId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     })
-    alert(response.data.message)
-  } catch (error) {
-    console.error(error)
+
+    alert(res.data.message)
+  } catch (err) {
+    console.error(err)
     alert('Gagal update profile ❌')
   }
 }
+
 async function getProfile() {
   try {
-    const response = await apiFetch(`/profile/${userId}`)
+    const { data } = await apiFetch(`/profile/${userId}`)
+    const user = data.user
 
-    accountDataLocal.value = {
-      ...accountDataLocal.value,
-      id: response.data.user._id,
-      name: response.data.user.nama,
-      email: response.data.user.email,
-      phone_number: response.data.user.phone_number || '',
-      address: response.data.user.address || '',
-      village: response.data.user.village || '',
-      subdistrict: response.data.user.subdistrict || '',
-      city: response.data.user.city || '',
-      zip_code: response.data.user.zip_code || '',
-      avatar: response.data.user.avatar || null, // default avatar jika kosong
-    }
+    Object.assign(accountDataLocal.value, {
+      id: user._id,
+      name: user.nama || '',
+      email: user.email || '',
+      phone_number: user.phone_number || '',
+      address: user.address || '',
+      village: user.village || '',
+      subdistrict: user.subdistrict || '',
+      city: user.city || '',
+      zip_code: user.zip_code || '',
+      avatar: user.avatar || null,
+      receiverLocation: user.receiverLocation || null,
+    })
+    console.log('profile', accountDataLocal.value.receiverLocation.destinationName)
 
-    console.log('profile', accountDataLocal.value)
   } catch (err) {
-    console.error(err.message)
+    console.error(err)
   }
 }
 
-const resetForm = () => {
-  accountDataLocal.value = structuredClone(accountData)
-}
+// ================== AVATAR ==================
 
-const changeAvatar = async file => {
-  const { files } = file.target
-  if (!files || !files.length) return
+async function changeAvatar(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
 
   const formData = new FormData()
-  formData.append('avatar', files[0]) // `avatar` harus sama dengan field multer.single('avatar')
+  formData.append('avatar', file)
 
   try {
-    const response = await apiFetch(`/profile/${userId}/avatar`, {
+    const { data } = await apiFetch(`/profile/${userId}/avatar`, {
       method: 'POST',
       body: formData,
     })
 
-    // update preview avatar
-    accountDataLocal.value.avatar = response.data.avatar
-
+    accountDataLocal.value.avatar = data.avatar
     alert('Avatar berhasil diperbarui ✅')
-  } catch (error) {
-    console.error(error)
+  } catch (err) {
+    console.error(err)
     alert('Gagal upload avatar ❌')
   }
 }
 
-// reset avatar image
-const resetAvatar = () => {
-  accountDataLocal.value.avatar = accountData.avatarImg
+function resetAvatar() {
+  accountDataLocal.value.avatar = avatar1
 }
 
-// Event klik tombol ulasan (sementara hanya alert)
-// const addReview = () => {
-//   alert('Fitur tambah ulasan akan ditambahkan nanti.')
-// }
+// ================== RESET ==================
+
+function resetForm() {
+  Object.assign(accountDataLocal.value, {
+    name: '',
+    email: '',
+    phone_number: '',
+    address: '',
+    village: '',
+    subdistrict: '',
+    city: '',
+    zip_code: '',
+  })
+}
+
+const phoneModel = computed({
+  get() {
+    let val = accountDataLocal.value.phone_number
+    if (!val) return ''
+
+    val = String(val)
+
+    if (val.startsWith('+62')) return '0' + val.slice(3)
+    if (val.startsWith('62')) return '0' + val.slice(2)
+
+    return val.startsWith('0') ? val : '0' + val
+  },
+  set(val) {
+    accountDataLocal.value.phone_number = val
+  }
+})
 </script>
 
 <template>
@@ -188,19 +207,7 @@ const resetAvatar = () => {
         <VCardText>
           <!-- 👉 Form -->
           <VForm class="mt-6">
-            <VRow>
-              <!-- 👉 ID -->
-              <VCol
-                md="6"
-                cols="12"
-              >
-                <VTextField
-                  v-model="accountDataLocal.id"
-                  label="ID"
-                  placeholder="User ID"
-                  :readonly="true"
-                />
-              </VCol>
+            <VRow>              
 
               <!-- 👉 Name -->
               <VCol
@@ -211,6 +218,7 @@ const resetAvatar = () => {
                   v-model="accountDataLocal.name"
                   label="Nama"
                   placeholder="John Doe"
+                  variant="outlined"
                 />
               </VCol>
 
@@ -224,6 +232,7 @@ const resetAvatar = () => {
                   label="E-mail"
                   placeholder="johndoe@gmail.com"
                   type="email"
+                  variant="outlined"
                 />
               </VCol>
 
@@ -233,8 +242,10 @@ const resetAvatar = () => {
                 md="6"
               >
                 <VTextField
-                  v-model="accountDataLocal.phone_number"
+                  v-model="phoneModel"
                   label="No. Handphone"
+                  variant="outlined"
+                  :value="phoneModel"
                 />
               </VCol>
 
@@ -246,6 +257,7 @@ const resetAvatar = () => {
                 <VTextField
                   v-model="accountDataLocal.address"
                   label="Alamat"
+                  variant="outlined"
                 />
               </VCol>
 
@@ -257,6 +269,7 @@ const resetAvatar = () => {
                 <VTextField
                   v-model="accountDataLocal.village"
                   label="Desa/Kelurahan"
+                  variant="outlined"
                 />
               </VCol>
 
@@ -268,6 +281,7 @@ const resetAvatar = () => {
                 <VTextField
                   v-model="accountDataLocal.subdistrict"
                   label="Kecamatan"
+                  variant="outlined"
                 />
               </VCol>
 
@@ -281,6 +295,7 @@ const resetAvatar = () => {
                   label="Kabupaten"
                   :items="['Banyuwangi']"
                   placeholder="Select city"
+                  variant="outlined"
                 />
               </VCol>
 
@@ -289,18 +304,26 @@ const resetAvatar = () => {
                 cols="12"
                 md="6"
               >
-                <VTextField
-                  v-model="accountDataLocal.zip_code"
-                  label="Kode pos"
-                />
+                  <CMultiSelect
+                    :multiple="false"
+                    :options="destinationList"
+                    :value="selectedDestination"
+                    @change="(val) => { selectedDestination = val }"
+                    @filter-change="handleSearch"
+                    :placeholder="`(Kode Pos) ${accountDataLocal.receiverLocation?.destinationName || 'Masukkan kode pos'}`"
+                    virtual-scroller
+                    teleport="body"
+                    
+                  />
+                
               </VCol>
 
               <!-- 👉 Form Actions -->
               <VCol
                 cols="12"
-                class="d-flex flex-wrap gap-4"
+                class="d-flex flex-wrap gap-5"
               >
-                <VBtn @click="updateProfile">Save changes</VBtn>
+                <VBtn color="primary" @click="updateProfile">Save changes</VBtn>
 
                 <VBtn
                   color="secondary"

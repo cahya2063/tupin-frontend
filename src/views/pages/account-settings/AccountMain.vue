@@ -33,6 +33,7 @@ const tabs = [
         v-for="item in tabs"
         :key="item.icon"
         :value="item.tab"
+        class="custom-tabs"
       >
         <VIcon
           size="20"
@@ -48,15 +49,22 @@ const tabs = [
       class="mt-5 disable-tab-transition"
       :touch="false"
     >
-      <!-- Account -->
+      <!-- technician detail -->
       <VWindowItem value="account">
         <TechnicianDetail :technicianId="route.params.id"/>
       </VWindowItem>
 
-      <!-- Security -->
+      <!-- job history -->
       <VWindowItem value="work-history">
         <JobHistory />
       </VWindowItem>
     </VWindow>
   </div>
 </template>
+
+<style scoped>
+.custom-tabs.v-tab--selected {
+  background-color: #8d58ff;
+  color: white;
+}
+</style>

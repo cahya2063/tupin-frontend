@@ -16,7 +16,7 @@ const showSidebar = ref(false)
 const acceptedJobs = ref([])
 const selectedJob = ref()
 const userName = ref([])
-const isCancelable = computed(() => ['pending', 'request'].includes(selectedJob.value?.status))
+// const isCancelable = computed(() => ['pending', 'request'].includes(selectedJob.value?.status))
 const showRatingModal = ref(false)
 const userId = localStorage.getItem('userId')
 const receiverId = computed(() => selectedJob.value?.idCreator)
@@ -60,6 +60,7 @@ async function getDetailJobs(id) {
 
     // Ambil profil creator berdasarkan idCreator dari job detail
     const profile = await getProfile(selectedJob.value.idCreator)
+
     userName.value = profile.nama // simpan nama creator
 
     showSidebar.value = true
@@ -68,23 +69,23 @@ async function getDetailJobs(id) {
   }
 }
 
-async function createChat(clientId, technicianId) {
-  try {
-    const response = await apiFetch(`/chats/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        clientId: clientId,
-        technicianId: technicianId,
-      }),
-    })
-    console.log('Chat created:', response.data)
-  } catch (error) {
-    console.error('Gagal membuat chat:', error)
-  }
-}
+// async function createChat(clientId, technicianId) {
+//   try {
+//     const response = await apiFetch(`/chats/create`, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify({
+//         clientId: clientId,
+//         technicianId: technicianId,
+//       }),
+//     })
+//     console.log('Chat created:', response.data)
+//   } catch (error) {
+//     console.error('Gagal membuat chat:', error)
+//   }
+// }
 
 async function technicianRequest(jobId) {
   try {

@@ -1,6 +1,9 @@
 <script setup>
 import Payment from '@/components/form/Payment.vue';
-import { onMounted } from 'vue';
+import { apiFetch, getProfile } from '@/utils/api';
+import sweetAlert from '@/utils/sweetAlert';
+import { createChat } from '@/utils/tools';
+import { onMounted, ref, watch } from 'vue';
 
 
 const props = defineProps({
@@ -8,6 +11,17 @@ const props = defineProps({
     showSidebar: Boolean,
     isCancelable: Boolean
 })
+// console.log('selected job : ', props.selectedJob);
+
+const profile = ref()
+const technicianId = localStorage.getItem('userId')
+const role = localStorage.getItem('role')
+const technicianProfile = ref()
+const shippingCost = ref()
+const repairPrice = ref(0)
+const modalAddPrice = ref(false)
+const lastCalculatedJobId = ref(null)
+
 const emit = defineEmits([
   'close',
   'cancel',
@@ -21,10 +35,174 @@ const formatDate = date => {
   return date.split('T')[0]
 }
 
-// onMounted(()=>{
+
+
+const openGoogleMaps = () => {
+  if (!props.selectedJob?.location) return
+
+  const { lat, lng } = props.selectedJob.location
+
+  const url = `https://www.google.com/maps?q=${lat},${lng}`
+
+  window.open(url, '_blank') // buka di tab baru
+}
+// format angka ke Rupiah
+const formatRupiah = (val) => 'Rp ' + (val || 0).toLocaleString('id-ID')
+
+// handle input manual (strip non-digit, update repairPrice)
+const onPriceInput = (e) => {
+  const raw = e.target.value.replace(/\D/g, '')
+  repairPrice.value = parseInt(raw) || 0
+}
+
+async function calculateShippingCost(jobId){
+  try {
+    shippingCost.value = null // reset
+
+    const response = await apiFetch(`/ongkir/calculate-shipping-cost`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        jobId,
+        technicianId
+      })
+    })
+
+    const data = response.data.shippingCost.data
+
+    console.log('Shipping cost:', data);
+    shippingCost.value =
+      (
+        data.calculate_instant?.[0]?.shipping_cost
+        ?? data.calculate_reguler?.[0]?.shipping_cost
+        ?? 0
+      ) * 2
+
+  } catch (error) {
+    console.error('Gagal menghitung biaya pengiriman:', error)
+  }
+}
+
+async function getTechnicianProfile(technicianId){
+  try {
+    const response = await getProfile(technicianId)
+    technicianProfile.value = response
+    console.log('technician profile : ', technicianProfile.value);
     
-//     console.log('selectedJob : ', props.selectedJob);
-// })
+  } catch (error) {
+    console.error('Gagal ambil profile teknisi:', error)
+  }
+}
+
+async function doneJob(jobId){
+  try {
+    const response = await apiFetch(`/jobs/${jobId}/done-job`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    console.log('done job : ', response);
+    sweetAlert.success('Job berhasil diselesaikan tunggu konfirmasi pelanggan')
+  } catch (error) {
+    sweetAlert.error('terjadi kesalahan saat menyelesaikan job')
+  }
+}
+
+const handleDoneJob = async (jobId) => {
+  const result = await sweetAlert.confirm({
+    title: 'Apakah kamu yakin pekerjaan sudah selesai?',
+    text: 'Pastikan kamu sudah menyelesaikan pekerjaan dengan baik sebelum mengonfirmasi.'
+  })
+
+  if (result.isConfirmed) {
+    await doneJob(jobId)
+  }
+}
+
+
+async function isJobCompleted(jobId, status){
+  try {
+    const response = await apiFetch(`/jobs/${jobId}/is-job-completed`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status }),
+    })
+    console.log('status completed : ', response);
+    
+    sweetAlert.success(response.data.message)
+  } catch (error) {
+    sweetAlert.error('Gagal konfirmasi perbaikan')
+  }
+}
+
+const handleIsJobCompleted = async(jobId)=>{
+  const result = await sweetAlert.confirm({
+    title: 'Apakah kamu yakin perbaikan sudah selesai?',
+    text: 'Pastikan pekerjaan sudah benar-benar selesai sebelum mengonfirmasi.',
+    showDenyButton: true,
+    showCancelButton: false
+  })
+
+  if (result.isConfirmed) {
+    await isJobCompleted(jobId, 'completed')
+  }
+  else if(result.isDenied){
+    await isJobCompleted(jobId, 'uncompleted')
+  }
+
+}
+
+
+
+async function cancelJobs(jobId){
+  try {
+    const response = await apiFetch(`/jobs/${jobId}/cancel-jobs`,{
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    console.log('cancel Job : ', response);
+    sweetAlert.success('Berhasil menolak job')
+  } catch (error) {
+    sweetAlert.error('Gagal menolak job')
+  }
+}
+
+async function handleShippingCost(){
+  const jobId = props.selectedJob?._id
+
+  // update kalau job beda
+  if (jobId !== lastCalculatedJobId.value) {
+    await calculateShippingCost(jobId)
+    lastCalculatedJobId.value = jobId
+  }
+
+
+  await getTechnicianProfile(props.selectedJob?.selectedTechnician)
+
+  modalAddPrice.value = true
+}
+
+watch(() => props.selectedJob,
+  async (newVal) => {
+    if (newVal?.idCreator) {
+      try {
+        profile.value = await getProfile(newVal.idCreator)
+        
+        console.log('jobs detail:', props.selectedJob)
+      } catch (err) {
+        console.error('Gagal ambil profile:', err)
+      }
+    }
+  },
+  { immediate: true }
+)
 
 </script>
 <template>
@@ -61,11 +239,21 @@ const formatDate = date => {
  
           <!-- Job Image -->
           <div class="image-wrapper">
-            <CImage
-              :src="`http://localhost:3000/uploads/jobs/${selectedJob?.photo}`"
-              rounded
-              class="job-detail-image"
-            />
+            <!-- <v-carousel>
+              <v-carousel-item
+              v-for="(image, index) in selectedJob?.photos || []"
+              :key="index"
+                :src="`http://localhost:3000/uploads/jobs/${image}`"
+                cover
+              ></v-carousel-item>
+
+            </v-carousel> -->
+            <CCarousel controls indicators>
+              <CCarouselItem v-for="(image, index) in selectedJob?.photos || []" :key="index">
+                <img class="d-block w-100" :src="`http://localhost:3000/uploads/jobs/${image}`"/>
+              </CCarouselItem>
+              
+            </CCarousel>
             
           </div>
  
@@ -80,9 +268,19 @@ const formatDate = date => {
               </div>
               <div class="info-pill">
                 <span class="pill-label">Status</span>
-                <span :class="['pill-value', 'pill-status', `pill-status--${selectedJob.status}`]">
-                  {{ selectedJob.status }}
-                </span>
+                <span class="pill-value">{{ selectedJob.status }}</span>
+              </div>
+              <div class="info-pill">
+                <span>Pelanggan</span>
+                <div class="pill-content">
+
+                  <span>
+                    {{ profile?.nama }}
+                  </span>
+                  <VBtn class="chat-btn" @click="createChat(selectedJob.idCreator, selectedJob.selectedTechnician)" :to="`/chat-view`">
+                    <i class="ri-chat-1-line"></i>
+                  </VBtn>
+                </div>
               </div>
             </div>
  
@@ -127,7 +325,7 @@ const formatDate = date => {
             <!-- Payment Component -->
             <div v-show="selectedJob?.status === 'completed'" class="payment-section">
               <div class="section-divider"></div>
-              <payment
+              <!-- <payment
                 :name="selectedJob?.creatorName"
                 :email="selectedJob?.creatorEmail"
                 :amount="selectedJob?.budget"
@@ -135,11 +333,33 @@ const formatDate = date => {
                 :job-id="selectedJob?._id"
                 :payer-id="selectedJob?.idCreator"
                 :receiver-id="selectedJob?.selectedTechnician"
-              />
+              /> -->
             </div>
  
             <!-- Action Buttons -->
             <div class="action-buttons">
+
+              <VBtn @click="openGoogleMaps" color="primary" class="location-btn">Lihat lokasi</VBtn>
+
+              <VBtn v-if="selectedJob.status == 'open'" @click="handleShippingCost"
+              class="accept-btn"
+              >
+                terima job
+              </VBtn>
+              <VBtn class="cancel-btn" v-if="selectedJob.status == 'open'" @click="cancelJobs(selectedJob?._id)"
+              >
+                tolak job
+              </VBtn>
+              <VBtn class="accept-btn" v-if="selectedJob.status == 'paid' && role == 'technician'" @click="handleDoneJob(selectedJob?._id)"
+              >
+                perbaikan selesai
+              </VBtn>
+              <VBtn v-if="selectedJob.status == 'done' && role == 'client'" @click="handleIsJobCompleted(selectedJob?._id)"
+              class="accept-btn"
+              >
+                konfirmasi perbaikan
+              </VBtn>
+
               <!-- <VBtn
                 v-if="selectedJob?.status === 'payed done' && !review"
                 class="action-btn btn-review"
@@ -151,16 +371,7 @@ const formatDate = date => {
                 <span class="btn-icon">⭐</span> Beri Review
               </VBtn> -->
  
-              <VBtn
-                v-if="isCancelable"
-                class="action-btn btn-cancel"
-                color="error"
-                variant="outlined"
-                rounded="lg"
-                @click="emit('cancel', selectedJob._id)"
-              >
-                <span class="btn-icon">✕</span> Batalkan Job
-              </VBtn>
+              
             </div>
  
           </div>
@@ -168,6 +379,100 @@ const formatDate = date => {
       </div>
     </div>
   </transition>
+    <CModal  :visible="modalAddPrice" @close="modalAddPrice = false">
+
+    <CModalHeader style="border-bottom: 0.5px solid var(--cui-border-color); padding-bottom: 0.9rem;">
+      <div>
+        <small class="text-uppercase text-muted" style="font-size:11px; letter-spacing:.05em;">ID Pekerjaan</small>
+        <CModalTitle class="font-monospace mt-1">{{ selectedJob?._id }}</CModalTitle>
+      </div>
+    </CModalHeader>
+
+    <CModalBody class="p-0">
+
+      <!-- Lokasi -->
+      <div class="p-3 border-bottom">
+        <small class="text-uppercase text-muted d-block mb-2" style="font-size:11px; letter-spacing:.05em;">Lokasi</small>
+        <div class="row g-2">
+          <div class="col-6">
+            <div class="bg-light border rounded p-2">
+              <small class="text-muted d-block mb-1" style="font-size:11px;">
+                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" class="me-1">
+                  <path d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5zm0 6.5A1.5 1.5 0 1 1 8 4a1.5 1.5 0 0 1 0 3z" fill="#639922"/>
+                </svg>
+                Pelanggan
+              </small>
+              <strong class="small">{{ selectedJob.destination?.destinationName || '-' }}</strong>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="bg-light border rounded p-2">
+              <small class="text-muted d-block mb-1" style="font-size:11px;">
+                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" class="me-1">
+                  <circle cx="8" cy="6" r="2" stroke="#185FA5" stroke-width="1.5"/>
+                  <path d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5z" stroke="#185FA5" stroke-width="1.5" fill="none"/>
+                </svg>
+                Teknisi
+              </small>
+              <strong class="small">{{ technicianProfile.receiverLocation?.destinationName || '-' }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rincian biaya -->
+      <div class="p-3 border-bottom">
+        <small class="text-uppercase text-muted d-block mb-2" style="font-size:11px; letter-spacing:.05em;">Rincian biaya</small>
+        <div class="bg-light rounded px-3 py-1">
+          <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <span class="small text-muted">Ongkos kirim</span>
+            <span class="small fw-semibold font-monospace">{{ formatRupiah(shippingCost) }}</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <span class="small text-muted">Harga perbaikan</span>
+            <span class="small fw-semibold font-monospace">{{ formatRupiah(repairPrice) }}</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center py-2">
+            <span class="small fw-semibold">Total</span>
+            <span class="small fw-semibold font-monospace text-primary">{{ formatRupiah(shippingCost + repairPrice) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input harga perbaikan -->
+      <div class="p-3">
+        <small class="text-uppercase text-muted d-block mb-2" style="font-size:11px; letter-spacing:.05em;">Harga perbaikan</small>
+        <div class="input-group mb-2">
+          <span class="input-group-text">Rp</span>
+          <input
+            type="text"
+            class="form-control form-control-lg font-monospace fw-semibold"
+            placeholder="0"
+            :value="repairPrice ? repairPrice.toLocaleString('id-ID') : ''"
+            @input="onPriceInput"
+          />
+        </div>
+        <!-- Tombol shortcut -->
+        
+      </div>
+
+    </CModalBody>
+
+    <CModalFooter>
+      <Payment
+        v-show="selectedJob?.status == 'open'"
+        :name="profile?.nama"
+        :email="profile?.email"
+        :amount="shippingCost + repairPrice"
+        :sub-account-id="technicianProfile.subAccountId"
+        :job-id="selectedJob?._id"
+        :payer-id="profile?._id"
+        :receiver-id="selectedJob?.selectedTechnician"
+      />
+    </CModalFooter>
+  </CModal>
+
+
 </template>
 <style scoped>
 .slide-modal-overlay {
@@ -313,6 +618,7 @@ const formatDate = date => {
 ===================== */
 .job-detail {
   padding: 20px 20px 0;
+  font-family: 'Quicksand';
 }
  
 /* =====================
@@ -334,6 +640,33 @@ const formatDate = date => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+.pill-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-btn {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background-color: #eef2ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.chat-btn i {
+  font-size: 16px;
+}
+
+.chat-btn:hover {
+  background-color: #6366f1;
+  color: white;
 }
  
 .pill-label {
@@ -471,6 +804,7 @@ const formatDate = date => {
   flex-direction: column;
   gap: 10px;
   margin-top: 24px;
+  font-family: 'Quicksand';
 }
  
 .action-btn {
@@ -483,6 +817,26 @@ const formatDate = date => {
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+.location-btn{
+  font-weight: bold;
+}
+.accept-btn{
+  background-color: rgb(15, 255, 15);
+  color: white;
+  font-weight: bold;
+}
+.accept-btn:hover{
+  background-color: rgba(0, 128, 0, 0.736);
+}
+.cancel-btn{
+  color: white;
+  background-color: rgb(255, 4, 4);
+  font-weight: bold;
+
+}
+.cancel-btn:hover{
+  background-color: rgba(255, 0, 0, 0.738);
 }
  
 .btn-icon {

@@ -27,6 +27,7 @@ export async function apiFetch(url, options = {}) {
     localStorage.removeItem('token')
     localStorage.removeItem('userId')
     localStorage.removeItem('role')
+    sessionStorage.removeItem('nearestTechnicianProfile')
 
     router.push('/login') // ✅ gunakan instance router
     throw new Error('Token expired, please login again')

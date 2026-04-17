@@ -1,13 +1,14 @@
 <script setup>
 import { apiFetch, getProfile } from '@/utils/api';
-import { ref } from 'vue';
+import { getCurrentLocation } from '@/utils/tools';
+import avatar1 from '@images/avatars/avatar-1.png'
+import { computed, ref } from 'vue';
 
 const nearestTechnicianProfile = ref([])
-const showSearch = ref(false)
+const skillsList = ref([])
+const selectedSkills = ref([])
+const isLoading = ref(false)
 
-const toggleSearch = () => {
-  showSearch.value = !showSearch.value
-}
 const formatDistance = (distance)=>{
   if(distance < 1){
     return `${Math.round(distance * 1000)} m`
@@ -16,6 +17,17 @@ const formatDistance = (distance)=>{
     return `${distance.toFixed(2)} km`
   }
 }
+
+const filteredTechnicians = computed(()=>{
+
+  if(selectedSkills.value.length === 0){
+    return nearestTechnicianProfile.value
+  }
+
+  return nearestTechnicianProfile.value.filter(technician => 
+    selectedSkills.value.some(skill => technician.skills.includes(skill))
+  )
+})
 
 
 async function getNearestTechnician(location){  
@@ -30,9 +42,22 @@ async function getNearestTechnician(location){
   
   return nearestTechnicianList
 }
+
+async function getAllSkills(){
+  const response = await apiFetch('/skills')
+  
+  console.log('data skills : ', response.data.skills[0].label);
+  response.data.skills.forEach((skill, i)=>{    
+    skillsList.value.push(
+      skill.label,
+    )
+  })
+  
+  // return response.data.skills
+}
+
 async function getSkills(id){
   const response = await apiFetch(`/skills/${id}`)
-  console.log('skill teknisi : ', response);
   
   return response.data.skill.label
 }
@@ -57,26 +82,39 @@ const buildTechnicianProfiles = async (technicians) =>
       }
     })
   )
-onMounted( async () => {
-  const profile = await getProfile(localStorage.getItem('userId'));
 
-  const location = {
-    lat: profile.location.coordinates[1],
-    lng: profile.location.coordinates[0]
-  }
+const searchNearestTechnician = async()=>{
+  try {
+    isLoading.value = true
+    const location = await getCurrentLocation()
+    console.log('location test : ', location.lat);
+    
+    
+    const nearestTechnician = await getNearestTechnician(location)
+    const technicians = nearestTechnician.data.technicians
   
-  const nearestTechnician = await getNearestTechnician(location)
-  // const skills = await getSkills(nearestTechnician.data.technicians[0]._id)
-  const technicians = nearestTechnician.data.technicians
+    nearestTechnicianProfile.value = await buildTechnicianProfiles(technicians)
+    sessionStorage.setItem('nearestTechnicianProfile', JSON.stringify(nearestTechnicianProfile.value))
+  } catch (error) {
+    console.error(error);
+    
+  }finally{
+    isLoading.value = false
+  }
 
-  nearestTechnicianProfile.value = await buildTechnicianProfiles(technicians)
 
-  // console.log('teknisi skill : ', nearestTechnicianProfile.value[0].skills);
-  console.log('profile teknisi terdekat : ', nearestTechnicianProfile.value);
+}
+onMounted( async () => {
+  getAllSkills()
+  const data = sessionStorage.getItem('nearestTechnicianProfile')
+  if(data){
+    nearestTechnicianProfile.value = JSON.parse(data)
+  }
 })
 
 </script>
 <template>
+  
   <div class="content">
 
     <div class="banner-card">
@@ -87,34 +125,40 @@ onMounted( async () => {
       <div class="banner-description">
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptates dolore atque alias. Consequatur, accusamus nobis expedita rerum iusto cum praesentium corporis explicabo, ea molestiae dolores, est vitae? Praesentium dolorem dolor iusto soluta perferendis doloribus repellendus, ad fugit mollitia molestias sint unde non. Aliquid ratione omnis tempora quaerat sequi eaque sed!
       </div>
-      <a href="#" class="btn-search" @click.prevent="toggleSearch">Cari</a>
+      <a href="#" class="btn-search" @click.prevent="searchNearestTechnician">Cari</a>
       
     </div>
-    <transition name="slide-fade">
-      <div class="search-box" v-show="showSearch">
-        <input type="text" placeholder="Cari teknisi..." />
-        <button type="submit">🔍</button>
-      </div>
-    </transition>
+    <VSelect
+      v-model="selectedSkills"
+      clearable
+      chips
+      label="Select"
+      :items="skillsList"
+      multiple
+      variant="outlined"
+    ></VSelect>
 
+    <div v-if="isLoading" class="loading-container d-flex justify-center align-center">
+      <v-progress-circular
+        :size="70"
+        :width="7"
+        color="purple"
+        indeterminate
+      />
+    </div>
 
-    <div class="technician-card" v-for="(item, i) in nearestTechnicianProfile" :key="i">
+    <div v-else>
+      <div class="technician-card" v-if="filteredTechnicians.length > 0" v-for="(item, i) in filteredTechnicians" :key="i">
       <div class="part-one">
         <div class="technician-detail">
 
-          <CAvatar color="secondary" size="lg">CUI</CAvatar>
+          <CAvatar
+            class="avatar-wrapper"
+            :src="item.avatar ? `http://localhost:3000${item.avatar}` : avatar1"
+          />
           <div class="technician-name">{{ item.nama }}</div>
         </div>
-        <v-rating
-          half-increments
-          hover
-          readonly
-          :length="5"
-          :size="29"
-          :model-value="item.ratings"
-          color="warning"
-          active-color="warning"
-        />
+        <CRating v-model="item.ratings" />
       </div>
       <div class="part-two">
         <v-chip 
@@ -150,6 +194,25 @@ onMounted( async () => {
         </VBtn>
       </div>
     </div>
+    
+    <template v-else>
+      <VRow
+        class="empty-state"
+        align="center"
+        justify="center"
+      >
+        <VCol
+          cols="12"
+          class="text-center"
+        >
+          <h3>Tidak ada teknisi yang sesuai dengan kriteria pencarian 😢</h3>
+          <p class="text-subtitle-2 text-grey-darken-1">Coba ubah filter skill yang dipilih</p>
+        </VCol>
+      </VRow>
+    </template>
+    </div>
+    
+
   </div>
 </template>
 <style scoped>
@@ -276,6 +339,18 @@ onMounted( async () => {
 .part-one, .part-two, .part-three, .part-four{
   display: flex;
   flex-direction: row;
+}
+.avatar-wrapper {
+  width: 50px;
+  height: 50px;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.avatar-wrapper :deep(img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .part-one{
   justify-content: space-between;

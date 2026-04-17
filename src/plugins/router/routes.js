@@ -46,8 +46,8 @@ export const routes = [
         // meta: { roles: ['client'] }
       },
       {
-        path: 'account-settings',
-        component: () => import('@/pages/account-settings.vue'),
+        path: 'profile',
+        component: () => import('@/views/pages/account-settings/AccountSettingsAccount.vue'),
       },
       // bawaan template
       {

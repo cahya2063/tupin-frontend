@@ -68,7 +68,7 @@ async function payXendit() {
     }
     console.log('data : ', data)
 
-    const response = await apiFetch('/payment/create-invoice-with-split', {
+    const response = await apiFetch('/payment/create-invoice', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -77,11 +77,12 @@ async function payXendit() {
     })
     console.log('response xendit : ', response)
 
-    const payUrl = response.data.invoices.invoice_url
-    // const payUrl = response.data.data.actions[0].value
+    // const payUrl = response.data.invoices.invoice_url
+    // const payUrl = response.data.actions[0].value
 
     // ✅ buka di tab baru
-    window.open(payUrl, '_blank')
+    // window.open(payUrl, '_blank')
+    sweetAlert.success('Tagihan berhasil dibuat. tunggu pelanggan melakukan pembayaran.')
   } catch (error) {
     sweetAlert.error('gagal membuat invoice', error.message)
     console.error(error)
@@ -97,12 +98,11 @@ async function payXendit() {
       @click="payGateway"
       >Bayar Midtrans
     </VBtn>
-    <VBtn
-      color="success"
-      variant="elevated"
+    <CButton
+      color="primary"
       class="mt-4 mx-2"
       @click="payXendit"
-      >Bayar Xendit
-    </VBtn>
+      >Buat Tagihan
+    </CButton>
   </div>
 </template>

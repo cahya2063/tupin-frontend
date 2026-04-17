@@ -5,12 +5,15 @@ import { apiFetch } from '@/utils/api'
 import { ref } from 'vue'
 import Swal from 'sweetalert2'
 import ReviewContainer from '@/pages/part/ReviewContainer.vue'
+import { createChat } from '@/utils/tools'
 
 // const route = useRoute()
 // const technicianId = route.params.id // dari :id di path
 // const jobId = route.query.jobId // dari query ?jobId=...
 // const jobId = '693d1810c4cb04f41f21b527' // dari query ?jobId=...
 // const detailJobs = ref()
+
+const userId = localStorage.getItem('userId')
 
 const props = defineProps({
   technicianId : String
@@ -54,7 +57,7 @@ async function getProfile() {
       ratings: response.data.user.ratings || 0,
       description: response.data.user.description || '',
       skills: response.data.user.skills || [],
-    }
+    }    
   } catch (err) {
     console.error(err.message)
   }
@@ -97,17 +100,8 @@ onMounted(async () => {
       <div class="name">
         {{ accountDataLocal.name }}
       </div>
-
-      <v-rating
-        half-increments
-        hover
-        readonly
-        :length="5"
-        :size="29"
-        :model-value="accountDataLocal.ratings"
-        color="warning"
-        active-color="warning"
-      />
+      <CRating v-model="accountDataLocal.ratings" />
+      
 
       <div class="completed-job">
         4 pekerjaan terselesaikan
@@ -116,12 +110,12 @@ onMounted(async () => {
 
     <!-- Buttons -->
     <div class="action-buttons d-flex flex-column ms-auto gap-3">
-      <VBtn color="primary">
+      <VBtn color="primary" @click="createChat(userId, accountDataLocal.id)" :to="`/chat-view`">
         <VIcon start icon="ri-chat-3-line" />
         Chat
       </VBtn>
 
-      <VBtn color="success" :to="`/jobs/${accountDataLocal.id}`">
+      <VBtn class="accept-btn" :to="`/jobs/${accountDataLocal.id}`">
         <VIcon start icon="ri-tools-line" />
         Ajukan Perbaikan
       </VBtn>
@@ -157,7 +151,7 @@ onMounted(async () => {
             <VRow>
 
               <!-- 👉 Email -->
-              <VCol
+              <!-- <VCol
                 cols="12"
                 md="6"
               >
@@ -168,10 +162,10 @@ onMounted(async () => {
                   type="email"
                   :readonly="true"
                 />
-              </VCol>
+              </VCol> -->
 
               <!-- 👉 Phone -->
-              <VCol
+              <!-- <VCol
                 cols="12"
                 md="6"
               >
@@ -181,7 +175,7 @@ onMounted(async () => {
                   placeholder="085123456789"
                   :readonly="true"
                 />
-              </VCol>
+              </VCol> -->
 
               <!-- 👉 Address -->
               <VCol
@@ -193,6 +187,7 @@ onMounted(async () => {
                   label="Alamat"
                   placeholder="Jl. Ikan Hiu no. 123"
                   :readonly="true"
+                  variant="outlined"
                 />
               </VCol>
 
@@ -206,6 +201,7 @@ onMounted(async () => {
                   label="Desa/Kelurahan"
                   placeholder="Karangrejo"
                   :readonly="true"
+                  variant="outlined"
                 />
               </VCol>
 
@@ -219,6 +215,7 @@ onMounted(async () => {
                   label="Kecamatan"
                   placeholder="Banyuwangi"
                   :readonly="true"
+                  variant="outlined"
                 />
               </VCol>
 
@@ -233,6 +230,7 @@ onMounted(async () => {
                   :items="['Banyuwangi']"
                   placeholder="Select city"
                   :readonly="true"
+                  variant="outlined"
                 />
               </VCol>
 
@@ -246,6 +244,7 @@ onMounted(async () => {
                   v-model="accountDataLocal.zip_code"
                   label="Kode Pos"
                   :readonly="true"
+                  variant="outlined"
                 />
               </VCol>
 
@@ -262,11 +261,18 @@ onMounted(async () => {
         </VCardText>
       </VCard>
     </VCol>
-    <ReviewContainer :userId="accountDataLocal.id" />
   </VRow>
 </template>
 
 <style scoped>
+.accept-btn{
+  background-color: rgb(15, 255, 15);
+  color: white;
+  font-weight: bold;
+}
+.accept-btn:hover{
+  background-color: rgba(0, 128, 0, 0.736);
+}
 .name{
   font-size: 30px;
   font-weight: 600;
