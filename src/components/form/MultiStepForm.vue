@@ -1,99 +1,108 @@
 <script setup>
-import { apiFetch } from '@/utils/api'
-import { onMounted, ref, computed } from 'vue'
+import { apiFetch, getProfile } from '@/utils/api'
+import { onMounted, ref, watch } from 'vue'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue'
 import InlineEditor from '@ckeditor/ckeditor5-build-inline'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import { nextTick } from 'vue'
 import Swal from 'sweetalert2'
+import { getCurrentLocation, useDestination } from '@/utils/tools'
 
-// import 'ckeditor5/ckeditor5.css';
+const {destinationList, handleSearch, getDestination} = useDestination()
 
+const props = defineProps({
+  technicianId: String,
+})
+ 
 // ===========CKEDITOR============//
-
 const editor = InlineEditor
-const editorData = ref('<p>Tulis sesuatu di sini...</p>')
-
+const description = ref('')
 const config = {
   toolbar: [
-    'undo',
-    'redo',
-    '|',
-    'heading',
-    '|',
-    'bold',
-    'italic',
-    '|',
-    'link',
-    '|',
-    'bulletedList',
-    'numberedList',
-    'outdent',
-    'indent',
+    'undo', 'redo', '|',
+    'heading', '|',
+    'bold', 'italic', '|',
+    'link', '|',
+    'bulletedList', 'numberedList', 'outdent', 'indent',
   ],
   placeholder: 'Ketik atau paste konten di sini...',
-  height: '100px',
 }
-
-const stepperRef = ref()
-const currentStep = ref(1)
-const finish = ref(false)
-const validationState = ref(0)
-
+ 
 const userId = localStorage.getItem('userId')
 
-const steps = [
-  'Judul',
-  'Kategori',
-  'Keahlian',
-  'Deadline',
-  'Pengalaman',
-  'Budget',
-  'Metode pembayaran',
-  'Gambar',
-  'Deskripsi',
-]
-
-// langsung flat
-const options = ref([])
-
-async function getSkills() {
-  const response = await apiFetch(`/skills`)
-  const flatSkills = response.data.skills.flatMap(item =>
-    item.skill.map(s => ({
-      value: s.value,
-      label: s.value,
-    })),
-  )
-
-  options.value = flatSkills
-}
+const technicianProfile = ref({})
+const uploadedFiles = ref([])
 
 const title = ref('')
 const category = ref('Elektronik')
-const skills = ref([])
 const needDeadline = ref(false)
 const vStartDate = ref(null)
 const vEndDate = ref(null)
-const experience = ref('Medioker')
-const budget = ref()
-const payment = ref('cash')
-const description = ref('')
-const photoFile = ref(null) // file akan disimpan di sini
-
-// handle ambil file
-function handleFileUpload(e) {
-  photoFile.value = e.target.files[0]
-}
+const postCode = ref(null)
+const today = new Date()
+// const destinationList = ref([])
+const selectedDestination = ref([])
+ 
+const lat = ref(-8.2192)
+const lng = ref(114.3691)
+ 
+let map
+let marker
+ 
+// function handleFileUpload(e) {
+//   photoFile.value = e.target.files[0]
+// }
 function toLocalISODate(date) {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
   return local.toISOString().split('T')[0]
 }
 
-async function postJob() {
-  const formData = new FormData()
+const getMyLocation = async () => {
+  try {
+    const posisi = await getCurrentLocation()
+    lat.value = posisi.lat
+    lng.value = posisi.lng
+    map.flyTo([posisi.lat, posisi.lng], 15)
+    marker.setLatLng([posisi.lat, posisi.lng])
+  } catch (err) {
+    console.error('Gagal ambil lokasi:', err)
+  }
+}
 
+function onFileChange(newFiles) {
+  // kalau jumlah berkurang → berarti hapus
+  if (newFiles.length < uploadedFiles.value.length) {
+    uploadedFiles.value = newFiles
+    return
+  }
+
+  // kalau bertambah → merge
+  const merged = [...uploadedFiles.value, ...newFiles]
+
+  uploadedFiles.value = merged.filter((file, index, self) =>
+    index === self.findIndex(f =>
+      f.name === file.name &&
+      f.size === file.size &&
+      f.lastModified === file.lastModified
+    )
+  )
+}
+
+
+
+
+async function getSkills(id){
+  const response = await apiFetch(`/skills/${id}`)
+  
+  return response.data.skill.label
+}
+
+async function postJob() {
+  
+  const formData = new FormData()
   formData.append('title', title.value)
   formData.append('category', category.value)
-  formData.append('skills', JSON.stringify(skills.value))
   formData.append(
     'deadline',
     JSON.stringify({
@@ -101,20 +110,25 @@ async function postJob() {
       end_date: vEndDate.value ? toLocalISODate(vEndDate.value) : null,
     }),
   )
-  formData.append('experiences', experience.value)
-  formData.append('budget', budget.value)
-  formData.append('payment_method', payment.value)
   formData.append('description', description.value)
   formData.append('userId', userId)
-
-  if (photoFile.value) {
-    formData.append('photo', photoFile.value)
+  formData.append('location', JSON.stringify({ lat: lat.value, lng: lng.value }))
+  formData.append('destination', JSON.stringify({ destinationId: selectedDestination.value[0].value, destinationName: selectedDestination.value[0].label }))
+  formData.append('selectedTechnician', props.technicianId)
+ 
+  console.log('uploaded files : ', uploadedFiles.value);
+  
+  if (uploadedFiles.value && uploadedFiles.value.length > 0) {
+    uploadedFiles.value.forEach(file => {
+      formData.append('photos', file)
+    })
   }
-
+ 
   const response = await apiFetch('/jobs', {
     method: 'POST',
     body: formData,
   })
+ 
   if (response.status === 201) {
     Swal.fire({
       title: 'Sukses',
@@ -123,559 +137,466 @@ async function postJob() {
       confirmButtonText: 'OK',
       confirmButtonColor: '#16a34a',
     })
+
     // reset form
-    stepperRef.value.reset()
+    title.value = ''
+    category.value = 'Elektronik'
+    needDeadline.value = false
+    vStartDate.value = null
+    vEndDate.value = null
+    description.value = ''
+    uploadedFiles.value = []
+    postCode.value = null
+    destinationList.value = []
+    lat.value = -8.2192
+    lng.value = 114.3691
+    marker?.setLatLng([lat.value, lng.value])
+    map?.setView([lat.value, lng.value], 13)
+  }
+  else{
+    Swal.fire({
+      title: 'Gagal',
+      text: response.data.message || 'Terjadi kesalahan saat mengirim permintaan',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#dc2626',
+    })
   }
 }
-
-onMounted(async () => {
-  getSkills()
+ 
+watch(selectedDestination, (val) => {
+  console.log('selected raw:', val)
 })
+onMounted(async () => {
+  
+  technicianProfile.value = await getProfile(props.technicianId)
+  
+  technicianProfile.value.skills = await Promise.all(
+    technicianProfile.value.skills.map(async (skillId) => {
+      return await getSkills(skillId)
+    })
+  )
+  console.log('profile teknisi : ', technicianProfile.value.skills);
+  
+  await nextTick()
+  map = L.map('map', {
+    zoomControl: false,
+  }).setView([lat.value, lng.value], 13)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap & Carto',
+  }).addTo(map)
+ 
+  marker = L.marker([lat.value, lng.value], { draggable: true }).addTo(map)
+ 
+  marker.on('dragend', function () {
+    const position = marker.getLatLng()
+    lat.value = position.lat
+    lng.value = position.lng
+  })
+ 
+  map.on('click', function (e) {
+    lat.value = e.latlng.lat
+    lng.value = e.latlng.lng
+    marker.setLatLng(e.latlng)
+  })
+ 
+  map.invalidateSize()
+})
+ 
+
 </script>
-
+ 
 <template>
-  <div class="stepper-wrapper">
-    <CStepper
-      :steps="steps"
-      layout="vertical"
-      @finish="finish = true"
-      @reset="finish = false"
-      @step-change="step => (currentStep = step)"
-      @step-validation-complete="({ stepNumber }) => (validationState = stepNumber)"
-      ref="stepperRef"
-    >
-      <template #step-1="{ formRef }">
-        <form
-          class="row form-title g-2 py-3"
-          :class="{ 'was-validated': validationState === 1 }"
-          novalidate
-          :ref="formRef"
-        >
-          <CCol :md="4">
-            <div class="title">ayo buat judul yang mudah dipahami</div>
-          </CCol>
-          <CCol :md="6">
-            <CFormInput
-              class="title-input"
-              v-model="title"
-              name="title"
-              type="text"
-              value=""
-              label="tulis judul untuk perbaikanmu"
-              required
-            />
-            <div class="example-title">
-              <div class="example-title-1">contoh judul :</div>
-              <ul class="custom-list">
-                <li>lemari pendingin saya tidak dingin</li>
-                <li>meja kerja saya permukaannya retak</li>
-                <li>kompor gas saya tidak menyala</li>
-                <li>keran air saya mampet</li>
-                <li>motor saya mengeluarkan suara kasar</li>
-              </ul>
-            </div>
-          </CCol>
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4 me-4">
-          
-          <CButton
-            v-if="!finish && currentStep < steps.length"
-            color="primary"
-            @click="stepperRef?.next()"
-          >
-            Next
-          </CButton>
-        </div>
-      </template>
-
-      <template #step-2="{ formRef }">
-        <form
-          class="row g-2 py-3"
-          novalidate
-          :ref="formRef"
-        >
-          <CCol :md="4">
-            <div class="title">barangmu yang rusak apa kategorinya?</div>
-          </CCol>
-          <CCol :md="8">
-            <CFormCheck
-              class="category-radio"
-              type="radio"
-              id="flexRadioVModel1"
-              inline
-              label="Elektronik"
-              value="Elektronik"
-              v-model="category"
-            />
-            <CFormCheck
-              class="category-radio"
-              type="radio"
-              id="flexRadioVModel2"
-              inline
-              label="Furnitur"
-              value="Furnitur"
-              v-model="category"
-            />
-            <CFormCheck
-              class="category-radio"
-              type="radio"
-              id="flexRadioVModel4"
-              inline
-              label="Kamar Mandi"
-              value="Kamar Mandi"
-              v-model="category"
-            />
-            <CFormCheck
-              class="category-radio"
-              type="radio"
-              id="flexRadioVModel5"
-              inline
-              label="Kendaraan"
-              value="Kendaraan"
-              v-model="category"
-            />
-            <CFormCheck
-              class="category-radio"
-              type="radio"
-              id="flexRadioVModel5"
-              inline
-              label="Lainnya"
-              value="Lainnya"
-              v-model="category"
-            />
-            <div class="picked">Category : {{ category }}</div>
-          </CCol>
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4">
-          <CButton
-            v-if="!finish && currentStep > 1"
-            color="secondary"
-            @click="stepperRef?.prev()"
-          >
-            Previous
-          </CButton>
-          <CButton
-            v-if="!finish && currentStep < steps.length"
-            color="primary"
-            @click="stepperRef?.next()"
-          >
-            Next
-          </CButton>
-          
-        </div>
-      </template>
-
-      <template #step-3="{ formRef }">
-        <form
-          class="row g-3 pt-3"
-          :class="{ 'was-validated': validationState === 3 }"
-          novalidate
-          :ref="formRef"
-        >
-          <label class="form-label fw-semibold">
-            Skill yang dibutuhkan <span class="text-danger">*</span>
+  <div class="job-form-wrapper">
+    <h2 class="form-heading">Buat Permintaan Perbaikan</h2>
+ 
+    <form class="job-form" novalidate @submit.prevent="postJob">
+ 
+      <!-- ROW 1: Judul & Kategori -->
+      <div class="form-row">
+        <!-- Judul -->
+        <div class="form-group">
+          <label class="field-label">
+            <span class="label-number">01</span>
+            Judul Perbaikan
           </label>
+          <p class="field-hint">Buat judul yang mudah dipahami teknisi</p>
+          <CFormInput
+            class="field-input"
+            v-model="title"
+            name="title"
+            type="text"
+            placeholder="cth: kulkas saya tidak dingin"
+            required
+          />
+          <ul class="example-list">
+            <li>lemari pendingin saya tidak dingin</li>
+            <li>meja kerja saya permukaannya retak</li>
+            <li>kompor gas saya tidak menyala</li>
+          </ul>
+        </div>
+ 
+        <!-- Kategori -->
+        <div class="form-group">
+          <label class="field-label">
+            <span class="label-number">02</span>
+            Kategori Kerusakan
+          </label>
+          <p class="field-hint">Pilih kategori yang sesuai dengan barangmu</p>
+          <div class="category-options">
+            <label
+              v-for="opt in technicianProfile.skills"
+              :key="opt"
+              class="category-chip"
+              :class="{ active: category === opt }"
+            >
+              <input type="radio" :value="opt" v-model="category" hidden />
+              {{ opt }}
+            </label>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- ROW 2: Deadline & Foto -->
+      <div class="form-row">
+        <!-- Deadline -->
+        <div class="form-group">
+          <label class="field-label">
+            <span class="label-number">03</span>
+            Jangka Waktu
+          </label>
+          <p class="field-hint">Apakah kamu butuh batas waktu pengerjaan?</p>
+          <div class="switch-row">
+            <span class="switch-label">Tidak</span>
+            <CFormSwitch size="xl" id="deadlineSwitch" v-model="needDeadline" />
+            <span class="switch-label">Ya</span>
+          </div>
+          <CDateRangePicker
+            v-if="needDeadline"
+            label="Pilih rentang tanggal"
+            locale="id-ID"
+            :min-date="today"
+            v-model:start-date="vStartDate"
+            v-model:end-date="vEndDate"
+            class="mt-3"
+          />
+        </div>
+ 
+        <!-- Foto -->
+        <div class="form-group">
+          <label class="field-label">
+            <span class="label-number">04</span>
+            Foto Barang
+          </label>
+          <p class="field-hint">Upload foto barang yang ingin diperbaiki</p>
+          <div class="file-upload-area">
+            <!-- <CFormInput
+              type="file"
+              id="photoUpload"
+              @change="handleFileUpload"
+              accept="image/*"
+            /> -->
+            
+            <v-file-upload
+              :model-value="uploadedFiles"
+              @update:modelValue="onFileChange"
+              multiple
+              clearable
+              accept="image/*"
+            />
+            
+
+          </div>
+        </div>
+      </div>
+ 
+      <!-- ROW 3: Deskripsi & Lokasi -->
+      <div class="form-row">
+        <!-- Deskripsi -->
+        <div class="form-group">
+          <label class="field-label">
+            <span class="label-number">05</span>
+            Deskripsi
+          </label>
+          <p class="field-hint">Ceritakan lebih detail tentang kerusakan barangmu</p>
+          <div class="editor-wrapper">
+            <ckeditor
+              v-if="editor && config"
+              v-model="description"
+              :editor="editor"
+              :config="config"
+            />
+          </div>
+        </div>
+ 
+        <!-- Lokasi -->
+        <div class="form-group">
+          <label class="field-label">
+            <span class="label-number">06</span>
+            Lokasi Perbaikan
+          </label>
+          <p class="field-hint">masukkan kode pos tempat perbaikan</p>
 
           <CMultiSelect
-            :options="options"
-            multiple
-            v-model="skills"
+            :multiple="false"
+            :options="destinationList"
+            :value="selectedDestination"
+            @change="(val) => { selectedDestination = val }"
+            @filter-change="handleSearch"
+            placeholder="masukkan kode pos"
+            virtual-scroller
+            
           />
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4">
-          <CButton
-            v-if="!finish && currentStep > 1"
-            color="secondary"
-            @click="stepperRef?.prev()"
-          >
-            Previous
-          </CButton>
-          <CButton
-            v-if="!finish && currentStep < steps.length"
-            color="primary"
-            @click="stepperRef?.next()"
-          >
-            Next
-          </CButton>
-          
+          <!-- <p>Dipilih: {{ selectedDestination }}</p> -->
+          <p class="field-hint">Klik peta atau seret penanda untuk menentukan lokasi</p>
+          <div id="map" class="map-container"></div>
+          <div class="map-footer">
+            <button type="button" class="btn-location" @click.prevent="getMyLocation">
+              📍 Ambil Lokasi Saya
+            </button>
+            <span class="coords">{{ lat.toFixed(5) }}, {{ lng.toFixed(5) }}</span>
+          </div>
         </div>
-      </template>
-
-      <template #step-4="{ formRef }">
-        <form
-          class="row g-3 pt-3"
-          novalidate
-          :ref="formRef"
-        >
-          <CCol :md="4">
-            <div class="title">apakah kamu perlu jangka waktu?</div>
-          </CCol>
-          <CCol :md="6">
-            <div class="switch-box">
-              Tidak
-              <CFormSwitch
-                size="xl"
-                id="formSwitchCheckDefaultXL"
-                v-model="needDeadline"
-              />
-              Ya
-            </div>
-
-            <!-- hanya muncul kalau switch aktif -->
-            <CDateRangePicker
-              v-if="needDeadline"
-              :key="'date-picker-' + needDeadline"
-              label="Date range"
-              locale="en-US"
-              v-model:start-date="vStartDate"
-              v-model:end-date="vEndDate"
-            />
-            <div class="mt-2 text-muted">
-              <pre>{{ (vStartDate, '-', vEndDate) }}</pre>
-            </div>
-          </CCol>
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4">
-          <CButton
-            v-if="!finish && currentStep > 1"
-            color="secondary"
-            @click="stepperRef?.prev()"
-          >
-            Previous
-          </CButton>
-          <CButton
-            v-if="!finish && currentStep < steps.length"
-            color="primary"
-            @click="stepperRef?.next()"
-          >
-            Next
-          </CButton>
-          
-        </div>
-      </template>
-
-      <template #step-5="{ formRef }">
-        <form
-          class="row g-3 pt-3"
-          novalidate
-          :ref="formRef"
-        >
-          <CCol :md="4">
-            <div class="title">Mau alatmu diperbaiki ahli?</div>
-          </CCol>
-          <CCol
-            :md="6"
-            class="py-3"
-          >
-            <div class="experience-container">
-              <div class="experience-btn-caption">mencari seseorang yang relatif baru di bidang ini</div>
-              <CFormCheck
-                type="radio"
-                value="Newbie"
-                v-model="experience"
-                name="flexRadioDefault"
-                id="flexRadioDefault1"
-                label="Newbie"
-              />
-            </div>
-            <div class="experience-container">
-              <div class="experience-btn-caption">mencari seseorang dengan pengalaman menengah</div>
-              <CFormCheck
-                type="radio"
-                value="Medioker"
-                v-model="experience"
-                name="flexRadioDefault"
-                id="flexRadioDefault2"
-                label="Medioker"
-                checked
-              />
-            </div>
-
-            <div class="experience-container">
-              <div class="experience-btn-caption">mencari seseorang ahli untuk menangani</div>
-              <CFormCheck
-                type="radio"
-                value="Expert"
-                v-model="experience"
-                name="flexRadioDefault"
-                id="flexRadioDefault1"
-                label="Expert"
-              />
-            </div>
-          </CCol>
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4">
-          <CButton
-            v-if="!finish && currentStep > 1"
-            color="secondary"
-            @click="stepperRef?.prev()"
-          >
-            Previous
-          </CButton>
-          <CButton
-            v-if="!finish && currentStep < steps.length"
-            color="primary"
-            @click="stepperRef?.next()"
-          >
-            Next
-          </CButton>
-          
-        </div>
-      </template>
-
-      <template #step-6="{ formRef }">
-        <form
-          class="row g-3 pt-3"
-          novalidate
-          :ref="formRef"
-        >
-          <CCol :md="4">
-            <div class="title">Mau alatmu diperbaiki ahli?</div>
-          </CCol>
-          <CCol
-            :md="6"
-            class="py-3"
-          >
-            <CFormInput
-              v-model="budget"
-              type="number"
-              id="input-budget"
-              label="Berapa budgetmu?"
-              placeholder="masukkan budgetmu..."
-            />
-          </CCol>
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4">
-          <CButton
-            v-if="!finish && currentStep > 1"
-            color="secondary"
-            @click="stepperRef?.prev()"
-          >
-            Previous
-          </CButton>
-          <CButton
-            v-if="!finish && currentStep < steps.length"
-            color="primary"
-            @click="stepperRef?.next()"
-          >
-            Next
-          </CButton>
-          
-        </div>
-      </template>
-
-      <template #step-7="{ formRef }">
-        <form
-          class="row g-3 pt-3"
-          novalidate
-          :ref="formRef"
-        >
-          <CCol :md="4">
-            <div class="title">Tunai atau Non-Tunai?</div>
-          </CCol>
-          <CCol
-            :md="6"
-            class="py-3"
-          >
-            <CFormCheck
-              class="category-radio"
-              type="radio"
-              id="flexRadioVModel6"
-              inline
-              label="cash"
-              value="cash"
-              v-model="payment"
-            />
-            <CFormCheck
-              class="category-radio"
-              type="radio"
-              id="flexRadioVModel7"
-              inline
-              label="gateway"
-              value="gateway"
-              v-model="payment"
-            />
-          </CCol>
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4">
-          <CButton
-            v-if="!finish && currentStep > 1"
-            color="secondary"
-            @click="stepperRef?.prev()"
-          >
-            Previous
-          </CButton>
-          <CButton
-            v-if="!finish && currentStep < steps.length"
-            color="primary"
-            @click="stepperRef?.next()"
-          >
-            Next
-          </CButton>
-          
-        </div>
-      </template>
-
-      <template #step-8="{ formRef }">
-        <form
-          class="row g-3 pt-3"
-          novalidate
-          :ref="formRef"
-        >
-          <CCol :md="4">
-            <div class="title">Upload gambar alatmu</div>
-          </CCol>
-          <CCol
-            :md="6"
-            class="py-3"
-          >
-            <CFormInput
-              type="file"
-              id="inputGroupFile01"
-              @change="handleFileUpload"
-            />
-          </CCol>
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4">
-          <CButton
-            v-if="!finish && currentStep > 1"
-            color="secondary"
-            @click="stepperRef?.prev()"
-          >
-            Previous
-          </CButton>
-          <CButton
-            v-if="!finish && currentStep < steps.length"
-            color="primary"
-            @click="stepperRef?.next()"
-          >
-            Next
-          </CButton>
-          
-        </div>
-      </template>
-
-      <template #step-9="{ formRef }">
-        <form
-          class="row g-3 pt-3"
-          novalidate
-          :ref="formRef"
-        >
-          <CCol :md="4">
-            <div class="title">Ceritakan lagi tentang alatmu?</div>
-          </CCol>
-          <CCol
-            :md="6"
-            class="py-3"
-          >
-            <div class="main-container">
-              <div
-                class="editor-container editor-container_inline-editor"
-                ref="editorContainerElement"
-              >
-                <div class="editor-container__editor">
-                  <div ref="editorElement">
-                    <ckeditor
-                      v-if="editor && config"
-                      v-model="description"
-                      :modelValue="config.initialData"
-                      :editor="editor"
-                      :config="config"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CCol>
-        </form>
-        <div class="d-flex btn-next-container gap-2 mt-4">
-          <CButton
-            v-if="!finish && currentStep > 1"
-            color="secondary"
-            @click="stepperRef?.prev()"
-          >
-            Previous
-          </CButton>
-              <CButton
-            v-if="!finish && currentStep === steps.length"
-            color="primary"
-            @click="postJob"
-          >
-            Finish
-          </CButton>
-          
-        </div>
-      </template>
-    </CStepper>
-    <div v-if="finish">All steps are complete—you're finished.</div>
-
-    <div class="d-flex gap-2 mt-4">      
-      <CButton
-        color="danger"
-        @click="stepperRef?.reset()"
-      >
-        Reset
-      </CButton>
-    </div>
+      </div>
+ 
+      <!-- Submit -->
+      <div class="form-actions">
+        <button type="submit" class="btn-submit">
+          Kirim Permintaan
+        </button>
+      </div>
+ 
+    </form>
   </div>
 </template>
-
+ 
 <style scoped>
-.stepper-wrapper {
-  width: 85%;
+.v-file-upload-item:hover .v-file-upload-item__actions {
+  opacity: 1 !important;
 }
-.btn-next-container{
+
+.v-file-upload-item__actions {
+  opacity: 1 !important;
+}
+/* ===== Base ===== */
+.job-form-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  font-family: 'Quicksand';
+}
+ 
+.form-heading {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 2rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 3px solid #9341fd;
+  display: inline-block;
+}
+ 
+/* ===== Grid Row (2 kolom di desktop) ===== */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+ 
+/* 1 kolom di mobile */
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+ 
+/* ===== Form Group ===== */
+.form-group {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
   display: flex;
-  justify-content: end;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s;
 }
-.title {
-  font-size: 30px;
-  font-weight: 500;
-  margin-bottom: 15px;
+ 
+.form-group:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
-.title-input {
-  margin-bottom: 10px;
-}
-.example-title {
-  margin-block: 15px;
-}
-.example-title-1 {
-  margin-block: 10px;
-}
-.custom-list {
-  list-style-type: disc;
-  padding-left: 1.5rem; /* atau sesuai kebutuhan */
-}
-.category-radio {
-  margin-inline: 30px;
-}
-.picked {
-  margin-left: 30px;
-}
-.switch-box {
+ 
+/* ===== Label ===== */
+.field-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
   display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+ 
+.label-number {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  align-items: center; /* biar vertikalnya juga rapi */
-  gap: 10px; /* kasih jarak antara teks dan switch */
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #9341fd;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
 }
-.experience-container {
-  margin-bottom: 10px;
+ 
+.field-hint {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin: 0;
 }
-.experience-btn-caption {
-  color: rgb(165, 156, 156);
+ 
+/* ===== Input ===== */
+.field-input {
+  margin-top: 0.25rem;
 }
-.ck-editor__editable_inline {
-  width: 600px;
-  min-height: 120px;
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ddd; /* kasih border default */
-  border-radius: 4px; /* biar lebih halus */
-  padding: 8px; /* kasih jarak teks ke border */
-  background: #fff;
+ 
+/* ===== Example list ===== */
+.example-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.8rem;
+  color: #9ca3af;
 }
-.ck-editor__editable_inline:focus {
-  border-color: #4a90e2; /* warna border saat fokus */
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+ 
+.example-list li {
+  margin-bottom: 0.2rem;
+}
+ 
+/* ===== Category chips ===== */
+.category-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+ 
+.category-chip {
+  cursor: pointer;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  border: 1.5px solid #d1d5db;
+  font-size: 0.85rem;
+  color: #374151;
+  background: #f9fafb;
+  transition: all 0.15s;
+  user-select: none;
+}
+ 
+.category-chip.active {
+  background: #9341fd;
+  border-color: #9341fd;
+  color: white;
+  font-weight: 600;
+}
+ 
+.category-chip:hover:not(.active) {
+  border-color: #9341fd;
+  color: #9341fd;
+}
+ 
+/* ===== Switch ===== */
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+ 
+.switch-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+ 
+/* ===== Map ===== */
+.map-container {
+  height: 280px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  margin-top: 0.5rem;
+  flex-shrink: 0;
+}
+ 
+.map-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+ 
+.btn-location {
+  background: #f0fdf4;
+  border: 1.5px solid #9341fd;
+  color: #9341fd;
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+ 
+.btn-location:hover {
+  background: #dcfce7;
+}
+ 
+.coords {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-family: monospace;
+}
+ 
+/* ===== Editor ===== */
+.editor-wrapper {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 180px;
+  margin-top: 0.25rem;
+}
+ 
+/* ===== Submit ===== */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+ 
+.btn-submit {
+  background: #9341fd;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 4px 12px rgba(147, 65, 253, 0.3);
+}
+ 
+.btn-submit:hover {
+  background: #9341fd;
+  transform: translateY(-1px);
+}
+ 
+.btn-submit:active {
+  transform: translateY(0);
 }
 </style>

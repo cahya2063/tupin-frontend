@@ -5,13 +5,17 @@ import DemoFormLayoutHorizontalFormWithIcons from '@/views/pages/form-layouts/De
 import DemoFormLayoutMultipleColumn from '@/views/pages/form-layouts/DemoFormLayoutMultipleColumn.vue'
 import DemoFormLayoutVerticalForm from '@/views/pages/form-layouts/DemoFormLayoutVerticalForm.vue'
 import DemoFormLayoutVerticalFormWithIcons from '@/views/pages/form-layouts/DemoFormLayoutVerticalFormWithIcons.vue'
+import { useRoute } from 'vue-router'
 // import { Vueform } from '@vueform/vueform/dist/vueform'
+
+const route = useRoute()
+const technicianId = route.params.technicianId
 </script>
 
 <template>
   <div class="title">perbaiki barangmu di sini</div>
   <div class="form">
-    <MultiStepForm />
+    <MultiStepForm :technician-id="technicianId" />
   </div>
 </template>
 <style scoped>

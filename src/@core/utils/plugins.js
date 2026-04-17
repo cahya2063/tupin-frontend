@@ -40,6 +40,37 @@
  */
 import '@coreui/coreui-pro/dist/css/coreui.min.css'
 import CoreuiVue from '@coreui/vue-pro'
+import { createVuetify } from 'vuetify'
+import {
+  VFileUpload,
+  // VFileUploadDropzone,
+  VFileUploadItem,
+  // VFileUploadList,
+} from 'vuetify/labs/VFileUpload'
+
+export const vuetify = createVuetify({
+  components: {
+    VFileUpload,
+    // VFileUploadDropzone,
+    VFileUploadItem,
+    // VFileUploadList,
+  },
+  theme: {
+    defaultTheme: 'myTheme',
+    themes: {
+      myTheme: {
+        dark: false,
+        colors: {
+          primary: '#8d58ff', // 🔥 ganti warna di sini
+          secondary: '#64748b',
+          success: '#56ca00',
+          warning: '#f59e0b',
+          error: '#ef4444',
+        },
+      },
+    },
+  },
+})
 export const registerPlugins = app => {
   const imports = import.meta.glob(['../../plugins/*.{ts,js}', '../../plugins/*/index.{ts,js}'], { eager: true })
   const importPaths = Object.keys(imports).sort()
@@ -54,4 +85,7 @@ export function registerPlugins1(app) {
 
   // 👉 CoreUI (ini yang penting)
   app.use(CoreuiVue)
+}
+export function registerPlugins2(app){
+  app.use(vuetify)
 }

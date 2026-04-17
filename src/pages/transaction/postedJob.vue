@@ -7,6 +7,7 @@ import sweetAlert from '@/utils/sweetAlert'
 import { CForm } from '@coreui/vue-pro'
 import ReviewModal from '@/components/form/ReviewModal.vue'
 import Payment from '@/components/form/Payment.vue'
+import SlideJobDetail from '@/layouts/components/SlideJobDetail.vue'
 
 const headers = [
   { title: 'User', key: 'username' },
@@ -42,42 +43,42 @@ async function getPostedJobs() {
   const response = await apiFetch(`/jobs/uploaded/${userId}`)
   jobs.value = response.data.jobs
 
-  for (const job of jobs.value) {
-    getProfile(job.idCreator, 'creator')
+  // for (const job of jobs.value) {
+  //   getProfile(job.idCreator, 'creator')
 
-    if (job.invites && job.invites.length > 0) {
-      for (const inviteId of job.invites) {
-        getProfile(inviteId, 'invite', job._id)
-      }
-    }
-  }
+  //   if (job.invites && job.invites.length > 0) {
+  //     for (const inviteId of job.invites) {
+  //       getProfile(inviteId, 'invite', job._id)
+  //     }
+  //   }
+  // }
 }
 
 // fungsi untuk ambil avatar profile
-const getProfile = async (id, type = 'creator', jobId = null) => {
-  if (!id) return
+// const getProfile = async (id, type = 'creator', jobId = null) => {
+//   if (!id) return
 
-  if (type === 'creator') {
-    if (avatars.value[id]) return
-    const response = await apiFetch(`/profile/${id}`)
-    avatars.value[id] = response.data.user.avatar
-  }
+//   if (type === 'creator') {
+//     if (avatars.value[id]) return
+//     const response = await apiFetch(`/profile/${id}`)
+//     avatars.value[id] = response.data.user.avatar
+//   }
 
-  if (type === 'invite' && jobId) {
-    if (!invitesAvatars.value[jobId]) {
-      invitesAvatars.value[jobId] = []
-    }
+//   if (type === 'invite' && jobId) {
+//     if (!invitesAvatars.value[jobId]) {
+//       invitesAvatars.value[jobId] = []
+//     }
 
-    const alreadyFetched = invitesAvatars.value[jobId].find(a => a.userId === id)
-    if (alreadyFetched) return
+//     const alreadyFetched = invitesAvatars.value[jobId].find(a => a.userId === id)
+//     if (alreadyFetched) return
 
-    const response = await apiFetch(`/profile/${id}`)
-    invitesAvatars.value[jobId].push({
-      userId: id,
-      avatar: response.data.user.avatar,
-    })
-  }
-}
+//     const response = await apiFetch(`/profile/${id}`)
+//     invitesAvatars.value[jobId].push({
+//       userId: id,
+//       avatar: response.data.user.avatar,
+//     })
+//   }
+// }
 
 async function getSubAccountId(teknisiId) {
   try {
@@ -94,37 +95,38 @@ async function getSubAccountId(teknisiId) {
   }
 }
 
-async function approveJobRequest(jobId) {
-  try {
-    const response = await apiFetch(`/jobs/${jobId}/approve-job-request`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    // console.log('response approve : ', response.data);
-    return response.data
-  } catch (error) {
-    sweetAlert.error()
-  }
-}
+// async function approveJobRequest(jobId) {
+//   try {
+//     const response = await apiFetch(`/jobs/${jobId}/approve-job-request`, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//     })
+//     // console.log('response approve : ', response.data);
+//     return response.data
+//   } catch (error) {
+//     sweetAlert.error()
+//   }
+// }
 
-async function completeJob(jobId, status) {
-  try {
-    const response = await apiFetch(`/jobs/${jobId}/is-job-completed`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ status }),
-    })
-    // console.log('response complete : ', response.data);
-    return response.data
-  } catch (error) {
-    sweetAlert.error(error.message)
-  }
-}
+// async function completeJob(jobId, status) {
+//   try {
+//     const response = await apiFetch(`/jobs/${jobId}/is-job-completed`, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify({ status }),
+//     })
+//     // console.log('response complete : ', response.data);
+//     return response.data
+//   } catch (error) {
+//     sweetAlert.error(error.message)
+//   }
+// }
 async function cancelJob(jobId) {
+  
   try {
     const response = await apiFetch(`/jobs/${jobId}/cancel-jobs`, {
       method: 'POST',
@@ -139,43 +141,43 @@ async function cancelJob(jobId) {
   }
 }
 
-async function handleApproveRequest() {
-  showSidebar.value = false
-  const result = await sweetAlert.confirm({
-    title: 'Setujui Request?',
-    text: 'Apakah anda yakin ingin menyetujui teknisi yang mengajukan request untuk memperbaiki alatmu?',
-    confirmText: 'Ya, Setujui!',
-    cancelText: 'Batal',
-  })
+// async function handleApproveRequest() {
+//   showSidebar.value = false
+//   const result = await sweetAlert.confirm({
+//     title: 'Setujui Request?',
+//     text: 'Apakah anda yakin ingin menyetujui teknisi yang mengajukan request untuk memperbaiki alatmu?',
+//     confirmText: 'Ya, Setujui!',
+//     cancelText: 'Batal',
+//   })
 
-  if (result.isConfirmed) {
-    const approveData = await approveJobRequest(selectedJob.value._id)
-    // console.log(approveData);
-    sweetAlert.success(approveData.message)
-  }
-}
-async function handleIsJobCompleted() {
-  showSidebar.value = false
-  const result = await sweetAlert.confirm({
-    title: 'Selesaikan Job?',
-    text: 'Apakah anda yakin teknisi sudah menyelesaikan job ini?',
-    confirmText: 'Ya, selesai!',
-    showCancelButton: false,
-    showDenyButton: true,
-    denyText: 'Belum selesai',
-  })
+//   if (result.isConfirmed) {
+//     const approveData = await approveJobRequest(selectedJob.value._id)
+//     // console.log(approveData);
+//     sweetAlert.success(approveData.message)
+//   }
+// }
+// async function handleIsJobCompleted() {
+//   showSidebar.value = false
+//   const result = await sweetAlert.confirm({
+//     title: 'Selesaikan Job?',
+//     text: 'Apakah anda yakin teknisi sudah menyelesaikan job ini?',
+//     confirmText: 'Ya, selesai!',
+//     showCancelButton: false,
+//     showDenyButton: true,
+//     denyText: 'Belum selesai',
+//   })
 
-  if (result.isConfirmed) {
-    const completedJob = await completeJob(selectedJob.value._id, 'completed')
-    // console.log(approveData);
-    sweetAlert.success(completedJob.message)
-  } else if (result.isDenied) {
-    const uncompletedJob = await completeJob(selectedJob.value._id, 'uncompleted')
-    sweetAlert.warning(uncompletedJob.message, 'Job Belum Selesai')
-  }
-}
+//   if (result.isConfirmed) {
+//     const completedJob = await completeJob(selectedJob.value._id, 'completed')
+//     // console.log(approveData);
+//     sweetAlert.success(completedJob.message)
+//   } else if (result.isDenied) {
+//     const uncompletedJob = await completeJob(selectedJob.value._id, 'uncompleted')
+//     sweetAlert.warning(uncompletedJob.message, 'Job Belum Selesai')
+//   }
+// }
 
-async function handleCancel() {
+async function handleCancel(jobId) {
   showSidebar.value = false
   const result = await sweetAlert.confirm({
     title: 'Cancel Jobs?',
@@ -185,7 +187,7 @@ async function handleCancel() {
   })
 
   if (result.isConfirmed) {
-    const cancelJobData = await cancelJob(selectedJob.value._id)
+    const cancelJobData = await cancelJob(jobId)
     console.log(cancelJobData)
     sweetAlert.success(cancelJobData.message)
   }
@@ -193,7 +195,7 @@ async function handleCancel() {
 
 const openDetail = async job => {
   selectedJob.value = job
-  const profile = await apiFetch(`/profile/${job.idCreator}`)
+  const profile = await apiFetch(`/profile/${job.idCreator}`)  
   if (selectedJob.value.selectedTechnician) {
     const subAccountId = await getSubAccountId(selectedJob.value.selectedTechnician)
     selectedJob.value.subAccountId = subAccountId
@@ -203,18 +205,18 @@ const openDetail = async job => {
   showSidebar.value = true
 }
 
-const openApplicants = async () => {
-  userData.value = []
+// const openApplicants = async () => {
+//   userData.value = []
 
-  if (invitesAvatars.value[selectedJob.value._id]) {
-    for (const invite of invitesAvatars.value[selectedJob.value._id]) {
-      const res = await apiFetch(`/profile/${invite.userId}`)
-      userData.value.push(res.data.user)
-    }
-  }
+//   if (invitesAvatars.value[selectedJob.value._id]) {
+//     for (const invite of invitesAvatars.value[selectedJob.value._id]) {
+//       const res = await apiFetch(`/profile/${invite.userId}`)
+//       userData.value.push(res.data.user)
+//     }
+//   }
 
-  showApplicantsModal.value = true
-}
+//   showApplicantsModal.value = true
+// }
 const openReview = () => {
   showRatingModal.value = true
   showSidebar.value = false
@@ -227,14 +229,11 @@ async function getReviewByJobId(jobId, userId) {
     const response = await apiFetch(`/review/${jobId}/${userId}/get-review-byJobId`)
     return response.data.review
   } catch (error) {
-    sweetAlert.error(error.message)
+    console.error(error.message)
   }
 }
 
-const formatDate = date => {
-  if (!date || typeof date !== 'string') return '-'
-  return date.split('T')[0]
-}
+
 
 onMounted(async () => {
   await getPostedJobs()
@@ -281,192 +280,15 @@ onMounted(async () => {
   </VRow>
 
   <!-- Sidebar kanan untuk detail job -->
-  <transition name="slide-fade">
-    <div
-      v-if="showSidebar"
-      class="slide-modal-overlay"
-      @click.self="showSidebar = false"
-    >
-      <div class="slide-modal-content">
-        <div class="slide-modal-header">
-          <h4>{{ selectedJob.title }}</h4>
-          <button
-            class="close-btn"
-            @click="showSidebar = false"
-          >
-            ×
-          </button>
-        </div>
+   <SlideJobDetail
+    :showSidebar="showSidebar"
+    :selectedJob="selectedJob"
+    :isCancelable="true"
+    @close="showSidebar = false"
+    @cancel="handleCancel"
+  />
+  
 
-        <div class="slide-modal-body">
-          <h5
-            style="color: red"
-            v-if="selectedJob?.status == `progress`"
-          >
-            tunggu teknisi sedang perbaiki alatmu
-          </h5>
-          <CImage
-            :src="`http://localhost:3000/uploads/jobs/${selectedJob?.photo}`"
-            rounded
-            width="100%"
-            class="job-detail-image"
-          />
-          <div
-            v-if="selectedJob"
-            class="job-detail"
-          >
-            <p class="text-muted mb-2"><strong>Kategori:</strong> {{ selectedJob.category }}</p>
-            <p class="text-muted mb-3"><strong>Status:</strong> {{ selectedJob.status }}</p>
-
-            <div class="description mb-4">
-              <h6 class="fw-semibold">Deskripsi:</h6>
-              <div v-html="selectedJob.description"></div>
-            </div>
-
-            <div class="info-box mb-4">
-              💰 <strong>Budget:</strong> Rp {{ selectedJob.budget?.toLocaleString('id-ID') }}<br />
-              🧰 <strong>Pengalaman:</strong> {{ selectedJob.experiences }}
-            </div>
-
-            <div class="skills mb-4">
-              <h6 class="fw-semibold mb-2">Skill Dibutuhkan:</h6>
-              <VChip
-                v-for="(skill, idx) in selectedJob.skills"
-                :key="idx"
-                color="green lighten-4"
-                text-color="green darken-2"
-                size="small"
-                class="text-capitalize me-2 mb-2"
-              >
-                {{ skill }}
-              </VChip>
-            </div>
-
-            <div class="deadline-box mt-3">
-              <label class="deadline-label">📅 Deadline Pengerjaan:</label>
-              <p class="deadline-value">
-                {{ formatDate(selectedJob?.deadline?.start_date) }} →
-                {{ formatDate(selectedJob?.deadline?.end_date) }}
-              </p>
-            </div>
-
-            <VBtn
-              color="primary"
-              variant="elevated"
-              class="mt-4 mx-2"
-              @click="openApplicants"
-            >
-              Lihat Pelamar
-            </VBtn>
-            <VBtn
-              v-if="selectedJob?.status == 'request'"
-              class="mt-4 mx-2"
-              color="success"
-              @click="handleApproveRequest"
-            >
-              Setujui perbaikan
-            </VBtn>
-
-            <VBtn
-              v-if="selectedJob?.status == 'done'"
-              class="mt-4 mx-2"
-              color="warning"
-              @click="handleIsJobCompleted"
-            >
-              Selesai diperbaiki?
-            </VBtn>
-
-            <!-- <VBtn
-            v-if="selectedJob?.status == 'completed'"
-            class="mt-4 mx-2"
-            color="success"
-            >Bayar</VBtn> -->
-            <Payment
-              v-show="selectedJob?.status == 'completed'"
-              :name="selectedJob?.creatorName"
-              :email="selectedJob?.creatorEmail"
-              :amount="selectedJob?.budget"
-              :sub-account-id="selectedJob.subAccountId"
-              :job-id="selectedJob?._id"
-              :payer-id="selectedJob?.idCreator"
-              :receiver-id="selectedJob?.selectedTechnician"
-            />
-
-            <VBtn
-              v-if="selectedJob?.status == 'payed done' && !review"
-              class="mt-4 mx-2"
-              color="success"
-              @click="openReview"
-              >Beri Review</VBtn
-            >
-
-            <VBtn
-              class="mt-4 mx-2"
-              v-if="isCancelable"
-              color="danger"
-              variant="elevated"
-              @click="handleCancel"
-            >
-              Cancel
-            </VBtn>
-          </div>
-        </div>
-      </div>
-    </div>
-  </transition>
-
-  <!-- Modal Pop-up Pelamar -->
-  <VDialog
-    v-model="showApplicantsModal"
-    max-width="800"
-  >
-    <VCard>
-      <VCardTitle class="d-flex justify-between align-center">
-        <span>Daftar Pelamar</span>
-      </VCardTitle>
-      <VCardText>
-        <VDataTable
-          :headers="headers"
-          :items="userData"
-          item-value="id"
-          class="text-no-wrap"
-          density="comfortable"
-        >
-          <!-- Kolom Avatar & Nama -->
-          <template #item.username="{ item }">
-            <div class="d-flex align-center gap-x-3">
-              <VAvatar size="36">
-                <VImg :src="item.avatar ? `http://localhost:3000${item.avatar}` : avatar1" />
-              </VAvatar>
-              <div>
-                <strong>{{ item.nama }}</strong>
-              </div>
-            </div>
-          </template>
-
-          <template #item.email="{ item }">
-            <span>{{ item.email }}</span>
-          </template>
-
-          <template #item.role="{ item }">
-            <span class="text-capitalize">{{ item.role }}</span>
-          </template>
-
-          <template #item.profile="{ item }">
-            <VBtn
-              color="secondary"
-              variant="tonal"
-              :to="`/technician-detail/${item._id}?jobId=${selectedJob._id}`"
-            >
-              Profile
-            </VBtn>
-          </template>
-
-          <template #bottom />
-        </VDataTable>
-      </VCardText>
-    </VCard>
-  </VDialog>
   <!-- Modal Pop-up Rating -->
   <ReviewModal
     v-model:show="showRatingModal"
@@ -542,7 +364,7 @@ onMounted(async () => {
 }
 
 /* Overlay blur */
-.slide-modal-overlay {
+/* .slide-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
@@ -552,7 +374,6 @@ onMounted(async () => {
   z-index: 2000;
 }
 
-/* Panel kanan */
 .slide-modal-content {
   background: #fff;
   width: 50%;
@@ -567,7 +388,6 @@ onMounted(async () => {
   flex-direction: column;
 }
 
-/* Header */
 .slide-modal-header {
   display: flex;
   justify-content: space-between;
@@ -595,7 +415,6 @@ onMounted(async () => {
   color: #ef4444;
 }
 
-/* Body */
 .slide-modal-body {
   padding: 24px;
   overflow-y: auto;
@@ -624,7 +443,6 @@ onMounted(async () => {
   color: #334155;
 }
 
-/* Animasi */
 @keyframes fadeInRight {
   from {
     transform: translateX(100%);
@@ -643,5 +461,5 @@ onMounted(async () => {
 .slide-fade-enter-from,
 .slide-fade-leave-to {
   opacity: 0;
-}
+} */
 </style>

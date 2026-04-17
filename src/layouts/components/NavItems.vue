@@ -10,18 +10,23 @@ const role = localStorage.getItem('role')
 const menuItems = computed(() => {
   if (role === 'client') {
     return [
-      {
-        title: 'Post Job',
-        icon: 'ri-briefcase-line',
-        to: '/jobs',
-      },
+      // {
+      //   title: 'Post Job',
+      //   icon: 'ri-briefcase-line',
+      //   to: '/jobs',
+      // },
       {
         title: 'Posted Job',
         icon: 'ri-briefcase-line',
         to: '/posted-jobs',
       },
       {
-        title: 'Riwayat Pembayaran',
+        title: 'Teknisi terdekat',
+        icon: 'ri-user-search-line',
+        to: '/search-technician',
+      },
+      {
+        title: 'Pembayaran',
         icon: 'ri-history-line',
         to: '/payment-history',
       },
@@ -30,11 +35,11 @@ const menuItems = computed(() => {
 
   if (role === 'technician') {
     return [
-      {
-        title: 'Search Job',
-        icon: 'ri-tools-line',
-        to: '/view-jobs',
-      },
+      // {
+      //   title: 'Search Job',
+      //   icon: 'ri-tools-line',
+      //   to: '/view-jobs',
+      // },
       {
         title: 'Accepted Jobs',
         icon: 'ri-tools-line',
@@ -110,9 +115,9 @@ const menuItems = computed(() => {
 
   <VerticalNavLink
     :item="{
-      title: 'Account Settings',
+      title: 'Profile',
       icon: 'ri-user-settings-line',
-      to: '/account-settings',
+      to: '/profile',
     }"
   />
 

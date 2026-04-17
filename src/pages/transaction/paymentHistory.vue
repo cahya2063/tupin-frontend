@@ -18,6 +18,8 @@ const filteredInvoices = computed(() =>
 async function getInvoices(userId) {
   const response = await apiFetch(`/payment/get-invoice/${userId}`)
   payment.value = response.data
+  console.log('payment history : ', payment.value);
+  
 }
 
 async function deleteInvoices(invoiceId){
@@ -79,7 +81,7 @@ onMounted(async () => {
   // console.log('userId : ', userId);
 
   await getInvoices(userId)
-  console.log('invoice : ', payment.value.invoices)
+  console.log('invoice : ', payment.value)
 })
 </script>
 <template>
