@@ -2,12 +2,12 @@
 import { apiFetch, getProfile } from '@/utils/api'
 import { onMounted, ref, watch } from 'vue'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue'
-import InlineEditor from '@ckeditor/ckeditor5-build-inline'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { nextTick } from 'vue'
 import Swal from 'sweetalert2'
 import { getCurrentLocation, useDestination } from '@/utils/tools'
+import { config, editor } from '../../utils/tools'
 
 const {destinationList, handleSearch, getDestination} = useDestination()
 
@@ -15,19 +15,8 @@ const props = defineProps({
   technicianId: String,
 })
  
-// ===========CKEDITOR============//
-const editor = InlineEditor
 const description = ref('')
-const config = {
-  toolbar: [
-    'undo', 'redo', '|',
-    'heading', '|',
-    'bold', 'italic', '|',
-    'link', '|',
-    'bulletedList', 'numberedList', 'outdent', 'indent',
-  ],
-  placeholder: 'Ketik atau paste konten di sini...',
-}
+
  
 const userId = localStorage.getItem('userId')
 

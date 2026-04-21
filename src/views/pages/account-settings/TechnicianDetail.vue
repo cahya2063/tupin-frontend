@@ -125,57 +125,26 @@ onMounted(async () => {
 
         <VDivider />
         <div class="skills d-flex flex-wrap gap-2 px-4">
-
           <v-chip 
             class="me-2"
             v-for="(skill, index) in accountDataLocal.skills"
             color="success lighten-4"
             text-color="green darken-2"
-            >
+          >
             {{ skill }}
           </v-chip>
-          <!-- deskripsi -->
-              
-          <CFormTextarea
-            class="my-3"
-            placeholder="Disabled textarea"
-            aria-label="Disabled textarea example"
-            v-model="accountDataLocal.description"
-            disabled>
-          </CFormTextarea>
+        </div>
+
+        <!-- deskripsi -->
+        <div class="card-description px-4 mx-auto my-4">
+          <div class="description-content" v-html="accountDataLocal.description"></div>
+
         </div>
 
         <VCardText>
           <!-- 👉 Form -->
           <VForm class="mt-6">
             <VRow>
-
-              <!-- 👉 Email -->
-              <!-- <VCol
-                cols="12"
-                md="6"
-              >
-                <VTextField
-                  v-model="accountDataLocal.email"
-                  label="E-mail"
-                  placeholder="johndoe@gmail.com"
-                  type="email"
-                  :readonly="true"
-                />
-              </VCol> -->
-
-              <!-- 👉 Phone -->
-              <!-- <VCol
-                cols="12"
-                md="6"
-              >
-                <VTextField
-                  v-model="accountDataLocal.phone_number"
-                  label="No. Handphone"
-                  placeholder="085123456789"
-                  :readonly="true"
-                />
-              </VCol> -->
 
               <!-- 👉 Address -->
               <VCol
@@ -276,6 +245,21 @@ onMounted(async () => {
 .name{
   font-size: 30px;
   font-weight: 600;
+}
+.card-description{
+  width: 97%;
+  height: auto;
+  padding: 20px;
+  border-radius: 10px;  
+  background-color: #e7eaee;
+}
+.description-content ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.description-content li {
+  margin-bottom: 5px;
 }
 @media (max-width: 618px) {
 
