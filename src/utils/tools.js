@@ -1,4 +1,17 @@
 import { apiFetch } from "./api"
+import InlineEditor from '@ckeditor/ckeditor5-build-inline'
+// ===========CKEDITOR============//
+export const editor = InlineEditor
+export const config = {
+  toolbar: [
+    'undo', 'redo', '|',
+    'heading', '|',
+    'bold', 'italic', '|',
+    'link', '|',
+    'bulletedList', 'numberedList', 'outdent', 'indent',
+  ],
+  placeholder: 'Ketik atau paste konten di sini...',
+}
 
 export const getCurrentLocation = () => {
   return new Promise((resolve, reject) => {

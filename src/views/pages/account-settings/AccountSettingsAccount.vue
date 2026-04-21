@@ -1,9 +1,10 @@
 <script setup>
 import ReviewContainer from '@/pages/part/ReviewContainer.vue'
 import { apiFetch } from '@/utils/api'
+import { Ckeditor } from '@ckeditor/ckeditor5-vue'
 import avatar1 from '@images/avatars/avatar-1.png'
 import { ref, onMounted } from 'vue'
-import { useDestination } from '@/utils/tools'
+import { config, editor, useDestination } from '@/utils/tools'
 
 const { destinationList, handleSearch } = useDestination()
 
@@ -23,9 +24,11 @@ const accountDataLocal = ref({
   subdistrict: '',
   city: '',
   zip_code: '',
+  description: '',
   receiverLocation: null,
 })
 
+// const description = ref('')
 const refInputEl = ref()
 
 onMounted(getProfile)
@@ -44,6 +47,7 @@ async function updateProfile() {
       subdistrict: accountDataLocal.value.subdistrict,
       city: accountDataLocal.value.city,
       zip_code: dest.zipCode || accountDataLocal.value.zip_code,
+      description: accountDataLocal.value.description,
       receiverLocation: {
         destinationId: dest.value,
         destinationName: dest.label,
@@ -79,9 +83,10 @@ async function getProfile() {
       city: user.city || '',
       zip_code: user.zip_code || '',
       avatar: user.avatar || null,
+      description: user.description || '',
       receiverLocation: user.receiverLocation || null,
     })
-    console.log('profile', accountDataLocal.value.receiverLocation.destinationName)
+    console.log('profile', accountDataLocal.value)
 
   } catch (err) {
     console.error(err)
@@ -208,6 +213,16 @@ const phoneModel = computed({
           <!-- 👉 Form -->
           <VForm class="mt-6">
             <VRow>              
+              <VCol cols="12">
+                <div class="ckeditor-wrapper">
+                  <ckeditor
+                    v-if="editor && config"
+                    v-model="accountDataLocal.description"
+                    :editor="editor"
+                    :config="config"
+                  />
+                </div>
+              </VCol>
 
               <!-- 👉 Name -->
               <VCol
@@ -318,6 +333,7 @@ const phoneModel = computed({
                 
               </VCol>
 
+              
               <!-- 👉 Form Actions -->
               <VCol
                 cols="12"
@@ -366,5 +382,9 @@ const phoneModel = computed({
 </template>
 
 <style scoped>
-
+.ckeditor-wrapper {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 5px;
+}
 </style>

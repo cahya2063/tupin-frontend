@@ -131,6 +131,8 @@ async function shareLocation() {
       longitude,
       createdAt: new Date(),
     }
+    
+ // test 2
 
     console.log('data lokasi : ', msg)
     await apiFetch(`/messages/send`, {
