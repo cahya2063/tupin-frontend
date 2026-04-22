@@ -19,6 +19,7 @@ const role = localStorage.getItem('role')
 const technicianProfile = ref()
 const shippingCost = ref()
 const repairPrice = ref(0)
+const modalShippingCost = ref(false)
 const modalAddPrice = ref(false)
 const lastCalculatedJobId = ref(null)
 
@@ -70,9 +71,9 @@ async function calculateShippingCost(jobId){
       })
     })
 
+    console.log('Shipping cost:', response);
     const data = response.data.shippingCost.data
 
-    console.log('Shipping cost:', data);
     shippingCost.value =
       (
         data.calculate_instant?.[0]?.shipping_cost
@@ -157,8 +158,6 @@ const handleIsJobCompleted = async(jobId)=>{
 
 }
 
-
-
 async function cancelJobs(jobId){
   try {
     const response = await apiFetch(`/jobs/${jobId}/cancel-jobs`,{
@@ -182,12 +181,43 @@ async function handleShippingCost(){
     await calculateShippingCost(jobId)
     lastCalculatedJobId.value = jobId
   }
+  await getTechnicianProfile(props.selectedJob?.selectedTechnician)
 
+  modalShippingCost.value = true
+}
+async function checkedJob(jobId){
+  try {
+    const response = await apiFetch(`/jobs/${jobId}/checked-job`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    sweetAlert.success(response.data.message)
+  } catch (error) {
+    sweetAlert.error('Gagal mengonfirmasi pengecekan')
+  }
 
+}
+
+async function handlePriceInput(jobId){
+    
   await getTechnicianProfile(props.selectedJob?.selectedTechnician)
 
   modalAddPrice.value = true
 }
+
+const statusConfig = (s) => {
+  const st = s?.toLowerCase()
+  if (st === 'open')      return { color: '#f59e0b', bg: '#fff8e6', text: '#92400e', label: st }
+  if (st === 'pending transport fee')   return { color: '#3b82f6', bg: '#eff6ff', text: '#1e3a8a', label: st }
+  if (st === 'transport fee paid')      return { color: '#14532d', bg: '#f0fdf4', text: '#14532d', label: st }
+  if (st === 'checked')      return { color: '#10b981', bg: '#f4f0ff', text: '#4c1d95', label: st }
+  if (st === 'completed') return { color: '#10b981', bg: '#f0fdf4', text: '#14532d', label: st }
+  if (st === 'cancelled') return { color: '#ef4444', bg: '#fef2f2', text: '#7f1d1d', label: st }
+  return { color: '#8d58ff', bg: '#f4f0ff', text: '#4c1d95', label: s }
+}
+ 
 
 watch(() => props.selectedJob,
   async (newVal) => {
@@ -207,171 +237,222 @@ watch(() => props.selectedJob,
 </script>
 <template>
   <transition name="slide-fade">
-    <div
-      v-if="showSidebar"
-      class="slide-modal-overlay"
-      @click.self="closeSidebar"
-    >
-      <div class="slide-modal-content">
+    <div v-if="showSidebar" class="overlay" @click.self="closeSidebar">
+      <div class="panel">
  
-        <!-- Header -->
-        <div class="slide-modal-header">
-          <div class="header-title-group">
-            <span class="header-icon">🔧</span>
-            <h4 class="header-title">{{ selectedJob.title }}</h4>
+        <!-- ── Header ── -->
+        <div class="panel-header">
+          <div class="header-left">
+            <div class="header-icon-wrap">
+              <i class="ri-tools-line"></i>
+            </div>
+            <div class="header-text">
+              <span class="header-eyebrow">Detail Pekerjaan</span>
+              <h4 class="header-title">{{ selectedJob.title }}</h4>
+            </div>
           </div>
           <button class="close-btn" @click="closeSidebar" aria-label="Tutup">
-            <span>×</span>
+            <i class="ri-close-line"></i>
           </button>
         </div>
  
-        <!-- Body -->
-        <div class="slide-modal-body">
- 
-          <!-- Status Banner -->
-          <div
-            v-if="selectedJob?.status === 'progress'"
-            class="status-banner status-progress"
+        <!-- ── Status bar ── -->
+        <div
+          class="status-bar"
+          :style="{
+            background: statusConfig(selectedJob?.status).bg,
+            borderBottomColor: statusConfig(selectedJob?.status).color + '40'
+          }"
+        >
+          <span
+            class="status-dot"
+            :style="{ background: statusConfig(selectedJob?.status).color }"
+          ></span>
+          <span
+            class="status-text"
+            :style="{ color: statusConfig(selectedJob?.status).text }"
           >
-            <span class="status-icon">⏳</span>
-            <span>Teknisi sedang memperbaiki alatmu, mohon tunggu...</span>
-          </div>
- 
-          <!-- Job Image -->
-          <div class="image-wrapper">
-            <!-- <v-carousel>
-              <v-carousel-item
-              v-for="(image, index) in selectedJob?.photos || []"
-              :key="index"
-                :src="`http://localhost:3000/uploads/jobs/${image}`"
-                cover
-              ></v-carousel-item>
+            {{ statusConfig(selectedJob?.status).label }}
+          </span>
 
-            </v-carousel> -->
+
+          <span
+            v-if="selectedJob?.status === 'transport fee paid' && role === 'technician'"
+            class="status-hint"
+            :style="{ color: statusConfig(selectedJob?.status).text }"
+          >
+            — segera lakukan pengecekan kerusakan
+          </span>
+          <span
+            v-if="selectedJob?.status === 'transport fee paid' && role === 'client'"
+            class="status-hint"
+            :style="{ color: statusConfig(selectedJob?.status).text }"
+          >
+            — menunggu pengecekan teknisi
+          </span>
+
+
+          <span
+            v-if="selectedJob?.status === 'progress'"
+            class="status-hint"
+            :style="{ color: statusConfig(selectedJob?.status).text }"
+          >
+            — Teknisi sedang memperbaiki alatmu
+          </span>
+        </div>
+ 
+        <!-- ── Body (scrollable) ── -->
+        <div class="panel-body">
+ 
+          <!-- Foto carousel -->
+          <div class="carousel-wrap">
             <CCarousel controls indicators>
               <CCarouselItem v-for="(image, index) in selectedJob?.photos || []" :key="index">
-                <img class="d-block w-100" :src="`http://localhost:3000/uploads/jobs/${image}`"/>
+                <img class="carousel-img" :src="`http://localhost:3000/uploads/jobs/${image}`" />
               </CCarouselItem>
-              
             </CCarousel>
-            
           </div>
  
-          <!-- Detail Content -->
-          <div v-if="selectedJob" class="job-detail">
+          <div v-if="selectedJob" class="detail-content">
  
-            <!-- Info Pills -->
-            <div class="info-pills">
-              <div class="info-pill">
-                <span class="pill-label">Kategori</span>
-                <span class="pill-value">{{ selectedJob.category }}</span>
+            <!-- Info cards -->
+            <div class="info-grid">
+              <div class="info-card">
+                <span class="info-lbl">Kategori</span>
+                <span class="info-val">{{ selectedJob.category }}</span>
               </div>
-              <div class="info-pill">
-                <span class="pill-label">Status</span>
-                <span class="pill-value">{{ selectedJob.status }}</span>
+              <div class="info-card">
+                <span class="info-lbl">Status</span>
+                <span
+                  class="info-val status-pill"
+                  :style="{
+                    background: statusConfig(selectedJob.status).bg,
+                    color: statusConfig(selectedJob.status).text
+                  }"
+                >
+                  {{ statusConfig(selectedJob.status).label }}
+                </span>
               </div>
-              <div class="info-pill">
-                <span>Pelanggan</span>
-                <div class="pill-content">
-
-                  <span>
-                    {{ profile?.nama }}
-                  </span>
-                  <VBtn class="chat-btn" @click="createChat(selectedJob.idCreator, selectedJob.selectedTechnician)" :to="`/chat-view`">
+              <div class="info-card info-card--wide">
+                <span class="info-lbl">Pelanggan</span>
+                <div class="info-val info-row">
+                  <span>{{ profile?.nama }}</span>
+                  <button
+                    class="chat-btn"
+                    @click="createChat(selectedJob.idCreator, selectedJob.selectedTechnician)"
+                  >
                     <i class="ri-chat-1-line"></i>
-                  </VBtn>
+                    Chat
+                  </button>
                 </div>
               </div>
             </div>
  
-            <!-- Divider -->
-            <div class="section-divider"></div>
+            <div class="divider"></div>
  
-            <!-- Description -->
-            <div class="description-section">
+            <!-- Deskripsi -->
+            <section class="section">
               <h6 class="section-title">
-                <span class="section-icon">📋</span> Deskripsi
+                <i class="ri-file-text-line section-icon"></i>
+                Deskripsi
               </h6>
-              <div class="description-content" v-html="selectedJob.description"></div>
-            </div>
+              <div class="desc-box" v-html="selectedJob.description"></div>
+            </section>
  
-            <!-- Divider -->
-            <div class="section-divider"></div>
+            <div class="divider"></div>
  
             <!-- Deadline -->
-            <div class="deadline-section">
+            <section class="section">
               <h6 class="section-title">
-                <span class="section-icon">📅</span> Deadline Pengerjaan
+                <i class="ri-calendar-event-line section-icon"></i>
+                Deadline Pengerjaan
               </h6>
               <div class="deadline-track">
                 <div class="deadline-point">
-                  <span class="deadline-dot start"></span>
+                  <div class="deadline-dot-wrap">
+                    <span class="dl-dot dl-dot--start"></span>
+                  </div>
                   <div>
-                    <span class="deadline-meta">Mulai</span>
-                    <p class="deadline-date">{{ formatDate(selectedJob?.deadline?.start_date) }}</p>
+                    <span class="dl-label">Mulai</span>
+                    <p class="dl-date">{{ formatDate(selectedJob?.deadline?.start_date) }}</p>
                   </div>
                 </div>
                 <div class="deadline-line"></div>
                 <div class="deadline-point">
-                  <span class="deadline-dot end"></span>
+                  <div class="deadline-dot-wrap">
+                    <span class="dl-dot dl-dot--end"></span>
+                  </div>
                   <div>
-                    <span class="deadline-meta">Selesai</span>
-                    <p class="deadline-date">{{ formatDate(selectedJob?.deadline?.end_date) }}</p>
+                    <span class="dl-label">Selesai</span>
+                    <p class="dl-date">{{ formatDate(selectedJob?.deadline?.end_date) }}</p>
                   </div>
                 </div>
               </div>
+            </section>
+ 
+            <!-- Payment slot -->
+            <div v-show="selectedJob?.status === 'completed'">
+              <div class="divider"></div>
             </div>
  
-            <!-- Payment Component -->
-            <div v-show="selectedJob?.status === 'completed'" class="payment-section">
-              <div class="section-divider"></div>
-              <!-- <payment
-                :name="selectedJob?.creatorName"
-                :email="selectedJob?.creatorEmail"
-                :amount="selectedJob?.budget"
-                :sub-account-id="selectedJob.subAccountId"
-                :job-id="selectedJob?._id"
-                :payer-id="selectedJob?.idCreator"
-                :receiver-id="selectedJob?.selectedTechnician"
-              /> -->
-            </div>
+            <div class="divider"></div>
  
-            <!-- Action Buttons -->
-            <div class="action-buttons">
+            <!-- Action buttons -->
+            <div class="action-group">
+              <button class="btn btn--outline" @click="openGoogleMaps">
+                <i class="ri-map-pin-line"></i>
+                Lihat Lokasi
+              </button>
 
-              <VBtn @click="openGoogleMaps" color="primary" class="location-btn">Lihat lokasi</VBtn>
+              <!-- aksi client -->
+               <button
+                v-if="selectedJob.status === 'transport fee paid' && role === 'client'"
+                class="btn btn--checked"
+                @click="checkedJob(selectedJob._id)"
+              >
+                <i class="ri-check-line"></i>
+                Sudah diperiksa
+              </button>
 
-              <VBtn v-if="selectedJob.status == 'open'" @click="handleShippingCost"
-              class="accept-btn"
-              >
-                terima job
-              </VBtn>
-              <VBtn class="cancel-btn" v-if="selectedJob.status == 'open'" @click="cancelJobs(selectedJob?._id)"
-              >
-                tolak job
-              </VBtn>
-              <VBtn class="accept-btn" v-if="selectedJob.status == 'paid' && role == 'technician'" @click="handleDoneJob(selectedJob?._id)"
-              >
-                perbaikan selesai
-              </VBtn>
-              <VBtn v-if="selectedJob.status == 'done' && role == 'client'" @click="handleIsJobCompleted(selectedJob?._id)"
-              class="accept-btn"
-              >
-                konfirmasi perbaikan
-              </VBtn>
 
-              <!-- <VBtn
-                v-if="selectedJob?.status === 'payed done' && !review"
-                class="action-btn btn-review"
-                color="success"
-                variant="elevated"
-                rounded="lg"
-                @click="openReview"
-              >
-                <span class="btn-icon">⭐</span> Beri Review
-              </VBtn> -->
- 
+
               
+              <!-- aksi teknisi -->
+              <button
+                v-if="selectedJob.status === 'open' && role === 'technician'"
+                class="btn btn--accept"
+                @click="handleShippingCost"
+              >
+                <i class="ri-check-line"></i>
+                Terima Job
+              </button>
+ 
+              <button
+                v-if="selectedJob.status === 'open' && role === 'technician'"
+                class="btn btn--reject"
+                @click="cancelJobs(selectedJob?._id)"
+              >
+                <i class="ri-close-line"></i>
+                Tolak Job
+              </button>
+ 
+              <button
+                v-if="selectedJob.status === 'checked' && role === 'technician'"
+                class="btn btn--accept"
+                @click="handlePriceInput(selectedJob?._id)"
+              >
+                <i class="ri-check-double-line"></i>
+                Ajukan biaya perbaikan
+              </button>
+ 
+              <button
+                v-if="selectedJob.status === 'done' && role === 'client'"
+                class="btn btn--accept"
+                @click="handleIsJobCompleted(selectedJob?._id)"
+              >
+                <i class="ri-shield-check-line"></i>
+                Konfirmasi Perbaikan
+              </button>
             </div>
  
           </div>
@@ -379,92 +460,185 @@ watch(() => props.selectedJob,
       </div>
     </div>
   </transition>
-    <CModal  :visible="modalAddPrice" @close="modalAddPrice = false">
-
-    <CModalHeader style="border-bottom: 0.5px solid var(--cui-border-color); padding-bottom: 0.9rem;">
+ 
+  <!-- ── Modal ongkir ── -->
+  <CModal :visible="modalShippingCost" @close="modalShippingCost = false">
+    <CModalHeader class="modal-header-custom">
       <div>
-        <small class="text-uppercase text-muted" style="font-size:11px; letter-spacing:.05em;">ID Pekerjaan</small>
-        <CModalTitle class="font-monospace mt-1">{{ selectedJob?._id }}</CModalTitle>
+        <small class="modal-eyebrow">ID Pekerjaan</small>
+        <CModalTitle class="modal-job-id">{{ selectedJob?._id }}</CModalTitle>
       </div>
     </CModalHeader>
-
+ 
     <CModalBody class="p-0">
-
       <!-- Lokasi -->
-      <div class="p-3 border-bottom">
-        <small class="text-uppercase text-muted d-block mb-2" style="font-size:11px; letter-spacing:.05em;">Lokasi</small>
-        <div class="row g-2">
-          <div class="col-6">
-            <div class="bg-light border rounded p-2">
-              <small class="text-muted d-block mb-1" style="font-size:11px;">
-                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" class="me-1">
-                  <path d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5zm0 6.5A1.5 1.5 0 1 1 8 4a1.5 1.5 0 0 1 0 3z" fill="#639922"/>
-                </svg>
-                Pelanggan
-              </small>
-              <strong class="small">{{ selectedJob.destination?.destinationName || '-' }}</strong>
+      <div class="modal-section">
+        <small class="modal-section-label">Lokasi</small>
+        <div class="location-grid">
+          <div class="location-card location-card--client">
+            <span class="location-card__icon">
+              <i class="ri-user-line"></i>
+            </span>
+            <div>
+              <span class="location-card__lbl">Pelanggan</span>
+              <strong class="location-card__val">{{ selectedJob.destination?.destinationName || '-' }}</strong>
             </div>
           </div>
-          <div class="col-6">
-            <div class="bg-light border rounded p-2">
-              <small class="text-muted d-block mb-1" style="font-size:11px;">
-                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" class="me-1">
-                  <circle cx="8" cy="6" r="2" stroke="#185FA5" stroke-width="1.5"/>
-                  <path d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5z" stroke="#185FA5" stroke-width="1.5" fill="none"/>
-                </svg>
-                Teknisi
-              </small>
-              <strong class="small">{{ technicianProfile.receiverLocation?.destinationName || '-' }}</strong>
+          <div class="location-card location-card--tech">
+            <span class="location-card__icon">
+              <i class="ri-tools-line"></i>
+            </span>
+            <div>
+              <span class="location-card__lbl">Teknisi</span>
+              <strong class="location-card__val">{{ technicianProfile?.receiverLocation?.destinationName || '-' }}</strong>
             </div>
           </div>
         </div>
       </div>
-
+ 
       <!-- Rincian biaya -->
-      <div class="p-3 border-bottom">
-        <small class="text-uppercase text-muted d-block mb-2" style="font-size:11px; letter-spacing:.05em;">Rincian biaya</small>
-        <div class="bg-light rounded px-3 py-1">
-          <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-            <span class="small text-muted">Ongkos kirim</span>
-            <span class="small fw-semibold font-monospace">{{ formatRupiah(shippingCost) }}</span>
+      <div class="modal-section">
+        <small class="modal-section-label">Rincian Biaya</small>
+        <div class="cost-table">
+          <div class="cost-row">
+            <span class="cost-label">Ongkos kirim</span>
+            <span class="cost-value">{{ formatRupiah(shippingCost) }}</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-            <span class="small text-muted">Harga perbaikan</span>
-            <span class="small fw-semibold font-monospace">{{ formatRupiah(repairPrice) }}</span>
-          </div>
-          <div class="d-flex justify-content-between align-items-center py-2">
-            <span class="small fw-semibold">Total</span>
-            <span class="small fw-semibold font-monospace text-primary">{{ formatRupiah(shippingCost + repairPrice) }}</span>
+          <!-- <div class="cost-row">
+            <span class="cost-label">Harga perbaikan</span>
+            <span class="cost-value">{{ formatRupiah(repairPrice) }}</span>
+          </div> -->
+          <div class="cost-row cost-row--total">
+            <span class="cost-label">Total</span>
+            <span class="cost-value cost-value--total">{{ formatRupiah(shippingCost) }}</span>
           </div>
         </div>
       </div>
-
-      <!-- Input harga perbaikan -->
-      <div class="p-3">
-        <small class="text-uppercase text-muted d-block mb-2" style="font-size:11px; letter-spacing:.05em;">Harga perbaikan</small>
-        <div class="input-group mb-2">
-          <span class="input-group-text">Rp</span>
+ 
+      <!-- Input harga -->
+      <!-- <div class="modal-section">
+        <small class="modal-section-label">Harga Perbaikan</small>
+        <div class="price-input-wrap">
+          <span class="price-prefix">Rp</span>
           <input
             type="text"
-            class="form-control form-control-lg font-monospace fw-semibold"
+            class="price-input"
             placeholder="0"
             :value="repairPrice ? repairPrice.toLocaleString('id-ID') : ''"
             @input="onPriceInput"
           />
         </div>
-        <!-- Tombol shortcut -->
-        
-      </div>
-
+      </div> -->
+ 
     </CModalBody>
-
-    <CModalFooter>
+ 
+    <CModalFooter class="modal-footer-custom">
       <Payment
-        v-show="selectedJob?.status == 'open'"
+        v-show="selectedJob?.status === 'open'"
         :name="profile?.nama"
         :email="profile?.email"
-        :amount="shippingCost + repairPrice"
+        :amount="shippingCost"
+        :sub-account-id="technicianProfile?.subAccountId"
+        :job-id="selectedJob?._id"
+        :payer-id="profile?._id"
+        :status="selectedJob?.status"
+        :receiver-id="selectedJob?.selectedTechnician"
+      />
+    </CModalFooter>
+  </CModal>
+
+  <!-- Modal add price -->
+  <CModal :visible="modalAddPrice" @close="modalAddPrice = false">
+    <CModalHeader class="modal-header-custom">
+      <div>
+        <small class="modal-eyebrow">ID Pekerjaan</small>
+        <CModalTitle class="modal-job-id">{{ selectedJob?._id }}</CModalTitle>
+      </div>
+    </CModalHeader>
+ 
+    <CModalBody class="p-0">
+      <!-- Lokasi -->
+      <div class="modal-section">
+        <small class="modal-section-label">Lokasi</small>
+        <div class="location-grid">
+          <div class="location-card location-card--client">
+            <span class="location-card__icon">
+              <i class="ri-user-line"></i>
+            </span>
+            <div>
+              <span class="location-card__lbl">Pelanggan</span>
+              <strong class="location-card__val">{{ selectedJob?.destination?.destinationName || '-' }}</strong>
+            </div>
+          </div>
+          <div class="location-card location-card--tech">
+            <span class="location-card__icon">
+              <i class="ri-tools-line"></i>
+            </span>
+            <div>
+              <span class="location-card__lbl">Teknisi</span>
+              <strong class="location-card__val">{{ technicianProfile?.receiverLocation?.destinationName || '-' }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- Rincian biaya -->
+      <div class="modal-section">
+        <small class="modal-section-label">Rincian Biaya</small>
+        <div class="cost-table">
+          <!-- <div class="cost-row">
+            <span class="cost-label">Ongkos kirim</span>
+            <span class="cost-value">{{ formatRupiah(shippingCost) }}</span>
+          </div> -->
+          <div class="cost-row">
+            <span class="cost-label">Harga perbaikan</span>
+            <span class="cost-value">{{ formatRupiah(repairPrice) }}</span>
+          </div>
+          <div class="cost-row cost-row--total">
+            <span class="cost-label">Total</span>
+            <span class="cost-value cost-value--total">{{ formatRupiah(repairPrice) }}</span>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- Input harga -->
+      <div class="modal-section">
+        <small class="modal-section-label">Harga Perbaikan</small>
+        <div class="price-input-wrap">
+          <span class="price-prefix">Rp</span>
+          <input
+            type="text"
+            class="price-input"
+            placeholder="0"
+            :value="repairPrice ? repairPrice.toLocaleString('id-ID') : ''"
+            @input="onPriceInput"
+          />
+        </div>
+      </div>
+
+      <CModalFooter>
+      <Payment
+        v-show="selectedJob?.status == 'checked'"
+        :name="profile?.nama"
+        :email="profile?.email"
+        :amount=" repairPrice"
         :sub-account-id="technicianProfile.subAccountId"
+        :job-id="selectedJob?._id"
+        :payer-id="profile?._id"
+        :status="selectedJob?.status"
+        :receiver-id="selectedJob?.selectedTechnician"
+      />
+    </CModalFooter>
+ 
+    </CModalBody>
+ 
+    <CModalFooter class="modal-footer-custom">
+      <Payment
+        v-show="selectedJob?.status === 'open'"
+        :name="profile?.nama"
+        :email="profile?.email"
+        :amount="shippingCost"
+        :sub-account-id="technicianProfile?.subAccountId"
         :job-id="selectedJob?._id"
         :payer-id="profile?._id"
         :receiver-id="selectedJob?.selectedTechnician"
@@ -472,81 +646,95 @@ watch(() => props.selectedJob,
     </CModalFooter>
   </CModal>
 
-
 </template>
+ 
 <style scoped>
-.slide-modal-overlay {
+/* ── Overlay ───────────────────────────────────────────────── */
+.overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 15, 30, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(10, 5, 25, 0.5);
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
   align-items: stretch;
 }
  
-/* =====================
-   MODAL PANEL
-===================== */
-.slide-modal-content {
-  width: 420px;
+/* ── Panel ─────────────────────────────────────────────────── */
+.panel {
+  width: 440px;
   max-width: 100vw;
   height: 100dvh;
   background: #ffffff;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.14);
+  border-left: 1px solid rgba(141, 88, 255, 0.15);
   overflow: hidden;
-  font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
 }
  
-/* =====================
-   HEADER
-===================== */
-.slide-modal-header {
+/* ── Header ────────────────────────────────────────────────── */
+.panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  padding: 16px 20px;
+  background: #8d58ff;
   flex-shrink: 0;
+  gap: 12px;
 }
  
-.header-title-group {
+.header-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
 }
  
-.header-icon {
-  font-size: 20px;
+.header-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #ffffff;
   flex-shrink: 0;
 }
  
+.header-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+ 
+.header-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+ 
 .header-title {
-  margin: 0;
-  font-size: 1.05rem;
+  font-size: 15px;
   font-weight: 700;
   color: #ffffff;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: -0.01em;
 }
  
 .close-btn {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   color: #ffffff;
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  font-size: 1.3rem;
-  line-height: 1;
+  font-size: 18px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -554,191 +742,182 @@ watch(() => props.selectedJob,
   flex-shrink: 0;
   transition: background 0.2s;
 }
+.close-btn:hover { background: rgba(255,255,255,0.28); }
  
-.close-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
-}
- 
-/* =====================
-   BODY
-===================== */
-.slide-modal-body {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0 0 32px;
-  scrollbar-width: thin;
-  scrollbar-color: #e0e0e0 transparent;
-}
- 
-/* =====================
-   STATUS BANNER
-===================== */
-.status-banner {
+/* ── Status bar ────────────────────────────────────────────── */
+.status-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  font-size: 0.84rem;
-  font-weight: 500;
-}
- 
-.status-progress {
-  background: linear-gradient(90deg, #fff8e1, #fff3cd);
-  color: #856404;
-  border-bottom: 1px solid #ffeaa7;
-}
- 
-.status-icon {
-  font-size: 1rem;
+  gap: 8px;
+  padding: 9px 20px;
+  border-bottom: 1px solid transparent;
   flex-shrink: 0;
 }
  
-/* =====================
-   IMAGE
-===================== */
-.image-wrapper {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  max-height: 220px;
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
  
-.job-detail-image {
+.status-text {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+ 
+.status-hint {
+  font-size: 12px;
+  font-weight: 400;
+}
+ 
+/* ── Body ──────────────────────────────────────────────────── */
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #e0d6ff transparent;
+}
+ 
+/* ── Carousel ──────────────────────────────────────────────── */
+.carousel-wrap {
   width: 100%;
-  height: 220px;
+  max-height: 210px;
+  overflow: hidden;
+  background: #f4f0ff;
+}
+ 
+.carousel-img {
+  width: 100%;
+  height: 210px;
   object-fit: cover;
   display: block;
 }
  
-
- 
-/* =====================
-   JOB DETAIL
-===================== */
-.job-detail {
-  padding: 20px 20px 0;
-  font-family: 'Quicksand';
-}
- 
-/* =====================
-   INFO PILLS
-===================== */
-.info-pills {
+/* ── Detail content ────────────────────────────────────────── */
+.detail-content {
+  padding: 20px 20px 32px;
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0;
 }
  
-.info-pill {
-  flex: 1;
-  min-width: 120px;
-  background: #f8f9fb;
-  border: 1px solid #eaecf0;
-  border-radius: 12px;
+/* ── Info grid ─────────────────────────────────────────────── */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+ 
+.info-card {
+  background: #fbf9ff;
+  border: 1px solid #ede8ff;
+  border-radius: 14px;
   padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-.pill-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.chat-btn {
-  width: 30px;
-  height: 30px;
-  border: none;
-  border-radius: 50%;
-  background-color: #eef2ff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.chat-btn i {
-  font-size: 16px;
-}
-
-.chat-btn:hover {
-  background-color: #6366f1;
-  color: white;
+  gap: 5px;
 }
  
-.pill-label {
-  font-size: 0.72rem;
+.info-card--wide {
+  grid-column: 1 / -1;
+}
+ 
+.info-lbl {
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #94a3b8;
+  letter-spacing: 0.7px;
+  color: #b0a4cc;
 }
  
-.pill-value {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #1e293b;
+.info-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2d1f52;
   text-transform: capitalize;
 }
  
-.pill-status--progress   { color: #d97706; }
-.pill-status--completed  { color: #16a34a; }
-.pill-status--cancelled  { color: #dc2626; }
-.pill-status--pending    { color: #64748b; }
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
  
-/* =====================
-   DIVIDER
-===================== */
-.section-divider {
+.status-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+ 
+.chat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #8d58ff;
+  color: #ffffff;
+  border: none;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.chat-btn:hover { background: #7a46ef; }
+ 
+/* ── Divider ───────────────────────────────────────────────── */
+.divider {
   height: 1px;
-  background: #f1f5f9;
+  background: #f0ebff;
   margin: 18px 0;
 }
  
-/* =====================
-   SECTION TITLES
-===================== */
+/* ── Section ───────────────────────────────────────────────── */
+.section { margin-bottom: 0; }
+ 
 .section-title {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
+  gap: 7px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: #64748b;
+  letter-spacing: 0.8px;
+  color: #8d58ff;
   margin-bottom: 12px;
 }
  
 .section-icon {
-  font-size: 1rem;
+  font-size: 14px;
 }
  
-/* =====================
-   DESCRIPTION
-===================== */
- 
-.description-content {
-  font-size: 0.9rem;
-  line-height: 1.7;
-  color: #374151;
+.desc-box {
+  background: #fbf9ff;
+  border: 1px solid #ede8ff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: #5c4f78;
 }
  
-/* =====================
-   DEADLINE
-===================== */
- 
+/* ── Deadline ──────────────────────────────────────────────── */
 .deadline-track {
   display: flex;
   align-items: center;
-  gap: 0;
-  background: #f8f9fb;
-  border: 1px solid #eaecf0;
+  background: #fbf9ff;
+  border: 1px solid #ede8ff;
   border-radius: 14px;
   padding: 14px 18px;
+  gap: 0;
 }
  
 .deadline-point {
@@ -748,150 +927,299 @@ watch(() => props.selectedJob,
   flex: 1;
 }
  
-.deadline-dot {
+.deadline-dot-wrap {
+  margin-top: 3px;
+}
+ 
+.dl-dot {
+  display: block;
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  margin-top: 4px;
-  flex-shrink: 0;
 }
  
-.deadline-dot.start { background: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
-.deadline-dot.end   { background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+.dl-dot--start {
+  background: #8d58ff;
+  box-shadow: 0 0 0 3px rgba(141, 88, 255, 0.2);
+}
+ 
+.dl-dot--end {
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
  
 .deadline-line {
   flex: 1;
   height: 2px;
   background: repeating-linear-gradient(
-    90deg,
-    #cbd5e1,
-    #cbd5e1 5px,
-    transparent 5px,
-    transparent 10px
+    90deg, #ddd4ff, #ddd4ff 5px, transparent 5px, transparent 10px
   );
   margin: 0 12px;
-  margin-top: -10px;
+  margin-top: -12px;
 }
  
-.deadline-meta {
-  font-size: 0.7rem;
+.dl-label {
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #94a3b8;
+  letter-spacing: 0.6px;
+  color: #b0a4cc;
   display: block;
 }
  
-.deadline-date {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #1e293b;
+.dl-date {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2d1f52;
   margin: 2px 0 0;
 }
  
-/* =====================
-   PAYMENT SECTION
-===================== */
-.payment-section {
-  margin-top: 0;
-}
- 
-/* =====================
-   ACTION BUTTONS
-===================== */
-.action-buttons {
+/* ── Action buttons ────────────────────────────────────────── */
+.action-group {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 24px;
-  font-family: 'Quicksand';
 }
  
-.action-btn {
-  width: 100% !important;
-  height: 46px !important;
-  font-weight: 600 !important;
-  font-size: 0.9rem !important;
-  letter-spacing: 0.01em !important;
+.btn {
+  width: 100%;
+  height: 46px;
+  border-radius: 14px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-}
-.location-btn{
-  font-weight: bold;
-}
-.accept-btn{
-  background-color: rgb(15, 255, 15);
-  color: white;
-  font-weight: bold;
-}
-.accept-btn:hover{
-  background-color: rgba(0, 128, 0, 0.736);
-}
-.cancel-btn{
-  color: white;
-  background-color: rgb(255, 4, 4);
-  font-weight: bold;
-
-}
-.cancel-btn:hover{
-  background-color: rgba(255, 0, 0, 0.738);
+  transition: opacity 0.2s, transform 0.15s;
 }
  
-.btn-icon {
-  font-size: 1rem;
+.btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+ 
+.btn--outline {
+  background: #f4f0ff;
+  color: #8d58ff;
+  border: 1.5px solid #ddd4ff;
 }
  
-/* =====================
-   TRANSITION
-===================== */
-.slide-fade-enter-active {
-  transition: all 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+.btn--accept {
+  background: #8d58ff;
+  color: #ffffff;
 }
-.slide-fade-leave-active {
-  transition: all 0.22s cubic-bezier(0.55, 0, 1, 0.45);
-}
-.slide-fade-enter-from {
-  opacity: 0;
-}
-.slide-fade-leave-to {
-  opacity: 0;
-}
-.slide-fade-enter-from .slide-modal-content {
-  transform: translateX(60px);
-}
-.slide-fade-leave-to .slide-modal-content {
-  transform: translateX(60px);
+.btn--checked {
+  background: #0dff00;
+  color: #ffffff;
 }
  
-
-/* =====================
-   RESPONSIVE
-===================== */
+.btn--reject {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1.5px solid #fecaca;
+}
+ 
+/* ── Modal ─────────────────────────────────────────────────── */
+.modal-header-custom {
+  border-bottom: 1px solid #ede8ff;
+  padding-bottom: 14px;
+}
+ 
+.modal-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: #b0a4cc;
+  display: block;
+  margin-bottom: 4px;
+}
+ 
+.modal-job-id {
+  font-family: monospace;
+  font-size: 14px;
+  color: #2d1f52;
+  font-weight: 700;
+}
+ 
+.modal-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f4f0ff;
+}
+ 
+.modal-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: #b0a4cc;
+  display: block;
+  margin-bottom: 10px;
+}
+ 
+.location-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+ 
+.location-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ede8ff;
+  background: #fbf9ff;
+}
+ 
+.location-card__icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+ 
+.location-card--client .location-card__icon { background: #f0fdf4; color: #15803d; }
+.location-card--tech   .location-card__icon { background: #f4f0ff; color: #8d58ff; }
+ 
+.location-card__lbl {
+  font-size: 10px;
+  font-weight: 600;
+  color: #b0a4cc;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 2px;
+}
+ 
+.location-card__val {
+  font-size: 12px;
+  color: #2d1f52;
+  font-weight: 700;
+}
+ 
+.cost-table {
+  background: #fbf9ff;
+  border: 1px solid #ede8ff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+ 
+.cost-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0ebff;
+}
+ 
+.cost-row:last-child { border-bottom: none; }
+ 
+.cost-row--total {
+  background: #f4f0ff;
+}
+ 
+.cost-label {
+  font-size: 13px;
+  color: #7a6d9a;
+}
+ 
+.cost-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2d1f52;
+  font-family: monospace;
+}
+ 
+.cost-value--total {
+  color: #8d58ff;
+  font-size: 14px;
+}
+ 
+.price-input-wrap {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #ddd4ff;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+}
+ 
+.price-prefix {
+  padding: 0 14px;
+  background: #f4f0ff;
+  color: #8d58ff;
+  font-weight: 700;
+  font-size: 14px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  border-right: 1.5px solid #ddd4ff;
+  flex-shrink: 0;
+}
+ 
+.price-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: monospace;
+  color: #2d1f52;
+  height: 48px;
+  background: transparent;
+}
+ 
+.modal-footer-custom {
+  border-top: 1px solid #ede8ff;
+  padding: 14px 20px;
+}
+ 
+/* ── Transition ────────────────────────────────────────────── */
+.slide-fade-enter-active { transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+.slide-fade-leave-active { transition: all 0.2s cubic-bezier(0.55, 0, 1, 0.45); }
+.slide-fade-enter-from { opacity: 0; }
+.slide-fade-leave-to  { opacity: 0; }
+.slide-fade-enter-from .panel { transform: translateX(60px); }
+.slide-fade-leave-to  .panel { transform: translateX(60px); }
+ 
+/* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 480px) {
-  .slide-modal-content {
+  .panel {
     width: 100vw;
     border-left: none;
-    border-radius: 0;
+  }
+ 
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+ 
+  .info-card--wide {
+    grid-column: 1;
   }
  
   .deadline-track {
     flex-direction: column;
-    gap: 14px;
     align-items: flex-start;
+    gap: 14px;
   }
  
-  .deadline-line {
-    display: none;
+  .deadline-line { display: none; }
+ 
+  .location-grid {
+    grid-template-columns: 1fr;
   }
  
-  .info-pills {
-    flex-direction: column;
-  }
- 
-  .info-pill {
-    min-width: unset;
+  .header-title {
+    font-size: 13px;
   }
 }
 </style>
+ 

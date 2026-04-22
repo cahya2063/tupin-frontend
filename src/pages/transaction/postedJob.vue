@@ -1,5 +1,5 @@
 <script setup>
-import { apiFetch } from '@/utils/api'
+import { apiFetch, getProfile } from '@/utils/api'
 import { onMounted, ref, computed } from 'vue'
 import avatar1 from '@images/avatars/avatar-1.png'
 import CardJob from '@/layouts/components/CardJob.vue'
@@ -40,19 +40,30 @@ const invitesAvatars = ref({})
 
 const isCancelable = computed(() => ['pending', 'request'].includes(selectedJob.value?.status))
 async function getPostedJobs() {
-  const response = await apiFetch(`/jobs/uploaded/${userId}`)
-  jobs.value = response.data.jobs
+  try {
+    
+    const response = await apiFetch(`/jobs/uploaded/${userId}`)
+    jobs.value = response.data.jobs
+    for (const job of jobs.value) {
+      const profile = await getProfile(job.idCreator)
+      job.creatorName = profile.nama
+    }
+ 
+    await Promise.all(
+      jobs.value.map(async job => {
+        if (job.idCreator && !avatars.value[job.idCreator]) {
+          const profile = await getProfile(job.idCreator)
+          avatars.value[job.idCreator] = profile.avatar
+        }
+      }),
+    )
+  } catch (error) {
+    console.error(error);
+    
+  }
 
-  // for (const job of jobs.value) {
-  //   getProfile(job.idCreator, 'creator')
-
-  //   if (job.invites && job.invites.length > 0) {
-  //     for (const inviteId of job.invites) {
-  //       getProfile(inviteId, 'invite', job._id)
-  //     }
-  //   }
-  // }
 }
+
 
 // fungsi untuk ambil avatar profile
 // const getProfile = async (id, type = 'creator', jobId = null) => {
@@ -141,41 +152,7 @@ async function cancelJob(jobId) {
   }
 }
 
-// async function handleApproveRequest() {
-//   showSidebar.value = false
-//   const result = await sweetAlert.confirm({
-//     title: 'Setujui Request?',
-//     text: 'Apakah anda yakin ingin menyetujui teknisi yang mengajukan request untuk memperbaiki alatmu?',
-//     confirmText: 'Ya, Setujui!',
-//     cancelText: 'Batal',
-//   })
 
-//   if (result.isConfirmed) {
-//     const approveData = await approveJobRequest(selectedJob.value._id)
-//     // console.log(approveData);
-//     sweetAlert.success(approveData.message)
-//   }
-// }
-// async function handleIsJobCompleted() {
-//   showSidebar.value = false
-//   const result = await sweetAlert.confirm({
-//     title: 'Selesaikan Job?',
-//     text: 'Apakah anda yakin teknisi sudah menyelesaikan job ini?',
-//     confirmText: 'Ya, selesai!',
-//     showCancelButton: false,
-//     showDenyButton: true,
-//     denyText: 'Belum selesai',
-//   })
-
-//   if (result.isConfirmed) {
-//     const completedJob = await completeJob(selectedJob.value._id, 'completed')
-//     // console.log(approveData);
-//     sweetAlert.success(completedJob.message)
-//   } else if (result.isDenied) {
-//     const uncompletedJob = await completeJob(selectedJob.value._id, 'uncompleted')
-//     sweetAlert.warning(uncompletedJob.message, 'Job Belum Selesai')
-//   }
-// }
 
 async function handleCancel(jobId) {
   showSidebar.value = false
@@ -205,18 +182,7 @@ const openDetail = async job => {
   showSidebar.value = true
 }
 
-// const openApplicants = async () => {
-//   userData.value = []
 
-//   if (invitesAvatars.value[selectedJob.value._id]) {
-//     for (const invite of invitesAvatars.value[selectedJob.value._id]) {
-//       const res = await apiFetch(`/profile/${invite.userId}`)
-//       userData.value.push(res.data.user)
-//     }
-//   }
-
-//   showApplicantsModal.value = true
-// }
 const openReview = () => {
   showRatingModal.value = true
   showSidebar.value = false
@@ -247,37 +213,59 @@ onMounted(async () => {
 </script>
 
 <template>
-  <VRow class="jobs-container">
-    <template v-if="jobs.length > 0">
-      <div class="container-job">
-        <CardJob
-          v-for="(item, i) in jobs"
-          :key="i"
-          :id="item._id"
-          :title="item.title"
-          :subtext1="[item.experiences, item.deadline, item.budget]"
-          :desc="item.description"
-          :skills="item.skills"
-          :category="item.category"
-          :status="item.status"
-          @click="openDetail(item)"
-          :creator="item.creatorName"
-          :invitesAvatars="invitesAvatars"
-          :avatarPlaceholder="avatar1"
-        />
-      </div>
-    </template>
-    <template v-else>
-      <VCol cols="12">
-        <div class="text-center py-10">
-          <h3>Kamu belum pernah upload job nihh 😔</h3>
-          <p class="text-subtitle-2 text-grey-darken-1">
-            Kalau kamu memiliki keluhan pada peralatanmu beri tahu kami ya!!
-          </p>
+  <div class="page-wrapper">
+    <div class="page-content">
+ 
+      <!-- ── Header ── -->
+      <div class="page-header">
+        <div class="page-header__text">
+          <h2 class="page-title">Riwayat perbaikan</h2>
+          <p class="page-subtitle">Daftar barang yang kamu unggah</p>
         </div>
-      </VCol>
-    </template>
-  </VRow>
+        <div v-if="jobs.length > 0" class="job-count-badge">
+          {{ jobs.length }} pekerjaan
+        </div>
+      </div>
+ 
+      <!-- ── Job List ── -->
+      <template v-if="jobs.length > 0">
+        <div class="container-job">
+          <CardJob
+            v-for="(item, i) in jobs"
+            :key="i"
+            :id="item._id"
+            :title="item.title"
+            :deadline="item.deadline"
+            :desc="item.description"
+            :category="item.category"
+            :status="item.status"
+            :creator="item.creatorName"
+            :avatarPlaceholder="avatar1"
+            class="job-card-item"
+            @click="openDetail(item)"
+          />
+        </div>
+      </template>
+ 
+      <!-- ── Empty State ── -->
+      <template v-else>
+        <div class="empty-state">
+          <div class="empty-state__icon">
+            <i class="ri-briefcase-4-line"></i>
+          </div>
+          <h3 class="empty-state__title">Belum ada pekerjaan diterima</h3>
+          <p class="empty-state__sub">
+            Coba lamar lebih banyak pekerjaan untuk meningkatkan peluangmu!
+          </p>
+          <div class="empty-state__hint">
+            <i class="ri-lightbulb-line"></i>
+            Pastikan profil dan skill-mu sudah lengkap agar lebih mudah ditemukan klien.
+          </div>
+        </div>
+      </template>
+ 
+    </div>
+  </div>
 
   <!-- Sidebar kanan untuk detail job -->
    <SlideJobDetail
@@ -299,6 +287,60 @@ onMounted(async () => {
   />
 </template>
 <style scoped>
+
+/* ─── Wrapper ─────────────────────────────────────────────── */
+.page-wrapper {
+  background-color: #f4f0ff;
+  min-height: 100vh;
+  padding: 28px 16px 48px;
+}
+ 
+.page-content {
+  width: min(92%, 860px);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+ 
+/* ─── Header ─────────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 20px 24px;
+  border: 1px solid rgba(141, 88, 255, 0.12);
+  border-left: 4px solid #8d58ff;
+}
+ 
+.page-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+ 
+.page-subtitle {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
+}
+ 
+.job-count-badge {
+  flex-shrink: 0;
+  background: #f0ebff;
+  color: #8d58ff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 50px;
+  border: 1px solid #ddd4ff;
+  white-space: nowrap;
+}
 .text-danger {
   color: #dc3545;
 }
@@ -309,6 +351,7 @@ onMounted(async () => {
   width: 100%;
   display: flex;
   flex-direction: column;
+  gap: 14px;
 }
 
 .category-text {

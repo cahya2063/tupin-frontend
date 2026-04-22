@@ -13,7 +13,7 @@ const isModalDeleteActive = ref(false)
 const selectedDeleteInvoice = ref(null)
 
 const filteredInvoices = computed(() =>
-  payment.value.invoices.filter(i => i.isClientDelete === false)
+  payment.value.invoices.filter(i => i.isClientDelete === false).reverse()
 )
 async function getInvoices(userId) {
   const response = await apiFetch(`/payment/get-invoice/${userId}`)
@@ -76,6 +76,9 @@ function getStatusColor(status) {
 
 // }
 
+// const reversedInvoices = computed(()=>{
+//   return filteredInvoices.value
+// })
 onMounted(async () => {
   const userId = localStorage.getItem('userId')
   // console.log('userId : ', userId);
@@ -118,6 +121,10 @@ onMounted(async () => {
               <span class="label">Penerima : </span>
               <span class="value">{{ item.merchant_name }}</span>
             </div>
+            <!-- <div class="row">
+              <span class="label">Tipe pembayaran : </span>
+              <span class="value">{{ item.type }} payment</span>
+            </div> -->
 
 
             <div class="total-container mt-4 d-flex justify-space-between">
@@ -246,6 +253,18 @@ onMounted(async () => {
               <VListItemTitle class="text-caption text-grey">Penerima</VListItemTitle>
               <VListItemSubtitle class="text-body-1 font-weight-medium text-black">
                 {{ selectedInvoice.merchant_name }}
+              </VListItemSubtitle>
+            </VListItem>
+
+            <VDivider class="my-1"></VDivider>
+
+            <VListItem class="px-0">
+              <template v-slot:prepend>
+                <VIcon color="primary">mdi-storefront-outline</VIcon>
+              </template>
+              <VListItemTitle class="text-caption text-grey">Tipe Pembayaran</VListItemTitle>
+              <VListItemSubtitle class="text-body-1 font-weight-medium text-black">
+                {{ selectedInvoice.type }} payment
               </VListItemSubtitle>
             </VListItem>
 
