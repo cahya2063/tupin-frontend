@@ -84,44 +84,44 @@ onMounted(async () => {
   
   <VRow>
     <VCol cols="12">
-      <VCard >
+      <VCard class="technician-detail-card">
         <VCardText class="profile-card d-flex">
     
-    <!-- Avatar -->
-    <VAvatar
-      rounded="lg"
-      size="100"
-      class="me-6 avatar"
-      :image="accountDataLocal.avatar ? `http://localhost:3000${accountDataLocal.avatar}` : avatar1"
-    />
+          <!-- Avatar -->
+          <VAvatar
+            rounded="lg"
+            size="100"
+            class="me-6 avatar"
+            :image="accountDataLocal.avatar ? `http://localhost:3000${accountDataLocal.avatar}` : avatar1"
+          />
 
-    <!-- Info -->
-    <div class="d-flex flex-column gap-2 profile-info">
-      <div class="name">
-        {{ accountDataLocal.name }}
-      </div>
-      <CRating v-model="accountDataLocal.ratings" />
-      
+          <!-- Info -->
+          <div class="d-flex flex-column gap-2 profile-info">
+            <div class="name">
+              {{ accountDataLocal.name }}
+            </div>
+            <CRating v-model="accountDataLocal.ratings" />
+            
 
-      <div class="completed-job">
-        4 pekerjaan terselesaikan
-      </div>
-    </div>
+            <div class="completed-job">
+              4 pekerjaan terselesaikan
+            </div>
+          </div>
 
-    <!-- Buttons -->
-    <div class="action-buttons d-flex flex-column ms-auto gap-3">
-      <VBtn color="primary" @click="createChat(userId, accountDataLocal.id)" :to="`/chat-view`">
-        <VIcon start icon="ri-chat-3-line" />
-        Chat
-      </VBtn>
+          <!-- Buttons -->
+          <div class="action-buttons d-flex flex-column ms-auto gap-3">
+            <VBtn color="primary" @click="createChat(userId, accountDataLocal.id)" :to="`/chat-view`">
+              <VIcon start icon="ri-chat-3-line" />
+              Chat
+            </VBtn>
 
-      <VBtn class="accept-btn" :to="`/jobs/${accountDataLocal.id}`">
-        <VIcon start icon="ri-tools-line" />
-        Ajukan Perbaikan
-      </VBtn>
-    </div>
+            <VBtn class="accept-btn" :to="`/jobs/${accountDataLocal.id}`">
+              <VIcon start icon="ri-tools-line" />
+              Ajukan Perbaikan
+            </VBtn>
+          </div>
 
-  </VCardText>
+        </VCardText>
 
         <VDivider />
         <div class="skills d-flex flex-wrap gap-2 px-4">
@@ -234,6 +234,10 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.technician-detail-card {
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+}
 .accept-btn{
   background-color: rgb(15, 255, 15);
   color: white;
