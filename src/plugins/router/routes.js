@@ -46,6 +46,10 @@ export const routes = [
         // meta: { roles: ['client'] }
       },
       {
+        path: 'transfered-money-to-technician',
+        component: ()=> import('@/pages/transaction/transferMoneyIn.vue'),
+      },
+      {
         path: 'profile',
         component: () => import('@/views/pages/account-settings/AccountSettingsAccount.vue'),
       },

@@ -3,9 +3,10 @@ import { apiFetch, getProfile } from '@/utils/api'
 import { onMounted, ref, computed } from 'vue'
 import avatar1 from '@images/avatars/avatar-1.png'
 import sweetAlert from '@/utils/sweetAlert'
-import CardJob from '@/layouts/components/CardJob.vue'
+// import CardJob from '@/layouts/components/CardJob.vue'
 import ReviewModal from '@/components/form/ReviewModal.vue'
 import SlideJobDetail from '@/layouts/components/SlideJobDetail.vue'
+import CardJobTechnician from '@/layouts/components/CardJobTechnician.vue'
  
 const avatars = ref({})
 const showSidebar = ref(false)
@@ -168,7 +169,7 @@ onMounted(async () => {
       <!-- ── Job List ── -->
       <template v-if="acceptedJobs.length > 0">
         <div class="container-job">
-          <CardJob
+          <CardJobTechnician
             v-for="(item, i) in acceptedJobs"
             :key="i"
             :id="item._id"
