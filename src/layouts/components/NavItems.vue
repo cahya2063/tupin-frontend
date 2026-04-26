@@ -100,6 +100,14 @@ const menuItems = computed(() => {
       }"
     />
     <VerticalNavLink
+      v-if="role == 'technician'"
+      :item="{
+        title: 'Riwayat Penarikan',
+        to: '/disbursements-history',
+      }"
+      v-c-tooltip="{content: 'Riwayat penarikan', placement: 'right'}"
+    />
+    <VerticalNavLink
       v-if="role == 'client'"
       :item="{
         title: 'Riwayat Pembayaran',
@@ -107,8 +115,16 @@ const menuItems = computed(() => {
       }"
       v-c-tooltip="{content: 'Riwayat pembayaran', placement: 'right'}"
     />
+
+    
   </VerticalNavGroup>
-  
+  <VerticalNavLink
+    :item="{
+      title: 'Profile',
+      icon: 'ri-user-settings-line',
+      to: '/profile',
+    }"
+  />
   
 
   <!-- <VerticalNavLink
@@ -132,13 +148,7 @@ const menuItems = computed(() => {
     }"
   />
 
-  <VerticalNavLink
-    :item="{
-      title: 'Profile',
-      icon: 'ri-user-settings-line',
-      to: '/profile',
-    }"
-  />
+  
 
   <VerticalNavLink
     :item="{

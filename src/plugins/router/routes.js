@@ -50,6 +50,10 @@ export const routes = [
         component: ()=> import('@/pages/transaction/transferMoneyIn.vue'),
       },
       {
+        path: 'disbursements-history',
+        component: ()=> import('@/pages/transaction/disbursementsHistory.vue'),
+      },
+      {
         path: 'profile',
         component: () => import('@/views/pages/account-settings/AccountSettingsAccount.vue'),
       },
