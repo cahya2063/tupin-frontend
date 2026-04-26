@@ -1,6 +1,6 @@
 <script setup>
 import NavItems from '@/layouts/components/NavItems.vue'
-import logo from '@images/logo.svg?raw'
+import logo from '@images/logos/logo-fixify-clear.png'
 import VerticalNavLayout from '@layouts/components/VerticalNavLayout.vue'
 
 // Components
@@ -213,9 +213,13 @@ onMounted(() => {
       >
         <div
           class="d-flex"
-          v-html="logo"
-        />
-        <h1 class="font-weight-medium leading-normal text-xl text-uppercase">Materio</h1>
+        >
+          <img
+            :src="logo"
+            alt="Logo"
+            style="width: 100px; margin-right: 8px;"
+          />
+        </div>
       </RouterLink>
 
       <IconBtn

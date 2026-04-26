@@ -1,7 +1,7 @@
 <script setup>
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 import { useDisplay } from 'vuetify'
-import logo from '@images/logo.svg?raw'
+import logo from '@images/logos/logo-fixify-clear.png'
 
 const props = defineProps({
   tag: {
@@ -69,7 +69,7 @@ const handleNavScroll = evt => {
             v-html="logo"
           />
 
-          <h1 class="font-weight-medium leading-normal text-xl text-uppercase">Materio</h1>
+          <h1 class="font-weight-medium leading-normal text-xl text-uppercase">Fixify</h1>
         </RouterLink>
       </slot>
     </div>

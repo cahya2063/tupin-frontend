@@ -76,7 +76,7 @@ const withdraw = async () => {
       channelName: channelName.value,
       accountNumber: accountNumber.value,
     }
-    const response = await apiFetch('/payment/create-payout', {
+    const response = await apiFetch('/payment/create-disbursements', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
