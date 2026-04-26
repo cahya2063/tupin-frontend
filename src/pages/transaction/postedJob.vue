@@ -2,12 +2,13 @@
 import { apiFetch, getProfile } from '@/utils/api'
 import { onMounted, ref, computed } from 'vue'
 import avatar1 from '@images/avatars/avatar-1.png'
-import CardJob from '@/layouts/components/CardJob.vue'
+// import CardJob from '@/layouts/components/CardJob.vue'
 import sweetAlert from '@/utils/sweetAlert'
 import { CForm } from '@coreui/vue-pro'
 import ReviewModal from '@/components/form/ReviewModal.vue'
 import Payment from '@/components/form/Payment.vue'
 import SlideJobDetail from '@/layouts/components/SlideJobDetail.vue'
+import CardJobClient from '@/layouts/components/CardJobClient.vue'
 
 const headers = [
   { title: 'User', key: 'username' },
@@ -46,7 +47,9 @@ async function getPostedJobs() {
     jobs.value = response.data.jobs
     for (const job of jobs.value) {
       const profile = await getProfile(job.idCreator)
+      const technicianProfile = await getProfile(job.selectedTechnician)
       job.creatorName = profile.nama
+      job.technicianName = technicianProfile.nama
     }
  
     await Promise.all(
@@ -202,8 +205,9 @@ async function getReviewByJobId(jobId, userId) {
 
 
 onMounted(async () => {
-  await getPostedJobs()
-
+  const test = await getPostedJobs()
+  console.log('posted jobs : ', test);
+  
   jobs.value.forEach(async (e, i) => {
     const response = await getReviewByJobId(e._id, e.idCreator)
     review.value = response
@@ -230,7 +234,7 @@ onMounted(async () => {
       <!-- ── Job List ── -->
       <template v-if="jobs.length > 0">
         <div class="container-job">
-          <CardJob
+          <CardJobClient
             v-for="(item, i) in jobs"
             :key="i"
             :id="item._id"
@@ -240,6 +244,7 @@ onMounted(async () => {
             :category="item.category"
             :status="item.status"
             :creator="item.creatorName"
+            :technician-name="item.technicianName"
             :avatarPlaceholder="avatar1"
             class="job-card-item"
             @click="openDetail(item)"
@@ -253,13 +258,13 @@ onMounted(async () => {
           <div class="empty-state__icon">
             <i class="ri-briefcase-4-line"></i>
           </div>
-          <h3 class="empty-state__title">Belum ada pekerjaan diterima</h3>
+          <h3 class="empty-state__title">Belum pernah mengunggah pekerjaan</h3>
           <p class="empty-state__sub">
-            Coba lamar lebih banyak pekerjaan untuk meningkatkan peluangmu!
+            unggah lebih banyak pekerjaan untuk menyelesaikan kerusakan!
           </p>
           <div class="empty-state__hint">
             <i class="ri-lightbulb-line"></i>
-            Pastikan profil dan skill-mu sudah lengkap agar lebih mudah ditemukan klien.
+            Pastikan informasi pekerjaan yang kamu unggah sudah akurat.
           </div>
         </div>
       </template>

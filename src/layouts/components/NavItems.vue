@@ -10,45 +10,32 @@ const role = localStorage.getItem('role')
 const menuItems = computed(() => {
   if (role === 'client') {
     return [
-      // {
-      //   title: 'Post Job',
-      //   icon: 'ri-briefcase-line',
-      //   to: '/jobs',
-      // },
-      {
-        title: 'Posted Job',
-        icon: 'ri-briefcase-line',
-        to: '/posted-jobs',
-      },
+
       {
         title: 'Teknisi terdekat',
         icon: 'ri-user-search-line',
         to: '/search-technician',
       },
       {
-        title: 'Pembayaran',
-        icon: 'ri-history-line',
-        to: '/payment-history',
+        title: 'Posted Job',
+        icon: 'ri-briefcase-line',
+        to: '/posted-jobs',
       },
+      // {
+      //   title: 'Pembayaran',
+      //   icon: 'ri-history-line',
+      //   to: '/payment-history',
+      // },
     ]
   }
 
   if (role === 'technician') {
     return [
-      // {
-      //   title: 'Search Job',
-      //   icon: 'ri-tools-line',
-      //   to: '/view-jobs',
-      // },
+
       {
         title: 'Accepted Jobs',
         icon: 'ri-tools-line',
         to: 'accepted-jobs',
-      },
-      {
-        title: 'Wallet',
-        icon: 'ri-wallet-line',
-        to: '/wallet',
       },
     ]
   }
@@ -91,8 +78,40 @@ const menuItems = computed(() => {
       to: '/chat-view',
     }"
   />
+  <VerticalNavGroup
+    :item="{
+      title: 'Pembayaran',
+      icon: 'ri-history-line',
+    }"
+    v-c-tooltip="{content: 'Pembayaran.', placement: 'right'}"
+  >
+    <VerticalNavLink
+      v-if="role == 'technician'"
+      :item="{
+        title: 'Wallet',
+        to: '/wallet',
+      }"
+    />
+    <VerticalNavLink
+      v-if="role == 'technician'"
+      :item="{
+        title: 'Transfer',
+        to: '/transfered-money-to-technician',
+      }"
+    />
+    <VerticalNavLink
+      v-if="role == 'client'"
+      :item="{
+        title: 'Riwayat Pembayaran',
+        to: '/payment-history',
+      }"
+      v-c-tooltip="{content: 'Riwayat pembayaran', placement: 'right'}"
+    />
+  </VerticalNavGroup>
+  
+  
 
-  <VerticalNavLink
+  <!-- <VerticalNavLink
     :item="{
       title: 'Calendar',
       icon: 'ri-calendar-line',
@@ -143,7 +162,6 @@ const menuItems = computed(() => {
     }"
   />
 
-  <!-- 👉 User Interface -->
   <VerticalNavSectionTitle
     :item="{
       heading: 'User Interface',
@@ -171,7 +189,6 @@ const menuItems = computed(() => {
     }"
   />
 
-  <!-- 👉 Forms & Tables -->
   <VerticalNavSectionTitle
     :item="{
       heading: 'Forms & Tables',
@@ -212,7 +229,6 @@ const menuItems = computed(() => {
     }"
   />
 
-  <!-- 👉 Others -->
   <VerticalNavSectionTitle
     :item="{
       heading: 'Others',
@@ -243,5 +259,5 @@ const menuItems = computed(() => {
       icon: 'ri-lifebuoy-line',
       target: '_blank',
     }"
-  />
+  /> -->
 </template>

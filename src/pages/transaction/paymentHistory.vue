@@ -91,62 +91,44 @@ onMounted(async () => {
   <div class="container">
     <!-- DATA ADA -->
     <template v-if="filteredInvoices.length > 0">
-      <CCard
-        v-for="item in filteredInvoices"
-        :key="item.external_id"
-        class="payment-card"
-      >
+      <CCard v-for="item in filteredInvoices" :key="item.external_id" class="payment-card">
+        <div class="card-accent"></div>
         <CCardBody @click="openDetailInvoice(item)">
-          <!-- Header -->
           <div class="header">
-            <span class="month">{{ item.external_id }}</span>
+            <span class="external-id-pill">{{ item.external_id }}</span>
             <span class="date">{{ formatDate(item.created) }}</span>
           </div>
-
-          <!-- Content -->
           <div class="content">
             <div class="row">
               <span class="label">Status</span>
-              <VChip
-                :color="getStatusColor(item.status)"
-                size="small"
-                class="job-status-chip ms-2"
-                variant="outlined"
-              >
+              <VChip :color="getStatusColor(item.status)" size="small" class="job-status-chip ms-2" variant="outlined">
                 {{ item.status }}
               </VChip>
             </div>
-
+            <div class="inv-divider"></div>
             <div class="row">
-              <span class="label">Penerima : </span>
+              <span class="label">Penerima</span>
               <span class="value">{{ item.merchant_name }}</span>
             </div>
-            <!-- <div class="row">
-              <span class="label">Tipe pembayaran : </span>
+            <div class="row">
+              <span class="label">Tipe pembayaran</span>
               <span class="value">{{ item.type }} payment</span>
-            </div> -->
-
-
-            <div class="total-container mt-4 d-flex justify-space-between">
-
-              <div class="row right">
-                <span class="label">Total Pembayaran</span>
-                <span class="value amount"> Rp {{ item.amount.toLocaleString('id-ID') }} </span>
+            </div>
+            <div class="inv-footer">
+              <div>
+                <div class="total-label">Total Pembayaran</div>
+                <div class="amount">Rp {{ item.amount.toLocaleString('id-ID') }}</div>
               </div>
-              <VBtn 
-                    v-show="item.status == 'SETTLED'"
-                    @click.stop="
-                    selectedDeleteInvoice = item;
-                    isModalDeleteActive = true" 
-                    density="comfortable" icon="ri-delete-bin-line" color="error">
-                    
-              </VBtn>
-
-              
+              <div class="inv-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                  <path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+                </svg>
+              </div>
             </div>
           </div>
         </CCardBody>
       </CCard>
+
       <v-dialog
         v-model="isModalDeleteActive"
         max-width="400"
@@ -355,75 +337,196 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-:deep(.job-status-chip) {
-  width: fit-content;
-  min-width: unset;
-  padding-inline: 8px;
-}
 .container {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 card per baris */
-  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
   padding: 20px;
 }
+
+/* Tablet: 1 kolom */
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
+  }
+}
+
+/* Mobile kecil */
+@media (max-width: 480px) {
+  .container {
+    padding: 8px;
+    gap: 10px;
+  }
+}
+
 .empty-state {
-  grid-column: 1 / -1; /* Membuat elemen ini mengambil seluruh kolom */
+  grid-column: 1 / -1;
   min-height: 60vh;
 }
+
 .payment-card {
   width: 100%;
-  max-width: 500px;
-  border-radius: 14px;
-  border: none;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  border: 0.5px solid #e2d9ff;
+  box-shadow: none;
   background: #ffffff;
   cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.15s ease;
+}
+
+.payment-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Disable hover effect on touch devices */
+@media (hover: none) {
+  .payment-card:hover {
+    transform: none;
+  }
+}
+
+.card-accent {
+  height: 4px;
+  background: linear-gradient(90deg, #8d58ff, #b48aff);
 }
 
 .header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
 }
 
-.month {
-  font-weight: 600;
-  font-size: 16px;
-  color: #111827;
+.external-id-pill {
+  font-size: 13px;
+  font-weight: 500;
+  color: #8d58ff;
+  background: #f3eeff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  /* Prevent overflow on small screens */
+  max-width: 60%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .external-id-pill {
+    font-size: 12px;
+    max-width: 55%;
+  }
 }
 
 .date {
-  font-size: 13px;
+  font-size: 12px;
   color: #6b7280;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .date {
+    font-size: 11px;
+  }
+}
+
+.inv-divider {
+  height: 0.5px;
+  background: #ede9fe;
+  margin: 10px 0;
 }
 
 .content .row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 6px;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
 .label {
-  font-size: 14px;
+  font-size: 12px;
   color: #6b7280;
 }
 
 .value {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #111827;
+  text-align: right;
+  max-width: 60%;
+  word-break: break-word;
 }
 
-/* Status */
-.status-failed {
-  color: #ef4444;
+@media (max-width: 480px) {
+  .label {
+    font-size: 11px;
+  }
+
+  .value {
+    font-size: 12px;
+  }
 }
 
-/* Amount */
+.inv-footer {
+  margin-top: 14px;
+  background: #f3eeff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (max-width: 480px) {
+  .inv-footer {
+    padding: 8px 12px;
+  }
+}
+
+.total-label {
+  font-size: 11px;
+  color: #8d58ff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .amount {
-  color: #3ff00e;
+  font-size: 18px;
   font-weight: 600;
+  color: #8d58ff;
 }
+
+@media (max-width: 480px) {
+  .total-label {
+    font-size: 10px;
+  }
+
+  .amount {
+    font-size: 15px;
+  }
+}
+
+.inv-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #8d58ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+:deep(.job-status-chip) {
+  width: fit-content;
+  min-width: unset;
+  padding-inline: 8px;
+}
+
 .btn-container {
   display: flex;
   flex-direction: column;

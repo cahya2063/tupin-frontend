@@ -106,16 +106,20 @@ async function doneJob(jobId){
       }
     })
     console.log('done job : ', response);
-    sweetAlert.success('Job berhasil diselesaikan tunggu konfirmasi pelanggan')
+    sweetAlert.success('Job telah diselesaikan kami tunggu ulasanmu ya!')
   } catch (error) {
     sweetAlert.error('terjadi kesalahan saat menyelesaikan job')
   }
 }
 
-const handleDoneJob = async (jobId) => {
+const handleDoneJob = async () => {
+  const jobId = props.selectedJob._id
   const result = await sweetAlert.confirm({
-    title: 'Apakah kamu yakin pekerjaan sudah selesai?',
-    text: 'Pastikan kamu sudah menyelesaikan pekerjaan dengan baik sebelum mengonfirmasi.'
+    title: 'Apakah teknisi sudah memperbaiki kerusakan?',
+    text: 'Pastikan teknisi sudah melakukan perbaikan dengan benar sebelum mengonfirmasi.',
+    showCancelButton: false,
+    showCancelButton: true,
+    confirmText: 'Ya, Sudah'
   })
 
   if (result.isConfirmed) {
@@ -199,6 +203,22 @@ async function checkedJob(jobId){
   }
 
 }
+async function handleChekedJob(){
+  const jobId = props.selectedJob?._id
+
+  const result = await sweetAlert.confirm({
+    title: 'Apakah teknisi sudah melakukan pengecekan kerusakan?',
+    text: 'Pastikan teknisi sudah melakukan pengecekan kerusakan dengan benar sebelum mengonfirmasi.',
+    showCancelButton: false,
+    showCancelButton: true,
+    confirmText: 'Ya, Sudah'
+  })
+
+  if (result.isConfirmed) {
+    await checkedJob(jobId)
+  }
+}
+
 
 async function handlePriceInput(jobId){
     
@@ -224,7 +244,7 @@ watch(() => props.selectedJob,
     if (newVal?.idCreator) {
       try {
         profile.value = await getProfile(newVal.idCreator)
-        
+        technicianProfile.value = await getProfile(newVal.selectedTechnician)
         console.log('jobs detail:', props.selectedJob)
       } catch (err) {
         console.error('Gagal ambil profile:', err)
@@ -276,12 +296,22 @@ watch(() => props.selectedJob,
           </span>
 
 
+          <!-- pesan pada slide job technician -->
           <span
             v-if="selectedJob?.status === 'transport fee paid' && role === 'technician'"
             class="status-hint"
             :style="{ color: statusConfig(selectedJob?.status).text }"
           >
             — segera lakukan pengecekan kerusakan
+          </span>
+
+          <!-- pesan pada slide job client -->
+           <span
+            v-if="selectedJob?.status === 'pending transport fee' && role === 'client'"
+            class="status-hint"
+            :style="{ color: statusConfig(selectedJob?.status).text }"
+          >
+            — menunggu pembayaran transportasi
           </span>
           <span
             v-if="selectedJob?.status === 'transport fee paid' && role === 'client'"
@@ -334,9 +364,11 @@ watch(() => props.selectedJob,
                 </span>
               </div>
               <div class="info-card info-card--wide">
-                <span class="info-lbl">Pelanggan</span>
+                <span class="info-lbl" v-if="role == 'client'">Diajukan kepada</span>
+                <span class="info-lbl" v-else-if="role == 'technician'">Diajukan oleh</span>
                 <div class="info-val info-row">
-                  <span>{{ profile?.nama }}</span>
+                  <span v-if="role == 'client'">{{ technicianProfile?.nama }}</span>
+                  <span v-else-if="role == 'technician'">{{ profile?.nama }}</span>
                   <button
                     class="chat-btn"
                     @click="createChat(selectedJob.idCreator, selectedJob.selectedTechnician)"
@@ -404,14 +436,40 @@ watch(() => props.selectedJob,
                 Lihat Lokasi
               </button>
 
+              <button
+                v-if="selectedJob.status === 'pending transport fee' && role === 'client'"
+                class="btn btn--accept"
+                @click="$router.push('/payment-history')"
+              >
+                <i class="ri-check-line"></i>
+                lihat tagihan transportasi
+              </button>
+
+
               <!-- aksi client -->
                <button
                 v-if="selectedJob.status === 'transport fee paid' && role === 'client'"
                 class="btn btn--checked"
-                @click="checkedJob(selectedJob._id)"
+                @click="handleChekedJob"
               >
                 <i class="ri-check-line"></i>
                 Sudah diperiksa
+              </button>
+               <button
+                v-if="selectedJob.status === 'repair paid' && role === 'client'"
+                class="btn btn--checked"
+                @click="handleDoneJob"
+              >
+                <i class="ri-check-line"></i>
+                Sudah diperbaiki
+              </button>
+              <button
+                v-if="selectedJob.status === 'done' && role === 'client'"
+                class="btn btn--accept"
+                @click="handleIsJobCompleted(selectedJob?._id)"
+              >
+                <i class="ri-shield-check-line"></i>
+                Konfirmasi Perbaikan
               </button>
 
 
@@ -445,14 +503,7 @@ watch(() => props.selectedJob,
                 Ajukan biaya perbaikan
               </button>
  
-              <button
-                v-if="selectedJob.status === 'done' && role === 'client'"
-                class="btn btn--accept"
-                @click="handleIsJobCompleted(selectedJob?._id)"
-              >
-                <i class="ri-shield-check-line"></i>
-                Konfirmasi Perbaikan
-              </button>
+              
             </div>
  
           </div>
