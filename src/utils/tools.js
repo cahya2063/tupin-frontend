@@ -57,6 +57,8 @@ export function useDestination() {
 
   const getDestination = async (postCode) => {
     try {
+      console.log();
+      
       const response = await apiFetch(`/ongkir/destination/${postCode}`)
       const data = response.data.destination.data
 

@@ -15,6 +15,10 @@ const {destinationList, handleSearch, getDestination} = useDestination()
 const props = defineProps({
   technicianId: String,
 })
+
+const styles = {
+  '--cui-form-multi-select-cleaner-height': '200px',
+}
  
 const description = ref('')
 
@@ -155,13 +159,6 @@ async function postJob() {
   }
   else{
     sweetAlert.error(response.data.message)
-    Swal.fire({
-      title: 'Gagal',
-      text: response.data.message || 'Terjadi kesalahan saat mengirim permintaan',
-      icon: 'error',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#dc2626',
-    })
   }
 }
  
@@ -174,11 +171,13 @@ watch([lat, lng], async ([lat1, lng1]) => {
     return
   }
 
+  console.log('test : ', location);
   postCode.value = location
   postCodeError.value = ''
 
   // 🔥 auto ambil destination
-  getDestination(location)
+  await getDestination(location)
+  
 })
 
 onMounted(async () => {
@@ -364,7 +363,6 @@ onMounted(async () => {
               @change="(val) => { selectedDestination = val }"
               @filter-change="handleSearch"
               placeholder="masukkan kode pos"
-              virtual-scroller
 
             />
           <!-- <p>Dipilih: {{ selectedDestination }}</p> -->
@@ -391,8 +389,9 @@ onMounted(async () => {
 </template>
  
 <style scoped>
-.form-multi-select-options {
-  min-height: 400px !important; /* default biasanya ±200px */
+.c-multi-select .form-multi-select-options {
+  max-height: 400px !important;
+  overflow-y: auto;
 }
 .v-file-upload-item:hover .v-file-upload-item__actions {
   opacity: 1 !important;

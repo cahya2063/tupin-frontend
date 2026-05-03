@@ -238,11 +238,13 @@ const shortId = computed(() => props.id?.slice(-6) ?? '------')
 }
 
 .header-left {
-  flex: 1;
   min-width: 0;
+  align-items: flex-start;
+  text-align: left;
   position: relative;
   z-index: 1;
   display: flex;
+  justify-content: left;
   flex-direction: column;
   gap: 6px;
 }
