@@ -12,10 +12,10 @@ export const routes = [
         path: 'jobs/:technicianId',
         component: () => import('@/pages/transaction/jobs.vue'),
       },
-      {
-        path: 'view-jobs',
-        component: () => import('@/pages/transaction/view-jobs.vue')
-      },
+      // {
+      //   path: 'view-jobs',
+      //   component: () => import('@/pages/transaction/view-jobs.vue')
+      // },
       {
         path: 'posted-jobs',
         component: () => import('@/pages/transaction/postedJob.vue')
@@ -46,7 +46,7 @@ export const routes = [
         // meta: { roles: ['client'] }
       },
       {
-        path: 'transfered-money-to-technician',
+        path: 'transfered-money',
         component: ()=> import('@/pages/transaction/transferMoneyIn.vue'),
       },
       {

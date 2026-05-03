@@ -4,13 +4,14 @@ import sweetAlert from '@/utils/sweetAlert';
 import { onMounted, ref, computed } from 'vue';
 
 const technicianId = localStorage.getItem('userId')
+const role = localStorage.getItem('role')
 const transferedMoneyIn = ref([])
 const isModalOpen = ref(false)
 const selectedTransfer = ref(null)
 
 async function getTransfer(receiverId) {
   try {
-    const response = await apiFetch(`/payment/get-transfers/${receiverId}`)
+    const response = await apiFetch(`/payment/get-transfers/`)
     transferedMoneyIn.value = response.data.transfers
   } catch (error) {
     sweetAlert.error('Gagal mendapatkan data transfer')
@@ -53,6 +54,8 @@ const totalIncome = computed(() =>
 
 onMounted(async () => {
   await getTransfer(technicianId)
+  console.log('transfered money in : ', transferedMoneyIn.value);
+  
 
   const updatedTransfers = await Promise.all(
     transferedMoneyIn.value.map(async (element) => {

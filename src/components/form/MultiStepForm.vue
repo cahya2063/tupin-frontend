@@ -8,6 +8,7 @@ import { nextTick } from 'vue'
 import Swal from 'sweetalert2'
 import { getCurrentLocation, useDestination } from '@/utils/tools'
 import { config, editor } from '../../utils/tools'
+import sweetAlert from '@/utils/sweetAlert'
 
 const {destinationList, handleSearch, getDestination} = useDestination()
 
@@ -29,6 +30,7 @@ const needDeadline = ref(false)
 const vStartDate = ref(null)
 const vEndDate = ref(null)
 const postCode = ref(null)
+const postCodeError = ref('')
 const today = new Date()
 // const destinationList = ref([])
 const selectedDestination = ref([])
@@ -45,6 +47,21 @@ let marker
 function toLocalISODate(date) {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
   return local.toISOString().split('T')[0]
+}
+const getPosCode = async(lat, lng)=>{
+  try {
+    const response = await apiFetch('/ongkir/get-poscode', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({lat: lat, lon: lng})
+    })
+    return response.data.location.address.postcode
+  } catch (error) {
+    console.log('error : ', error);
+    
+  }
 }
 
 const getMyLocation = async () => {
@@ -119,13 +136,7 @@ async function postJob() {
   })
  
   if (response.status === 201) {
-    Swal.fire({
-      title: 'Sukses',
-      text: response.data.message,
-      icon: 'success',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#16a34a',
-    })
+    sweetAlert.success(response.data.message)
 
     // reset form
     title.value = ''
@@ -143,6 +154,7 @@ async function postJob() {
     map?.setView([lat.value, lng.value], 13)
   }
   else{
+    sweetAlert.error(response.data.message)
     Swal.fire({
       title: 'Gagal',
       text: response.data.message || 'Terjadi kesalahan saat mengirim permintaan',
@@ -153,9 +165,22 @@ async function postJob() {
   }
 }
  
-watch(selectedDestination, (val) => {
-  console.log('selected raw:', val)
+watch([lat, lng], async ([lat1, lng1]) => {
+  const location = await getPosCode(lat1, lng1)
+
+  if (!location) {
+    postCode.value = null
+    postCodeError.value = 'Kode pos tidak ditemukan, silakan input manual'
+    return
+  }
+
+  postCode.value = location
+  postCodeError.value = ''
+
+  // 🔥 auto ambil destination
+  getDestination(location)
 })
+
 onMounted(async () => {
   
   technicianProfile.value = await getProfile(props.technicianId)
@@ -325,17 +350,23 @@ onMounted(async () => {
             Lokasi Perbaikan
           </label>
           <p class="field-hint">masukkan kode pos tempat perbaikan</p>
+          ( jika tidak ada yang cocok input manual atau pilih yang terdekat )
 
-          <CMultiSelect
-            :multiple="false"
-            :options="destinationList"
-            :value="selectedDestination"
-            @change="(val) => { selectedDestination = val }"
-            @filter-change="handleSearch"
-            placeholder="masukkan kode pos"
-            virtual-scroller
-            
-          />
+          <!-- ERROR MESSAGE -->
+            <p v-if="postCodeError" style="color: red; margin-bottom: 8px;">
+              {{ postCodeError }}
+            </p>
+
+            <CMultiSelect
+              :multiple="false"
+              :options="destinationList"
+              :value="selectedDestination"
+              @change="(val) => { selectedDestination = val }"
+              @filter-change="handleSearch"
+              placeholder="masukkan kode pos"
+              virtual-scroller
+
+            />
           <!-- <p>Dipilih: {{ selectedDestination }}</p> -->
           <p class="field-hint">Klik peta atau seret penanda untuk menentukan lokasi</p>
           <div id="map" class="map-container"></div>
@@ -360,6 +391,9 @@ onMounted(async () => {
 </template>
  
 <style scoped>
+.form-multi-select-options {
+  min-height: 400px !important; /* default biasanya ±200px */
+}
 .v-file-upload-item:hover .v-file-upload-item__actions {
   opacity: 1 !important;
 }

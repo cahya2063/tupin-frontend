@@ -96,13 +96,13 @@ const menuItems = computed(() => {
       v-if="role == 'technician'"
       :item="{
         title: 'Transfer',
-        to: '/transfered-money-to-technician',
+        to: '/transfered-money',
       }"
     />
     <VerticalNavLink
       v-if="role == 'technician'"
       :item="{
-        title: 'Riwayat Penarikan',
+        title: 'Penarikan',
         to: '/disbursements-history',
       }"
       v-c-tooltip="{content: 'Riwayat penarikan', placement: 'right'}"
@@ -110,10 +110,32 @@ const menuItems = computed(() => {
     <VerticalNavLink
       v-if="role == 'client'"
       :item="{
-        title: 'Riwayat Pembayaran',
+        title: 'Pembayaran',
         to: '/payment-history',
       }"
       v-c-tooltip="{content: 'Riwayat pembayaran', placement: 'right'}"
+    />
+    <VerticalNavLink
+      v-if="role == 'client'"
+      :item="{
+        title: 'Wallet',
+        to: '/wallet',
+      }"
+    />
+    <VerticalNavLink
+      v-if="role == 'client'"
+      :item="{
+        title: 'Cashback',
+        to: '/transfered-money',
+      }"
+    />
+    <VerticalNavLink
+      v-if="role == 'client'"
+      :item="{
+        title: 'Penarikan',
+        to: '/disbursements-history',
+      }"
+      v-c-tooltip="{content: 'Riwayat penarikan', placement: 'right'}"
     />
 
     
