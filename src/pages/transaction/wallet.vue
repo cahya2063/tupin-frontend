@@ -103,7 +103,7 @@ onMounted(async () => {
   const response = await getBalance(subAccountId.value)
   balance.value = response.balance
 
-  console.log('profile teknisi : ', profile.subAccountId)
+  console.log('sub akun id : ', profile.subAccountId)
 })
 </script>
 

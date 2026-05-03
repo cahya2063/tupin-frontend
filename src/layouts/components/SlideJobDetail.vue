@@ -35,7 +35,20 @@ const formatDate = date => {
   if (!date || typeof date !== 'string') return '-'
   return date.split('T')[0]
 }
+const isWithinWarranty = (jobDoneDate) => {
+  if (!jobDoneDate) return false;
 
+  const doneDate = new Date(jobDoneDate);
+  const now = new Date();
+  
+  // hitung selisi ms
+  const diffTime = now - doneDate;
+  // 1 hari = 1000 ms * 60 detik * 60 menit * 24 jam
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+  console.log('warranty debug : ', diffDays);
+
+  return diffDays >= 0;
+};
 
 
 const openGoogleMaps = () => {
@@ -128,14 +141,14 @@ const handleDoneJob = async () => {
 }
 
 
-async function isJobCompleted(jobId, status){
+async function claimWarranty(jobId){
   try {
-    const response = await apiFetch(`/jobs/${jobId}/is-job-completed`, {
+    const response = await apiFetch(`/jobs/${jobId}/claim-warranty`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ status }),
+      // body: JSON.stringify({ status }),
     })
     console.log('status completed : ', response);
     
@@ -145,19 +158,18 @@ async function isJobCompleted(jobId, status){
   }
 }
 
-const handleIsJobCompleted = async(jobId)=>{
+const handleIsWarranty = async(jobId)=>{
   const result = await sweetAlert.confirm({
-    title: 'Apakah kamu yakin perbaikan sudah selesai?',
-    text: 'Pastikan pekerjaan sudah benar-benar selesai sebelum mengonfirmasi.',
-    showDenyButton: true,
-    showCancelButton: false
+    title: 'Klaim garansi?',
+    text: 'Klaim garansi jika barang rusak kembali dalam waktu 3 hari!!',
+    showDenyButton: false,
+    showCancelButton: true,
+    confirmText: 'Klaim',
+    cancelText: 'Tutup'
   })
 
   if (result.isConfirmed) {
-    await isJobCompleted(jobId, 'completed')
-  }
-  else if(result.isDenied){
-    await isJobCompleted(jobId, 'uncompleted')
+    await claimWarranty(jobId)
   }
 
 }
@@ -304,6 +316,13 @@ watch(() => props.selectedJob,
           >
             — segera lakukan pengecekan kerusakan
           </span>
+          <span
+            v-if="selectedJob?.status === 'repair paid' && role == 'technician'" 
+            class="status-hint"
+            :style="{ color: statusConfig(selectedJob?.status).text }"
+          >
+            — Segera lakukan perbaikan alat
+          </span>
 
           <!-- pesan pada slide job client -->
            <span
@@ -320,14 +339,19 @@ watch(() => props.selectedJob,
           >
             — menunggu pengecekan teknisi
           </span>
-
-
           <span
-            v-if="selectedJob?.status === 'progress'"
+            v-if="selectedJob?.status === 'repair paid' && role == 'client'" 
             class="status-hint"
             :style="{ color: statusConfig(selectedJob?.status).text }"
           >
-            — Teknisi sedang memperbaiki alatmu
+            — Tunggu teknisi selesai memperbaiki alatmu
+          </span>
+          <span
+            v-if="selectedJob?.status === 'warranty' && role == 'client'" 
+            class="status-hint"
+            :style="{ color: statusConfig(selectedJob?.status).text }"
+          >
+            — Klaim garansi dalam 3 hari jika ada kerusakan
           </span>
         </div>
  
@@ -444,6 +468,14 @@ watch(() => props.selectedJob,
                 <i class="ri-check-line"></i>
                 lihat tagihan transportasi
               </button>
+              <button
+                v-if="selectedJob.status === 'pending repair payment' && role === 'client'"
+                class="btn btn--accept"
+                @click="$router.push('/payment-history')"
+              >
+                <i class="ri-check-line"></i>
+                lihat tagihan perbaikan
+              </button>
 
 
               <!-- aksi client -->
@@ -464,12 +496,16 @@ watch(() => props.selectedJob,
                 Sudah diperbaiki
               </button>
               <button
-                v-if="selectedJob.status === 'done' && role === 'client'"
+                v-if="
+                  selectedJob.status === 'warranty' &&
+                  role === 'client' &&
+                  isWithinWarranty(selectedJob.jobDoneDate)
+                "
                 class="btn btn--accept"
-                @click="handleIsJobCompleted(selectedJob?._id)"
+                @click="handleIsWarranty(selectedJob?._id)"
               >
                 <i class="ri-shield-check-line"></i>
-                Konfirmasi Perbaikan
+                Klaim garansi
               </button>
 
 

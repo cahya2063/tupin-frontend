@@ -90,8 +90,8 @@ onMounted(async () => {
 <template>
   <div class="container">
     <!-- DATA ADA -->
-    <template v-if="filteredInvoices.length > 0">
-      <CCard v-for="item in filteredInvoices" :key="item.external_id" class="payment-card">
+    <template v-if="payment.invoices.length > 0">
+      <CCard v-for="item in payment.invoices" :key="item.external_id" class="payment-card">
         <div class="card-accent"></div>
         <CCardBody @click="openDetailInvoice(item)">
           <div class="header">

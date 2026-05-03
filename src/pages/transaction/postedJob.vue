@@ -355,7 +355,7 @@ onMounted(async () => {
 .container-job {
   width: 100%;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   gap: 14px;
 }
 

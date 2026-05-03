@@ -112,7 +112,6 @@ onMounted(() => {
 
 <template>
   <VRow class="jobs-container pa-4">
-    <!-- Jika ada job open -->
     <template v-if="jobs.length > 0">
       <div class="container-job">
         <CardJob

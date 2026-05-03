@@ -154,7 +154,6 @@ onMounted(async () => {
 <template>
   <div class="page-wrapper">
     <div class="page-content">
- 
       <!-- ── Header ── -->
       <div class="page-header">
         <div class="page-header__text">
@@ -165,6 +164,7 @@ onMounted(async () => {
           {{ acceptedJobs.length }} pekerjaan
         </div>
       </div>
+ 
  
       <!-- ── Job List ── -->
       <template v-if="acceptedJobs.length > 0">
@@ -281,7 +281,7 @@ onMounted(async () => {
 /* ─── Job list ─────────────────────────────────────────────── */
 .container-job {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   gap: 14px;
 }
  
