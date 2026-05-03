@@ -4,6 +4,8 @@ import { apiFetch, getProfile } from '@/utils/api';
 import sweetAlert from '@/utils/sweetAlert';
 import { createChat } from '@/utils/tools';
 import { onMounted, ref, watch } from 'vue';
+import ShippingCostModal from './ShippingCostModal.vue';
+import AddPriceModal from './AddPriceModal.vue';
 
 
 const props = defineProps({
@@ -507,9 +509,6 @@ watch(() => props.selectedJob,
                 <i class="ri-shield-check-line"></i>
                 Klaim garansi
               </button>
-
-
-
               
               <!-- aksi teknisi -->
               <button
@@ -549,193 +548,27 @@ watch(() => props.selectedJob,
   </transition>
  
   <!-- ── Modal ongkir ── -->
-  <CModal :visible="modalShippingCost" @close="modalShippingCost = false">
-    <CModalHeader class="modal-header-custom">
-      <div>
-        <small class="modal-eyebrow">ID Pekerjaan</small>
-        <CModalTitle class="modal-job-id">{{ selectedJob?._id }}</CModalTitle>
-      </div>
-    </CModalHeader>
- 
-    <CModalBody class="p-0">
-      <!-- Lokasi -->
-      <div class="modal-section">
-        <small class="modal-section-label">Lokasi</small>
-        <div class="location-grid">
-          <div class="location-card location-card--client">
-            <span class="location-card__icon">
-              <i class="ri-user-line"></i>
-            </span>
-            <div>
-              <span class="location-card__lbl">Pelanggan</span>
-              <strong class="location-card__val">{{ selectedJob.destination?.destinationName || '-' }}</strong>
-            </div>
-          </div>
-          <div class="location-card location-card--tech">
-            <span class="location-card__icon">
-              <i class="ri-tools-line"></i>
-            </span>
-            <div>
-              <span class="location-card__lbl">Teknisi</span>
-              <strong class="location-card__val">{{ technicianProfile?.receiverLocation?.destinationName || '-' }}</strong>
-            </div>
-          </div>
-        </div>
-      </div>
- 
-      <!-- Rincian biaya -->
-      <div class="modal-section">
-        <small class="modal-section-label">Rincian Biaya</small>
-        <div class="cost-table">
-          <div class="cost-row">
-            <span class="cost-label">Ongkos kirim</span>
-            <span class="cost-value">{{ formatRupiah(shippingCost) }}</span>
-          </div>
-          <!-- <div class="cost-row">
-            <span class="cost-label">Harga perbaikan</span>
-            <span class="cost-value">{{ formatRupiah(repairPrice) }}</span>
-          </div> -->
-          <div class="cost-row cost-row--total">
-            <span class="cost-label">Total</span>
-            <span class="cost-value cost-value--total">{{ formatRupiah(shippingCost) }}</span>
-          </div>
-        </div>
-      </div>
- 
-      <!-- Input harga -->
-      <!-- <div class="modal-section">
-        <small class="modal-section-label">Harga Perbaikan</small>
-        <div class="price-input-wrap">
-          <span class="price-prefix">Rp</span>
-          <input
-            type="text"
-            class="price-input"
-            placeholder="0"
-            :value="repairPrice ? repairPrice.toLocaleString('id-ID') : ''"
-            @input="onPriceInput"
-          />
-        </div>
-      </div> -->
- 
-    </CModalBody>
- 
-    <CModalFooter class="modal-footer-custom">
-      <Payment
-        v-show="selectedJob?.status === 'open'"
-        :name="profile?.nama"
-        :email="profile?.email"
-        :amount="shippingCost"
-        :sub-account-id="technicianProfile?.subAccountId"
-        :job-id="selectedJob?._id"
-        :payer-id="profile?._id"
-        :status="selectedJob?.status"
-        :receiver-id="selectedJob?.selectedTechnician"
-      />
-    </CModalFooter>
-  </CModal>
+  <ShippingCostModal
+    :visible="modalShippingCost"
+    :selected-job="selectedJob"
+    :profile="profile"
+    :technician-profile="technicianProfile"
+    :shipping-cost="shippingCost"
+    @close="modalShippingCost = false"
+  />
 
   <!-- Modal add price -->
-  <CModal :visible="modalAddPrice" @close="modalAddPrice = false">
-    <CModalHeader class="modal-header-custom">
-      <div>
-        <small class="modal-eyebrow">ID Pekerjaan</small>
-        <CModalTitle class="modal-job-id">{{ selectedJob?._id }}</CModalTitle>
-      </div>
-    </CModalHeader>
- 
-    <CModalBody class="p-0">
-      <!-- Lokasi -->
-      <div class="modal-section">
-        <small class="modal-section-label">Lokasi</small>
-        <div class="location-grid">
-          <div class="location-card location-card--client">
-            <span class="location-card__icon">
-              <i class="ri-user-line"></i>
-            </span>
-            <div>
-              <span class="location-card__lbl">Pelanggan</span>
-              <strong class="location-card__val">{{ selectedJob?.destination?.destinationName || '-' }}</strong>
-            </div>
-          </div>
-          <div class="location-card location-card--tech">
-            <span class="location-card__icon">
-              <i class="ri-tools-line"></i>
-            </span>
-            <div>
-              <span class="location-card__lbl">Teknisi</span>
-              <strong class="location-card__val">{{ technicianProfile?.receiverLocation?.destinationName || '-' }}</strong>
-            </div>
-          </div>
-        </div>
-      </div>
- 
-      <!-- Rincian biaya -->
-      <div class="modal-section">
-        <small class="modal-section-label">Rincian Biaya</small>
-        <div class="cost-table">
-          <!-- <div class="cost-row">
-            <span class="cost-label">Ongkos kirim</span>
-            <span class="cost-value">{{ formatRupiah(shippingCost) }}</span>
-          </div> -->
-          <div class="cost-row">
-            <span class="cost-label">Harga perbaikan</span>
-            <span class="cost-value">{{ formatRupiah(repairPrice) }}</span>
-          </div>
-          <div class="cost-row cost-row--total">
-            <span class="cost-label">Total</span>
-            <span class="cost-value cost-value--total">{{ formatRupiah(repairPrice) }}</span>
-          </div>
-        </div>
-      </div>
- 
-      <!-- Input harga -->
-      <div class="modal-section">
-        <small class="modal-section-label">Harga Perbaikan</small>
-        <div class="price-input-wrap">
-          <span class="price-prefix">Rp</span>
-          <input
-            type="text"
-            class="price-input"
-            placeholder="0"
-            :value="repairPrice ? repairPrice.toLocaleString('id-ID') : ''"
-            @input="onPriceInput"
-          />
-        </div>
-      </div>
-
-      <CModalFooter>
-      <Payment
-        v-show="selectedJob?.status == 'checked'"
-        :name="profile?.nama"
-        :email="profile?.email"
-        :amount=" repairPrice"
-        :sub-account-id="technicianProfile.subAccountId"
-        :job-id="selectedJob?._id"
-        :payer-id="profile?._id"
-        :status="selectedJob?.status"
-        :receiver-id="selectedJob?.selectedTechnician"
-      />
-    </CModalFooter>
- 
-    </CModalBody>
- 
-    <CModalFooter class="modal-footer-custom">
-      <Payment
-        v-show="selectedJob?.status === 'open'"
-        :name="profile?.nama"
-        :email="profile?.email"
-        :amount="shippingCost"
-        :sub-account-id="technicianProfile?.subAccountId"
-        :job-id="selectedJob?._id"
-        :payer-id="profile?._id"
-        :receiver-id="selectedJob?.selectedTechnician"
-      />
-    </CModalFooter>
-  </CModal>
+  <AddPriceModal
+  :visible="modalAddPrice"
+  :selected-job="selectedJob"
+  :profile="profile"
+  :technician-profile="technicianProfile"
+  @close="modalAddPrice = false"
+/>
 
 </template>
  
-<style scoped>
+<style>
 /* ── Overlay ───────────────────────────────────────────────── */
 .overlay {
   position: fixed;
