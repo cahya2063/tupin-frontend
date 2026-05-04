@@ -10,13 +10,11 @@ const reviewModalVisible = ref(false)
 
 const jobs = ref([])
 const reviews = ref([])
-const profile = ref()
 
 
 async function getAcceptedJobs(technicianId) {
   try {
     const response = await apiFetch(`/jobs/${technicianId}/job-history`)
-    // console.log('accepted jobs : ', response.data)
 
     jobs.value = response.data.jobs
   } catch (error) {
@@ -35,11 +33,13 @@ async function getprofileById(senderId){
   }
 }
 
-async function getReviewByReceiverId(receiverId){
-  try {
-    const response = await apiFetch(`/review/${receiverId}/get-review`)
-    const reviewData = response.data.review
+const allReviews = ref([])
 
+async function getAllReviews(technicianId){
+  try {
+    const response = await apiFetch(`/review/${technicianId}/get-review`)
+    const reviewData = response.data.review || []
+    
     const reviewsWithProfile = await Promise.all(
       reviewData.map(async (review)=>{
         const profile = await getprofileById(review.senderId)
@@ -51,39 +51,31 @@ async function getReviewByReceiverId(receiverId){
       })
     )
 
-    reviews.value = reviewsWithProfile
-
-    // console.log('reviews with profile : ', reviews.value)
-    
-    // return response.data.review
+    allReviews.value = reviewsWithProfile
   } catch (error) {
     console.error(error)
   }
 }
 
-async function openReview(technicianId){
+function hasReview(jobId) {
+  // cari review yang memiliki jobId sama
+  return allReviews.value.some(r => r.jobId === jobId)
+}
+
+function openReview(jobId){
+  reviews.value = allReviews.value.filter(r => r.jobId === jobId)
   reviewModalVisible.value = true
-  await getReviewByReceiverId(technicianId)
-  // profile.value = await getprofileById(reviews.value[0].senderId)
-  // console.log('review value : ', reviews.value[0].senderProfile.nama);
-  
-  // await getprofileById(review.value.senderId)
 }
 
 
 onMounted(async () => {
   await getAcceptedJobs(technicianId)
-  
-  // await getReviewByJobId(jobs.value[0].id)
+  await getAllReviews(technicianId)
 })
 </script>
 
 <template>
   <VCard title="Riwayat Pekerjaan">
-    <VCardText>
-      We need permission from your browser to show notifications.
-      <a href="javascript:void(0)">Request Permission</a>
-    </VCardText>
 
     <!-- LIST JOB HISTORY -->
     <VCardText>
@@ -97,12 +89,15 @@ onMounted(async () => {
             <div class="d-flex gap-4 history-container">
 
               <!-- FOTO JOB -->
-              <VImg
-                cover
-                class="rounded image"
-                :src="`http://localhost:3000/uploads/jobs/${job.photo}`"
-              />
 
+              <div class="carousel-wrap">
+                <CCarousel controls indicators>
+                  <CCarouselItem v-for="(image, index) in job.photos || []" :key="index">
+                    <img class="carousel-img" :src="`http://localhost:3000/uploads/jobs/${image}`" />
+                  </CCarouselItem>
+                </CCarousel>
+              </div>
+              
               <!-- INFORMASI JOB -->
               <div class="flex-grow-1">
 
@@ -134,12 +129,12 @@ onMounted(async () => {
                   class="text-body-2"
                   v-html="job.description"
                 />
-                <div class="review-btn">
+                <div class="review-btn" v-if="hasReview(job._id)">
                   <VBtn
                     color="success"
                     variant="elevated"
                     class="mt-4 mx-2"
-                    @click="openReview(technicianId)">
+                    @click="openReview(job._id)">
                     Lihat Review
                   </VBtn>
                 </div>
@@ -162,10 +157,32 @@ onMounted(async () => {
 
     </VCardText>
   </VCard>
-  <ReadReview v-for="review in reviews" :key="review.id" v-model="reviewModalVisible" :ratings="review.rating" :comment="review.comment" :sender-name="review.senderProfile.nama" :avatar="review.senderProfile.avatar"/>
+  <ReadReview 
+    v-for="review in reviews" :key="review.id" 
+    v-model="reviewModalVisible" 
+    :ratings="review.rating" 
+    :comment="review.comment" 
+    :sender-name="review.senderProfile.nama" 
+    :avatar="review.senderProfile.avatar"
+  />
 </template>
 
 <style scoped>
+.carousel-wrap {
+  width: 30%;
+  max-height: 300px;
+  overflow: hidden;
+  background: #f4f0ff;
+}
+ 
+.carousel-img {
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  display: block;
+  border-radius: 20px;
+}
+ 
 @media (max-width: 1023px) {
   .history-container {
     flex-direction: column;

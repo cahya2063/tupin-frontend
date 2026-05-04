@@ -37,21 +37,25 @@ export const routes = [
         component: ()=> import('@/pages/transaction/acceptedJobs.vue')
       },
       {
+        path: 'payment-tabs',
+        component: ()=>import('@/pages/transaction/payment/paymentTab.vue')
+      },
+      {
         path: 'wallet',
-        component: ()=> import('@/pages/transaction/wallet.vue')
+        component: ()=> import('@/pages/transaction/payment/wallet.vue')
       },
       {
         path: 'payment-history',
-        component: ()=> import('@/pages/transaction/paymentHistory.vue'),
+        component: ()=> import('@/pages/transaction/payment/paymentHistory.vue'),
         // meta: { roles: ['client'] }
       },
       {
         path: 'transfered-money',
-        component: ()=> import('@/pages/transaction/transferMoneyIn.vue'),
+        component: ()=> import('@/pages/transaction/payment/transferMoneyIn.vue'),
       },
       {
         path: 'disbursements-history',
-        component: ()=> import('@/pages/transaction/disbursementsHistory.vue'),
+        component: ()=> import('@/pages/transaction/payment/disbursementsHistory.vue'),
       },
       {
         path: 'profile',

@@ -1,9 +1,19 @@
 <script setup>
 import DefaultLayoutWithVerticalNav from './components/DefaultLayoutWithVerticalNav.vue'
+import ClientLayout from './components/ClientLayout.vue'
+
+const role = localStorage.getItem('role')
+const isClient = role === 'client'
 </script>
 
 <template>
-  <DefaultLayoutWithVerticalNav>
+  <!-- Client: bottom navigation layout (no sidebar) -->
+  <ClientLayout v-if="isClient">
+    <RouterView />
+  </ClientLayout>
+
+  <!-- Technician / others: sidebar layout -->
+  <DefaultLayoutWithVerticalNav v-else>
     <RouterView />
   </DefaultLayoutWithVerticalNav>
 </template>

@@ -21,11 +21,7 @@ const menuItems = computed(() => {
         icon: 'ri-briefcase-line',
         to: '/posted-jobs',
       },
-      // {
-      //   title: 'Pembayaran',
-      //   icon: 'ri-history-line',
-      //   to: '/payment-history',
-      // },
+
     ]
   }
 
@@ -78,68 +74,13 @@ const menuItems = computed(() => {
       to: '/chat-view',
     }"
   />
-  <VerticalNavGroup
+  <VerticalNavLink
     :item="{
       title: 'Pembayaran',
-      icon: 'ri-history-line',
+      icon: 'ri-wechat-line',
+      to: '/payment-tabs',
     }"
-    v-c-tooltip="{content: 'Pembayaran.', placement: 'right'}"
-  >
-    <VerticalNavLink
-      v-if="role == 'technician'"
-      :item="{
-        title: 'Wallet',
-        to: '/wallet',
-      }"
-    />
-    <VerticalNavLink
-      v-if="role == 'technician'"
-      :item="{
-        title: 'Transfer',
-        to: '/transfered-money',
-      }"
-    />
-    <VerticalNavLink
-      v-if="role == 'technician'"
-      :item="{
-        title: 'Penarikan',
-        to: '/disbursements-history',
-      }"
-      v-c-tooltip="{content: 'Riwayat penarikan', placement: 'right'}"
-    />
-    <VerticalNavLink
-      v-if="role == 'client'"
-      :item="{
-        title: 'Pembayaran',
-        to: '/payment-history',
-      }"
-      v-c-tooltip="{content: 'Riwayat pembayaran', placement: 'right'}"
-    />
-    <VerticalNavLink
-      v-if="role == 'client'"
-      :item="{
-        title: 'Wallet',
-        to: '/wallet',
-      }"
-    />
-    <VerticalNavLink
-      v-if="role == 'client'"
-      :item="{
-        title: 'Cashback',
-        to: '/transfered-money',
-      }"
-    />
-    <VerticalNavLink
-      v-if="role == 'client'"
-      :item="{
-        title: 'Penarikan',
-        to: '/disbursements-history',
-      }"
-      v-c-tooltip="{content: 'Riwayat penarikan', placement: 'right'}"
-    />
-
-    
-  </VerticalNavGroup>
+  />
   <VerticalNavLink
     :item="{
       title: 'Profile',

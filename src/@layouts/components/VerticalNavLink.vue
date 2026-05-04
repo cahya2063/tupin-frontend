@@ -42,6 +42,9 @@ const props = defineProps({
     display: flex;
     align-items: center;
     cursor: pointer;
+    padding: 0.6rem 0.9rem;
+    column-gap: 0.65rem;
+    text-decoration: none;
   }
 }
 </style>

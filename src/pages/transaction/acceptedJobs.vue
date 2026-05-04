@@ -1,14 +1,16 @@
 <script setup>
 import { apiFetch, getProfile } from '@/utils/api'
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, onUnmounted } from 'vue'
 import avatar1 from '@images/avatars/avatar-1.png'
 import sweetAlert from '@/utils/sweetAlert'
 // import CardJob from '@/layouts/components/CardJob.vue'
 import ReviewModal from '@/components/form/ReviewModal.vue'
 import SlideJobDetail from '@/layouts/components/SlideJobDetail.vue'
 import CardJobTechnician from '@/layouts/components/CardJobTechnician.vue'
- 
+import { socket, useJobUpdater } from '@/utils/tools'
+
 const avatars = ref({})
+const role = localStorage.getItem('role')
 const showSidebar = ref(false)
 const acceptedJobs = ref([])
 const selectedJob = ref()
@@ -17,6 +19,7 @@ const showRatingModal = ref(false)
 const userId = localStorage.getItem('userId')
 const receiverId = computed(() => selectedJob.value?.idCreator)
 const jobId = computed(() => selectedJob.value?._id)
+const { updateJobStatus } = useJobUpdater(acceptedJobs)
  
 function handleReviewSubmitted(data) {
   console.log('Review tersimpan:', data)
@@ -27,10 +30,12 @@ async function getAcceptedJobs(technicianId) {
     const response = await apiFetch(`/jobs/${technicianId}/accepted-jobs`)
     acceptedJobs.value = response.data.jobs
  
-    for (const job of acceptedJobs.value) {
-      const profile = await getProfile(job.idCreator)
-      job.creatorName = profile.nama
-    }
+    await Promise.all(
+      acceptedJobs.value.map(async job => {
+        const profile = await getProfile(job.idCreator)
+        job.creatorName = profile.nama
+      })
+    )
  
     await Promise.all(
       acceptedJobs.value.map(async job => {
@@ -148,6 +153,48 @@ async function handleCancel() {
  
 onMounted(async () => {
   await getAcceptedJobs(userId)
+
+  // trigger event register di server
+  socket.emit('register', {
+    userId: userId,
+    role: role
+  })
+
+  socket.on('job:created', async () => {
+    await getAcceptedJobs(userId)
+  })
+  socket.on('job:pending-transport', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
+  socket.on('job:paid-transport', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
+  socket.on('job:checked', ({jobId, status})=>{
+    updateJobStatus(jobId, status)
+  })
+  socket.on('job:pending-repair', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
+  socket.on('job:paid-repair', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
+  socket.on('job:done', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
+  socket.on('job:completed', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
+
+})
+onUnmounted(() => {
+  socket.off('job:created')
+  socket.off('job:pending-transport')
+  socket.off('job:paid-transport')
+  socket.off('job:checked')
+  socket.off('job:pending-repair')
+  socket.off('job:paid-repair')
+  socket.off('job:done')
+  socket.off('job:completed')
 })
 </script>
  

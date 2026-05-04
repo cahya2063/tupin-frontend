@@ -15,6 +15,8 @@ const props = defineProps({
 //     await getprofileById(newId)
 //   }
 // })
+console.log('debug rating : ', props.ratings);
+
 </script>
 <template>
     <!-- v-model="props.show" -->
@@ -36,16 +38,7 @@ const props = defineProps({
       <div class="d-flex justify-center">
           <CForm style="width: 90%">
             <!-- v-model="rating" -->
-            <v-rating
-                half-increments
-                hover
-                readonly
-                :length="5"
-                :size="29"
-                :model-value="props.ratings"
-                color="warning"
-                active-color="warning"
-            />
+            <CRating readOnly v-model="props.ratings" class="card-rating mb-3" />
           <!-- v-if="errors.rating" -->
           <div
             class="text-danger text-sm mt-1"

@@ -6,6 +6,9 @@ import { createChat } from '@/utils/tools';
 import { onMounted, ref, watch } from 'vue';
 import ShippingCostModal from './ShippingCostModal.vue';
 import AddPriceModal from './AddPriceModal.vue';
+import WarrantyModal from './WarrantyModal.vue';
+import ReviewModal from '@/components/form/ReviewModal.vue'
+
 
 
 const props = defineProps({
@@ -16,14 +19,18 @@ const props = defineProps({
 // console.log('selected job : ', props.selectedJob);
 
 const profile = ref()
-const technicianId = localStorage.getItem('userId')
+const userId = localStorage.getItem('userId')
 const role = localStorage.getItem('role')
 const technicianProfile = ref()
 const shippingCost = ref()
-const repairPrice = ref(0)
 const modalShippingCost = ref(false)
 const modalAddPrice = ref(false)
+const modalWarranty = ref(false)
 const lastCalculatedJobId = ref(null)
+const showRatingModal = ref(false)
+const receiverId = computed(() => props.selectedJob?.selectedTechnician)
+
+
 
 const emit = defineEmits([
   'close',
@@ -33,10 +40,18 @@ const emit = defineEmits([
 const closeSidebar = () => {
   emit('close')
 }
+
 const formatDate = date => {
   if (!date || typeof date !== 'string') return '-'
   return date.split('T')[0]
 }
+
+function handleReviewSubmitted(data) {
+  console.log('Review tersimpan:', data)
+  // bisa tambahkan logika refresh data job, dll.
+}
+
+// validasi garansi 3 hari
 const isWithinWarranty = (jobDoneDate) => {
   if (!jobDoneDate) return false;
 
@@ -61,14 +76,6 @@ const openGoogleMaps = () => {
   const url = `https://www.google.com/maps?q=${lat},${lng}`
 
   window.open(url, '_blank') // buka di tab baru
-}
-// format angka ke Rupiah
-const formatRupiah = (val) => 'Rp ' + (val || 0).toLocaleString('id-ID')
-
-// handle input manual (strip non-digit, update repairPrice)
-const onPriceInput = (e) => {
-  const raw = e.target.value.replace(/\D/g, '')
-  repairPrice.value = parseInt(raw) || 0
 }
 
 async function calculateShippingCost(jobId){
@@ -126,23 +133,6 @@ async function doneJob(jobId){
     sweetAlert.error('terjadi kesalahan saat menyelesaikan job')
   }
 }
-
-const handleDoneJob = async () => {
-  const jobId = props.selectedJob._id
-  const result = await sweetAlert.confirm({
-    title: 'Apakah teknisi sudah memperbaiki kerusakan?',
-    text: 'Pastikan teknisi sudah melakukan perbaikan dengan benar sebelum mengonfirmasi.',
-    showCancelButton: false,
-    showCancelButton: true,
-    confirmText: 'Ya, Sudah'
-  })
-
-  if (result.isConfirmed) {
-    await doneJob(jobId)
-  }
-}
-
-
 async function claimWarranty(jobId){
   try {
     const response = await apiFetch(`/jobs/${jobId}/claim-warranty`, {
@@ -160,19 +150,33 @@ async function claimWarranty(jobId){
   }
 }
 
-const handleIsWarranty = async(jobId)=>{
+// =================== handle ==============//
+
+const handleDoneJob = async () => {
+  const jobId = props.selectedJob._id
   const result = await sweetAlert.confirm({
-    title: 'Klaim garansi?',
-    text: 'Klaim garansi jika barang rusak kembali dalam waktu 3 hari!!',
-    showDenyButton: false,
+    title: 'Apakah teknisi sudah memperbaiki kerusakan?',
+    text: 'Pastikan teknisi sudah melakukan perbaikan dengan benar sebelum mengonfirmasi.',
+    showCancelButton: false,
     showCancelButton: true,
-    confirmText: 'Klaim',
-    cancelText: 'Tutup'
+    confirmText: 'Ya, Sudah'
   })
 
   if (result.isConfirmed) {
-    await claimWarranty(jobId)
+    await doneJob(jobId)
   }
+}
+
+
+
+
+const handleIsWarranty = async(jobId)=>{
+  modalWarranty.value = true
+  
+
+  // if (result.isConfirmed) {
+  //   await claimWarranty(jobId)
+  // }
 
 }
 
@@ -465,7 +469,7 @@ watch(() => props.selectedJob,
               <button
                 v-if="selectedJob.status === 'pending transport fee' && role === 'client'"
                 class="btn btn--accept"
-                @click="$router.push('/payment-history')"
+                @click="$router.push('/payment-tabs')"
               >
                 <i class="ri-check-line"></i>
                 lihat tagihan transportasi
@@ -473,7 +477,7 @@ watch(() => props.selectedJob,
               <button
                 v-if="selectedJob.status === 'pending repair payment' && role === 'client'"
                 class="btn btn--accept"
-                @click="$router.push('/payment-history')"
+                @click="$router.push('/payment-tabs')"
               >
                 <i class="ri-check-line"></i>
                 lihat tagihan perbaikan
@@ -508,6 +512,14 @@ watch(() => props.selectedJob,
               >
                 <i class="ri-shield-check-line"></i>
                 Klaim garansi
+              </button>
+              <button
+                v-if="selectedJob.status === 'completed' && role === 'client'"
+                class="btn btn--checked"
+                @click="showRatingModal = true"
+              >
+                <i class="ri-check-line"></i>
+                Beri Ulasan
               </button>
               
               <!-- aksi teknisi -->
@@ -559,12 +571,30 @@ watch(() => props.selectedJob,
 
   <!-- Modal add price -->
   <AddPriceModal
-  :visible="modalAddPrice"
-  :selected-job="selectedJob"
-  :profile="profile"
-  :technician-profile="technicianProfile"
-  @close="modalAddPrice = false"
-/>
+    :visible="modalAddPrice"
+    :selected-job="selectedJob"
+    :profile="profile"
+    :technician-profile="technicianProfile"
+    @close="modalAddPrice = false"
+  />
+
+  <!-- modal warranty -->
+   <WarrantyModal
+    :visible="modalWarranty"
+    :selected-job="selectedJob"
+    :profile="profile"
+    :technician-profile="technicianProfile"
+    @close="modalWarranty = false"
+   />
+
+   <!-- Modal Pop-up Rating -->
+     <ReviewModal
+       v-model:show="showRatingModal"
+       :sender-id="userId"
+       :receiver-id="receiverId"
+       :job-id="selectedJob?._id"
+       @review-submitted="handleReviewSubmitted"
+     />
 
 </template>
  
@@ -718,7 +748,7 @@ watch(() => props.selectedJob,
  
 /* ── Detail content ────────────────────────────────────────── */
 .detail-content {
-  padding: 20px 20px 32px;
+  padding: 20px 20px 120px;
   display: flex;
   flex-direction: column;
   gap: 0;

@@ -1,6 +1,6 @@
 <script setup>
 import { apiFetch, getProfile } from '@/utils/api'
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, onUnmounted } from 'vue'
 import avatar1 from '@images/avatars/avatar-1.png'
 // import CardJob from '@/layouts/components/CardJob.vue'
 import sweetAlert from '@/utils/sweetAlert'
@@ -9,25 +9,19 @@ import ReviewModal from '@/components/form/ReviewModal.vue'
 import Payment from '@/components/form/Payment.vue'
 import SlideJobDetail from '@/layouts/components/SlideJobDetail.vue'
 import CardJobClient from '@/layouts/components/CardJobClient.vue'
+import { showSidebarPostedJobs, socket, useJobUpdater } from '@/utils/tools'
 
-const headers = [
-  { title: 'User', key: 'username' },
-  { title: 'Email', key: 'email' },
-  { title: 'Role', key: 'role' },
-  { title: 'Profile', key: 'profile' },
-]
 
-const userData = ref([])
 const selectedJob = ref(null)
-const showSidebar = ref(false)
-const showApplicantsModal = ref(false)
-const showRatingModal = ref(false)
+// const showSidebar = ref(false)
+
 const userId = localStorage.getItem('userId')
+const role = localStorage.getItem('role')
 const jobs = ref([])
 
-const receiverId = computed(() => selectedJob.value?.selectedTechnician)
-const jobId = computed(() => selectedJob.value?._id)
 
+
+const { updateJobStatus } = useJobUpdater(jobs)
 // event ketika review berhasil dikirim
 function handleReviewSubmitted(data) {
   console.log('Review tersimpan:', data)
@@ -36,7 +30,6 @@ function handleReviewSubmitted(data) {
 // avatars creator
 const avatars = ref({})
 
-// avatars untuk teknisi per job
 const invitesAvatars = ref({})
 
 const isCancelable = computed(() => ['pending', 'request'].includes(selectedJob.value?.status))
@@ -158,7 +151,7 @@ async function cancelJob(jobId) {
 
 
 async function handleCancel(jobId) {
-  showSidebar.value = false
+  showSidebarPostedJobs.value = false
   const result = await sweetAlert.confirm({
     title: 'Cancel Jobs?',
     text: 'Apakah anda yakin ingin cancel Job?',
@@ -182,13 +175,12 @@ const openDetail = async job => {
   }
   selectedJob.value.creatorName = profile.data.user.nama
   selectedJob.value.creatorEmail = profile.data.user.email
-  showSidebar.value = true
+  showSidebarPostedJobs.value = true
 }
 
 
 const openReview = () => {
-  showRatingModal.value = true
-  showSidebar.value = false
+  showSidebarPostedJobs.value = false
 }
 
 const review = ref()
@@ -208,11 +200,47 @@ onMounted(async () => {
   const test = await getPostedJobs()
   console.log('posted jobs : ', test);
   
+  socket.emit('register', {
+    userId: userId,
+    role: role
+  })
+  socket.on('job:pending-transport', ({ jobId, status }) => {
+
+    updateJobStatus(jobId, status)
+  })
+  socket.on('job:checked', ({jobId, status})=>{
+    updateJobStatus(jobId, status)
+  })
+  socket.on('job:paid-transport', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
+  socket.on('job:pending-repair', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
+  socket.on('job:paid-repair', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
+  socket.on('job:done', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
+  socket.on('job:completed', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
+
   jobs.value.forEach(async (e, i) => {
     const response = await getReviewByJobId(e._id, e.idCreator)
     review.value = response
     console.log('data review : ', review.value)
   })
+})
+onUnmounted(() => {
+  socket.off('job:pending-transport')
+  socket.off('job:paid-transport')
+  socket.off('job:checked')
+  socket.off('job:pending-repair')
+  socket.off('job:paid-repair')
+  socket.off('job:done')
+  socket.off('job:completed')
 })
 </script>
 
@@ -274,22 +302,15 @@ onMounted(async () => {
 
   <!-- Sidebar kanan untuk detail job -->
    <SlideJobDetail
-    :showSidebar="showSidebar"
+    :showSidebar="showSidebarPostedJobs"
     :selectedJob="selectedJob"
     :isCancelable="true"
-    @close="showSidebar = false"
+    @close="showSidebarPostedJobs = false"
     @cancel="handleCancel"
   />
   
 
-  <!-- Modal Pop-up Rating -->
-  <ReviewModal
-    v-model:show="showRatingModal"
-    :sender-id="userId"
-    :receiver-id="receiverId"
-    :job-id="jobId"
-    @review-submitted="handleReviewSubmitted"
-  />
+
 </template>
 <style scoped>
 

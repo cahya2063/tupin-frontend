@@ -1,11 +1,10 @@
 <script setup>
 import { apiFetch } from '@/utils/api'
 import { onMounted, ref } from 'vue'
-import { io } from 'socket.io-client'
+import { socket } from '@/utils/tools'
 import sweetAlert from '@/utils/sweetAlert'
 
-// mentrigger event connection di server
-const socket = io('http://localhost:3000')
+
 
 const userId = localStorage.getItem('userId')
 const userRole = localStorage.getItem('role')
