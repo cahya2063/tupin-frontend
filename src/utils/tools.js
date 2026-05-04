@@ -1,5 +1,7 @@
+import { ref } from "vue"
 import { apiFetch } from "./api"
 import InlineEditor from '@ckeditor/ckeditor5-build-inline'
+import { io } from 'socket.io-client'
 // ===========CKEDITOR============//
 export const editor = InlineEditor
 export const config = {
@@ -12,7 +14,9 @@ export const config = {
   ],
   placeholder: 'Ketik atau paste konten di sini...',
 }
-
+export const showSidebarPostedJobs = ref(false)
+// mentrigger event connection di server
+export const socket = io('http://localhost:3000')
 export const getCurrentLocation = () => {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -94,4 +98,17 @@ export function useDestination() {
     getDestination
   }
 }
+export function useJobUpdater(jobs) {
 
+  const updateJobStatus = (jobId, status) => {
+    const job = jobs.value.find(j => j._id === jobId)
+
+    if (job) {
+      job.status = status
+    }
+  }
+
+  return {
+    updateJobStatus
+  }
+}

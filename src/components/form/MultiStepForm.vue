@@ -5,7 +5,6 @@ import { Ckeditor } from '@ckeditor/ckeditor5-vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { nextTick } from 'vue'
-import Swal from 'sweetalert2'
 import { getCurrentLocation, useDestination } from '@/utils/tools'
 import { config, editor } from '../../utils/tools'
 import sweetAlert from '@/utils/sweetAlert'
@@ -431,6 +430,13 @@ onMounted(async () => {
   .form-row {
     grid-template-columns: 1fr;
   }
+  .job-form-wrapper {
+    width: 100%;
+    padding-inline: 0px;
+  }
+  .form-group{
+    padding: 0px;
+  }
 }
  
 /* ===== Form Group ===== */
@@ -621,4 +627,55 @@ onMounted(async () => {
 .btn-submit:active {
   transform: translateY(0);
 }
+/* ROW 3: Editor deskripsi */
+  .editor-wrapper {
+    min-height: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  /* ROW 3: Lokasi - peta lebih pendek di HP */
+  .map-container {
+    height: 200px;
+  }
+
+  .map-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-location {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* ROW 4: Date range picker full width */
+  .c-date-range-picker,
+  [class*="date-range"] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* ROW 4: File upload full width dan tidak overflow */
+  .file-upload-area {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .v-file-upload {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Switch row agar tidak overflow */
+  .switch-row {
+    flex-wrap: wrap;
+  }
+
+  /* Pastikan semua form group tidak overflow */
+  .form-group {
+    overflow: hidden;
+    word-break: break-word;
+  }
+
 </style>
