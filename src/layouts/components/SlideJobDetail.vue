@@ -7,6 +7,8 @@ import { onMounted, ref, watch } from 'vue';
 import ShippingCostModal from './ShippingCostModal.vue';
 import AddPriceModal from './AddPriceModal.vue';
 import WarrantyModal from './WarrantyModal.vue';
+import ReviewModal from '@/components/form/ReviewModal.vue'
+
 
 
 const props = defineProps({
@@ -17,7 +19,7 @@ const props = defineProps({
 // console.log('selected job : ', props.selectedJob);
 
 const profile = ref()
-const technicianId = localStorage.getItem('userId')
+const userId = localStorage.getItem('userId')
 const role = localStorage.getItem('role')
 const technicianProfile = ref()
 const shippingCost = ref()
@@ -25,6 +27,10 @@ const modalShippingCost = ref(false)
 const modalAddPrice = ref(false)
 const modalWarranty = ref(false)
 const lastCalculatedJobId = ref(null)
+const showRatingModal = ref(false)
+const receiverId = computed(() => props.selectedJob?.selectedTechnician)
+
+
 
 const emit = defineEmits([
   'close',
@@ -38,6 +44,11 @@ const closeSidebar = () => {
 const formatDate = date => {
   if (!date || typeof date !== 'string') return '-'
   return date.split('T')[0]
+}
+
+function handleReviewSubmitted(data) {
+  console.log('Review tersimpan:', data)
+  // bisa tambahkan logika refresh data job, dll.
 }
 
 // validasi garansi 3 hari
@@ -458,7 +469,7 @@ watch(() => props.selectedJob,
               <button
                 v-if="selectedJob.status === 'pending transport fee' && role === 'client'"
                 class="btn btn--accept"
-                @click="$router.push('/payment-history')"
+                @click="$router.push('/payment-tabs')"
               >
                 <i class="ri-check-line"></i>
                 lihat tagihan transportasi
@@ -466,7 +477,7 @@ watch(() => props.selectedJob,
               <button
                 v-if="selectedJob.status === 'pending repair payment' && role === 'client'"
                 class="btn btn--accept"
-                @click="$router.push('/payment-history')"
+                @click="$router.push('/payment-tabs')"
               >
                 <i class="ri-check-line"></i>
                 lihat tagihan perbaikan
@@ -501,6 +512,14 @@ watch(() => props.selectedJob,
               >
                 <i class="ri-shield-check-line"></i>
                 Klaim garansi
+              </button>
+              <button
+                v-if="selectedJob.status === 'completed' && role === 'client'"
+                class="btn btn--checked"
+                @click="showRatingModal = true"
+              >
+                <i class="ri-check-line"></i>
+                Beri Ulasan
               </button>
               
               <!-- aksi teknisi -->
@@ -567,6 +586,15 @@ watch(() => props.selectedJob,
     :technician-profile="technicianProfile"
     @close="modalWarranty = false"
    />
+
+   <!-- Modal Pop-up Rating -->
+     <ReviewModal
+       v-model:show="showRatingModal"
+       :sender-id="userId"
+       :receiver-id="receiverId"
+       :job-id="selectedJob?._id"
+       @review-submitted="handleReviewSubmitted"
+     />
 
 </template>
  
@@ -720,7 +748,7 @@ watch(() => props.selectedJob,
  
 /* ── Detail content ────────────────────────────────────────── */
 .detail-content {
-  padding: 20px 20px 32px;
+  padding: 20px 20px 120px;
   display: flex;
   flex-direction: column;
   gap: 0;

@@ -152,6 +152,7 @@ async function createWarranty(){
 }
 .button-warranty-wrapper{
     display: flex;
+    padding-bottom: 80px; /* added space to clear bottom navigation */
 }
 
 .button-warranty-wrapper button{

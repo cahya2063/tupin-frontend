@@ -73,6 +73,8 @@ const handleNavScroll = evt => {
         </RouterLink>
       </slot>
     </div>
+    <!-- Purple accent bar -->
+    <div class="sidebar-accent-bar" />
     <slot name="before-nav-items">
       <div class="vertical-nav-items-shadow" />
     </slot>
@@ -105,6 +107,13 @@ const handleNavScroll = evt => {
     line-height: 1.75rem;
     text-transform: uppercase;
   }
+}
+
+.sidebar-accent-bar {
+  height: 3px;
+  background: linear-gradient(90deg, #8d58ff 0%, #c4a0ff 60%, rgba(141, 88, 255, 0) 100%);
+  width: 100%;
+  opacity: 0.7;
 }
 </style>
 

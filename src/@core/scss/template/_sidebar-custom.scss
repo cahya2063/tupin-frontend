@@ -1,0 +1,331 @@
+// ============================================================
+// CUSTOM SIDEBAR STYLES - White & #8d58ff Theme
+// ============================================================
+
+@use '@layouts/styles/mixins' as layoutsMixins;
+
+// ---- Variables ----
+$sidebar-primary: #8d58ff;
+$sidebar-primary-light: rgba(141, 88, 255, 0.08);
+$sidebar-primary-hover: rgba(141, 88, 255, 0.12);
+$sidebar-white: #ffffff;
+$sidebar-text-muted: #94a3b8;
+$sidebar-text-main: #1e293b;
+$sidebar-border: rgba(141, 88, 255, 0.12);
+$sidebar-shadow: 0 4px 32px rgba(141, 88, 255, 0.13), 0 1.5px 6px rgba(0,0,0,0.06);
+
+// ---- Sidebar container ----
+.layout-nav-type-vertical {
+  .layout-vertical-nav {
+    background: $sidebar-white;
+    box-shadow: $sidebar-shadow;
+    border-right: 1.5px solid $sidebar-border;
+
+    // ---- Nav header (logo area) ----
+    .nav-header {
+      padding: 1.35rem 1.25rem 1rem 1.25rem;
+      border-bottom: 1.5px solid $sidebar-border;
+      background: linear-gradient(135deg, #f3edff 0%, #fafaff 100%);
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+
+      .app-logo {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+
+        img {
+          filter: drop-shadow(0 2px 8px rgba(141, 88, 255, 0.18));
+          transition: transform 0.22s cubic-bezier(.4,0,.2,1);
+        }
+
+        &:hover img {
+          transform: scale(1.06) rotate(-2deg);
+        }
+      }
+    }
+
+    // ---- Section title ----
+    .nav-section-title {
+      .title-text {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: $sidebar-primary;
+        opacity: 0.75;
+        padding-inline-start: 1.1rem;
+      }
+
+      .title-wrapper {
+        display: flex;
+        align-items: center;
+        padding-block: 0.2rem;
+      }
+    }
+
+    // ---- Nav link & group shared ----
+    .nav-link,
+    .nav-group {
+      padding-inline: 0.75rem;
+      margin-block-end: 0.1rem;
+
+      > :first-child {
+        border-radius: 10px;
+        transition:
+          background 0.18s ease,
+          color 0.18s ease,
+          box-shadow 0.18s ease,
+          transform 0.15s ease;
+        position: relative;
+        overflow: hidden;
+
+        &::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 10px;
+          background: $sidebar-primary-hover;
+          opacity: 0;
+          transition: opacity 0.18s ease;
+          pointer-events: none;
+        }
+
+        &:hover::before {
+          opacity: 1;
+        }
+
+        &:hover {
+          transform: translateX(2px);
+        }
+      }
+
+      .nav-item-icon {
+        color: $sidebar-text-muted;
+        font-size: 1.25rem;
+        transition: color 0.18s ease, transform 0.18s ease;
+        margin-inline-end: 0.65rem;
+        flex-shrink: 0;
+      }
+
+      .nav-item-title {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: $sidebar-text-main;
+        transition: color 0.18s ease;
+        letter-spacing: 0.01em;
+      }
+    }
+
+    // ---- Active nav link ----
+    .nav-link {
+      > .router-link-exact-active {
+        background: linear-gradient(135deg, #8d58ff 0%, #a97bff 100%) !important;
+        box-shadow: 0 4px 16px rgba(141, 88, 255, 0.28);
+        border-radius: 10px;
+
+        .nav-item-icon {
+          color: $sidebar-white !important;
+          transform: scale(1.08);
+        }
+
+        .nav-item-title {
+          color: $sidebar-white !important;
+          font-weight: 600;
+        }
+
+        &::before {
+          display: none;
+        }
+
+        &:hover {
+          transform: translateX(2px);
+          box-shadow: 0 6px 20px rgba(141, 88, 255, 0.38);
+        }
+      }
+    }
+
+    // ---- Nav group ----
+    .nav-group {
+      .nav-group-label {
+        border-radius: 10px;
+        cursor: pointer;
+
+        &:hover .nav-item-icon {
+          color: $sidebar-primary;
+        }
+
+        &:hover .nav-item-title {
+          color: $sidebar-primary;
+        }
+      }
+
+      .nav-group-arrow {
+        color: $sidebar-text-muted;
+        font-size: 1.2rem;
+        transition: transform 0.22s cubic-bezier(.4,0,.2,1), color 0.18s;
+      }
+
+      &.open {
+        > .nav-group-label {
+          background: $sidebar-primary-light;
+
+          .nav-item-icon {
+            color: $sidebar-primary;
+          }
+
+          .nav-item-title {
+            color: $sidebar-primary;
+            font-weight: 600;
+          }
+
+          .nav-group-arrow {
+            color: $sidebar-primary;
+          }
+        }
+      }
+
+      // Children (nested items)
+      .nav-group-children {
+        padding-inline-start: 0.75rem;
+
+        .nav-link {
+          padding-inline: 0.25rem;
+
+          > :first-child {
+            border-radius: 8px;
+          }
+
+          > .router-link-exact-active {
+            border-radius: 8px;
+          }
+
+          .nav-item-title {
+            font-size: 0.855rem;
+          }
+        }
+      }
+    }
+
+    // ---- Scrollbar ----
+    .ps__rail-y {
+      .ps__thumb-y {
+        background-color: rgba(141, 88, 255, 0.25) !important;
+        width: 3px !important;
+        border-radius: 3px;
+      }
+    }
+
+    // ---- Nav items shadow fix ----
+    .vertical-nav-items-shadow {
+      background: linear-gradient(
+        $sidebar-white 5%,
+        rgba(255,255,255, 0.75) 45%,
+        rgba(255,255,255, 0.2) 80%,
+        transparent
+      );
+    }
+  }
+}
+
+// ============================================================
+// NAVBAR (top header bar) - white with purple accent
+// ============================================================
+.layout-navbar {
+  .navbar-content-container {
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1.5px solid rgba(141, 88, 255, 0.1);
+    box-shadow: 0 2px 16px rgba(141, 88, 255, 0.08);
+  }
+}
+
+// ============================================================
+// MOBILE RESPONSIVE - Hamburger & Overlay nav
+// ============================================================
+
+// Mobile toggle button styling
+.icon-nav {
+  display: none;
+  background: linear-gradient(135deg, #8d58ff 0%, #a97bff 100%) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  padding: 0.45rem !important;
+  box-shadow: 0 2px 10px rgba(141, 88, 255, 0.3);
+  transition: box-shadow 0.18s, transform 0.15s;
+
+  .v-icon {
+    color: #fff !important;
+  }
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(141, 88, 255, 0.45);
+    transform: scale(1.07);
+  }
+}
+
+@media (max-width: 1279px) {
+  .icon-nav {
+    display: flex !important;
+  }
+
+  // When sidebar overlay is open: add close button styling
+  .layout-vertical-nav {
+    .nav-header {
+      // show close button on mobile
+      .v-btn {
+        background: rgba(141, 88, 255, 0.1);
+        color: $sidebar-primary;
+        border-radius: 8px;
+      }
+    }
+  }
+}
+
+// Mobile overlay backdrop
+.layout-overlay {
+  background: rgba(30, 20, 60, 0.5) !important;
+  backdrop-filter: blur(2px);
+}
+
+// ============================================================
+// NOTIFICATION BADGE
+// ============================================================
+.notif-badge {
+  background: linear-gradient(135deg, #8d58ff 0%, #c4a0ff 100%) !important;
+  color: $sidebar-white !important;
+  font-size: 0.62rem !important;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(141, 88, 255, 0.35);
+  min-width: 1.2rem;
+  text-align: center;
+}
+
+// ============================================================
+// SCROLL ANIMATION for nav items
+// ============================================================
+.layout-vertical-nav .nav-items {
+  > li {
+    animation: navItemFadeIn 0.22s ease-out both;
+
+    @for $i from 1 through 15 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.04}s;
+      }
+    }
+  }
+}
+
+@keyframes navItemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

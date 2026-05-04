@@ -212,18 +212,18 @@ onMounted(() => {
         class="app-logo app-title-wrapper"
       >
         <div
-          class="d-flex"
+          class="d-flex align-center"
         >
           <img
             :src="logo"
             alt="Logo"
-            style="width: 100px; margin-right: 8px;"
+            class="sidebar-logo-img"
           />
         </div>
       </RouterLink>
 
       <IconBtn
-        class="d-block d-lg-none"
+        class="d-block d-lg-none sidebar-close-btn"
         @click="toggleIsOverlayNavActive(false)"
       >
         <VIcon icon="ri-close-line" />
@@ -249,12 +249,42 @@ onMounted(() => {
   position: absolute;
   top: 0;
   right: 0;
-  background: red;
+  background: linear-gradient(135deg, #8d58ff 0%, #a97bff 100%);
   color: white;
   border-radius: 50%;
   font-size: 0.65rem;
   padding: 0.15rem 0.4rem;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(141, 88, 255, 0.4);
 }
+
+.sidebar-logo-img {
+  width: 100px;
+  margin-right: 8px;
+  filter: drop-shadow(0 2px 8px rgba(141, 88, 255, 0.2));
+  transition: transform 0.22s cubic-bezier(.4, 0, .2, 1);
+
+  &:hover {
+    transform: scale(1.04);
+  }
+}
+
+.sidebar-close-btn {
+  background: rgba(141, 88, 255, 0.1) !important;
+  color: #8d58ff !important;
+  border-radius: 8px !important;
+  transition: background 0.18s, transform 0.15s;
+
+  &:hover {
+    background: rgba(141, 88, 255, 0.2) !important;
+    transform: scale(1.08);
+  }
+
+  .v-icon {
+    color: #8d58ff !important;
+  }
+}
+
 @media (min-width: 1279px) {
   .icon-nav {
     display: none;

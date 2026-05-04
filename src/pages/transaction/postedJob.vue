@@ -15,13 +15,11 @@ import { showSidebarPostedJobs, socket, useJobUpdater } from '@/utils/tools'
 const selectedJob = ref(null)
 // const showSidebar = ref(false)
 
-const showRatingModal = ref(false)
 const userId = localStorage.getItem('userId')
 const role = localStorage.getItem('role')
 const jobs = ref([])
 
-const receiverId = computed(() => selectedJob.value?.selectedTechnician)
-const jobId = computed(() => selectedJob.value?._id)
+
 
 const { updateJobStatus } = useJobUpdater(jobs)
 // event ketika review berhasil dikirim
@@ -182,7 +180,6 @@ const openDetail = async job => {
 
 
 const openReview = () => {
-  showRatingModal.value = true
   showSidebarPostedJobs.value = false
 }
 
@@ -313,14 +310,7 @@ onUnmounted(() => {
   />
   
 
-  <!-- Modal Pop-up Rating -->
-  <ReviewModal
-    v-model:show="showRatingModal"
-    :sender-id="userId"
-    :receiver-id="receiverId"
-    :job-id="jobId"
-    @review-submitted="handleReviewSubmitted"
-  />
+
 </template>
 <style scoped>
 
