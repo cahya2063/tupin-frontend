@@ -226,6 +226,9 @@ onMounted(async () => {
   socket.on('job:completed', ({ jobId, status }) => {
     updateJobStatus(jobId, status)
   })
+  socket.on('job:canceled', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
 
   jobs.value.forEach(async (e, i) => {
     const response = await getReviewByJobId(e._id, e.idCreator)
@@ -241,6 +244,7 @@ onUnmounted(() => {
   socket.off('job:paid-repair')
   socket.off('job:done')
   socket.off('job:completed')
+  socket.off('job:canceled')
 })
 </script>
 

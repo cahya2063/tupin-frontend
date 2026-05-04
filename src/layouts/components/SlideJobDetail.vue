@@ -8,6 +8,7 @@ import ShippingCostModal from './ShippingCostModal.vue';
 import AddPriceModal from './AddPriceModal.vue';
 import WarrantyModal from './WarrantyModal.vue';
 import ReviewModal from '@/components/form/ReviewModal.vue'
+import CancelJobModal from './CancelJobModal.vue';
 
 
 
@@ -28,6 +29,7 @@ const modalAddPrice = ref(false)
 const modalWarranty = ref(false)
 const lastCalculatedJobId = ref(null)
 const showRatingModal = ref(false)
+const showCancelModal = ref(false)
 const receiverId = computed(() => props.selectedJob?.selectedTechnician)
 
 
@@ -173,26 +175,10 @@ const handleDoneJob = async () => {
 const handleIsWarranty = async(jobId)=>{
   modalWarranty.value = true
   
-
-  // if (result.isConfirmed) {
-  //   await claimWarranty(jobId)
-  // }
-
 }
 
-async function cancelJobs(jobId){
-  try {
-    const response = await apiFetch(`/jobs/${jobId}/cancel-jobs`,{
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    console.log('cancel Job : ', response);
-    sweetAlert.success('Berhasil menolak job')
-  } catch (error) {
-    sweetAlert.error('Gagal menolak job')
-  }
+const handleCancelJobs = async()=>{
+  showCancelModal.value = true
 }
 
 async function handleShippingCost(){
@@ -535,7 +521,7 @@ watch(() => props.selectedJob,
               <button
                 v-if="selectedJob.status === 'open' && role === 'technician'"
                 class="btn btn--reject"
-                @click="cancelJobs(selectedJob?._id)"
+                @click="handleCancelJobs"
               >
                 <i class="ri-close-line"></i>
                 Tolak Job
@@ -595,7 +581,13 @@ watch(() => props.selectedJob,
        :job-id="selectedJob?._id"
        @review-submitted="handleReviewSubmitted"
      />
-
+    
+    <!-- Modal Pop-up Cancel -->
+      <CancelJobModal
+        :visible="showCancelModal"
+        :selected-job="selectedJob"
+        @close="showCancelModal = false"
+      />
 </template>
  
 <style>
