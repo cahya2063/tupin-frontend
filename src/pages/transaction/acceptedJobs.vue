@@ -184,6 +184,9 @@ onMounted(async () => {
   socket.on('job:completed', ({ jobId, status }) => {
     updateJobStatus(jobId, status)
   })
+  socket.on('job:canceled', ({ jobId, status }) => {
+    updateJobStatus(jobId, status)
+  })
 
 })
 onUnmounted(() => {
@@ -195,6 +198,7 @@ onUnmounted(() => {
   socket.off('job:paid-repair')
   socket.off('job:done')
   socket.off('job:completed')
+  socket.off('job:canceled')
 })
 </script>
  

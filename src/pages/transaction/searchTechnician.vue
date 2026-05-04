@@ -46,7 +46,6 @@ async function getNearestTechnician(location){
 async function getAllSkills(){
   const response = await apiFetch('/skills')
   
-  // console.log('data skills : ', response.data.skills[0].label);
   response.data.skills.forEach((skill, i)=>{    
     skillsList.value.push(
       skill.label,
@@ -89,12 +88,10 @@ const searchNearestTechnician = async()=>{
     const location = await getCurrentLocation()
     console.log('location test : ', location.lat);
     
-    
     const nearestTechnician = await getNearestTechnician(location)
     const technicians = nearestTechnician.data.technicians
     console.log('teknisi terdekat : ', technicians);
         
-  
     nearestTechnicianProfile.value = await buildTechnicianProfiles(technicians)
     sessionStorage.setItem('nearestTechnicianProfile', JSON.stringify(nearestTechnicianProfile.value))
   } catch (error) {
@@ -253,9 +250,10 @@ onMounted( async () => {
 <style scoped>
 /* ─── Base ─────────────────────────────────────────────── */
 .page-wrapper {
-  background-color: #f4f0ff;
+  background-color: #ffffff;
   min-height: 100vh;
   padding: 28px 16px 48px;
+  border-radius: 20px;
 }
  
 .content {
@@ -355,7 +353,7 @@ onMounted( async () => {
   background: #ffffff;
   border-radius: 18px;
   padding: 18px 22px 12px;
-  border: 1px solid rgba(141, 88, 255, 0.12);
+  border: 3px solid rgba(141, 88, 255, 0.12);
 }
  
 .filter-label {
@@ -401,7 +399,7 @@ onMounted( async () => {
   background-color: #ffffff;
   border-radius: 20px;
   padding: 22px 22px 18px;
-  border: 1px solid rgba(141, 88, 255, 0.1);
+  border: 3px solid rgba(141, 88, 255, 0.1);
   display: flex;
   flex-direction: column;
   gap: 14px;

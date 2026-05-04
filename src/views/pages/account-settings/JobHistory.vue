@@ -59,6 +59,7 @@ async function getAllReviews(technicianId){
 
 function hasReview(jobId) {
   // cari review yang memiliki jobId sama
+  // return true / false
   return allReviews.value.some(r => r.jobId === jobId)
 }
 
