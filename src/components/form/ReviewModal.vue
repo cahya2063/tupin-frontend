@@ -9,7 +9,7 @@ const props = defineProps({
   receiverId: String,
   jobId: String,
 })
-const emits = defineEmits(['update:show', 'review-submitted'])
+const emits = defineEmits(['update:show', 'review-submitted', 'close'])
 
 // state lokal
 const rating = ref(0)
@@ -70,7 +70,8 @@ const createRating = async () => {
 
 <template>
   <VDialog
-    v-model="props.show"
+    :model-value="props.show"
+    @update:model-value="val => emits('update:show', val)"
     max-width="800"
   >
     <VCard style="font-family: 'Poppins'">

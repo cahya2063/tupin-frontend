@@ -42,7 +42,7 @@ const statusConfig = computed(() => {
   if (s === 'transport fee paid')  return { accent: '#14532d', bg: '#f0fdf4', text: '#14532d', border: '#14532d', avatarBg: '#14532d' }
   if (s === 'checked')      return { accent: '#10b981', bg: '#f0fdf4', text: '#14532d', border: '#6ee7b7', avatarBg: '#10b981' }
   if (s === 'completed')      return { accent: '#10b981', bg: '#f0fdf4', text: '#14532d', border: '#6ee7b7', avatarBg: '#10b981' }
-  if (s === 'cancelled') return { accent: '#ef4444', bg: '#fef2f2', text: '#7f1d1d', border: '#fca5a5', avatarBg: '#ef4444' }
+  if (s === 'canceled') return { accent: '#ef4444', bg: '#fef2f2', text: '#7f1d1d', border: '#fca5a5', avatarBg: '#ef4444' }
   return { accent: '#8d58ff', bg: '#f4f0ff', text: '#4c1d95', border: '#c4b5fd', avatarBg: '#8d58ff' }
 })
 

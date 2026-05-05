@@ -6,7 +6,7 @@ import { Ckeditor } from '@ckeditor/ckeditor5-vue'
 
 import { ref } from 'vue';
 
-
+const role = localStorage.getItem('role')
 const props = defineProps({
   visible: Boolean,
   selectedJob: Object,
@@ -45,8 +45,8 @@ const emit = defineEmits(['close'])
   <CModal :visible="visible" @close="emit('close')">
     <CModalHeader class="modal-header-custom d-flex justify-content-between" :close-button="false">
         <div>
-            <small class="modal-eyebrow">Tolak Perbaikan</small>
-            <CModalTitle class="modal-job-id">{{ selectedJob?._id }}</CModalTitle>
+            <small class="modal-eyebrow">Cancel Perbaikan</small>
+            <CModalTitle class="modal-job-id">{{ selectedJob?.title }}</CModalTitle>
         </div>
 
         <button class="btn-close" @click="emit('close')">
@@ -55,13 +55,19 @@ const emit = defineEmits(['close'])
     </CModalHeader>
 
     <CModalBody class="p-0">
-      <div class="modal-section">
-        <small class="modal-section-label">Lokasi</small>
+      <div class="modal-section" v-show="role == 'technician'">
+        <small class="modal-section-label">Kategori</small>
         <CFormCheck type="radio" id="flexRadioVModel1" inline label="Tidak sesuai keahlian" value="skill_mismatch" v-model="category"/>
         <CFormCheck type="radio" id="flexRadioVModel3" inline label="Tidak tersedia" value="not_available" v-model="category"/>
         <CFormCheck type="radio" id="flexRadioVModel2" inline label="Lokasi terlalu jauh" value="distance_too_far" v-model="category"/>
         <CFormCheck type="radio" id="flexRadioVModel4" inline label="Negosiasi gagal" value="negotiation_failed" v-model="category"/>
         <CFormCheck type="radio" id="flexRadioVModel5" inline label="Pelanggan tidak responsif" value="client_unresponsive" v-model="category"/>
+      </div>
+      <div class="modal-section" v-show="role == 'client'">
+        <small class="modal-section-label">Kategori</small>
+        <CFormCheck type="radio" id="flexRadioVModel1" inline label="kerusakan terlalu parah" value="repair_not_worth_it" v-model="category"/>
+        <CFormCheck type="radio" id="flexRadioVModel3" inline label="Harga terlalu mahal" value="price_too_high" v-model="category"/>
+        <CFormCheck type="radio" id="flexRadioVModel2" inline label="berubah pikiran" value="changed_mind_after_inspection" v-model="category"/>
       </div>
 
       <div class="modal-section">
@@ -86,7 +92,7 @@ const emit = defineEmits(['close'])
                 class="my-2 "
                 type="submit"
                 @click="cancelJobs"
-                >Ajukan garansi
+                >Cancel Perbaikan
             </CButton>
         </div>
     </CModalFooter>
