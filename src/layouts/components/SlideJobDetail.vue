@@ -31,7 +31,20 @@ const lastCalculatedJobId = ref(null)
 const showRatingModal = ref(false)
 const showCancelModal = ref(false)
 const receiverId = computed(() => props.selectedJob?.selectedTechnician)
+const getReview = ref()
 
+// ambil nama yang melakukan cancel
+const cancelByName = computed(() => {
+  const cancelById = props.selectedJob?.jobCancel?.cancelBy;
+  if (!cancelById) return '-';
+  
+  if (cancelById === props.selectedJob?.idCreator) {
+    return profile.value?.nama || 'Client';
+  } else if (cancelById === props.selectedJob?.selectedTechnician) {
+    return technicianProfile.value?.nama || 'Teknisi';
+  }
+  return cancelById;
+})
 
 
 const emit = defineEmits([
@@ -83,16 +96,13 @@ const openGoogleMaps = () => {
 async function calculateShippingCost(jobId){
   try {
     shippingCost.value = null // reset
-
-    const response = await apiFetch(`/ongkir/calculate-shipping-cost`, {
+    
+    const response = await apiFetch(`/ongkir/${jobId}/calculate-shipping-cost`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        jobId,
-        technicianId
-      })
+
     })
 
     console.log('Shipping cost:', response);
@@ -107,6 +117,17 @@ async function calculateShippingCost(jobId){
 
   } catch (error) {
     console.error('Gagal menghitung biaya pengiriman:', error)
+  }
+}
+
+async function getReviewByJobId(jobId){
+  try {
+    const response = await apiFetch(`/review/${jobId}/get-review-byJobId`)
+    return response.data.review
+    
+  } catch (error) {
+    console.error('error : ', error);
+    
   }
 }
 
@@ -135,22 +156,6 @@ async function doneJob(jobId){
     sweetAlert.error('terjadi kesalahan saat menyelesaikan job')
   }
 }
-async function claimWarranty(jobId){
-  try {
-    const response = await apiFetch(`/jobs/${jobId}/claim-warranty`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      // body: JSON.stringify({ status }),
-    })
-    console.log('status completed : ', response);
-    
-    sweetAlert.success(response.data.message)
-  } catch (error) {
-    sweetAlert.error('Gagal konfirmasi perbaikan')
-  }
-}
 
 // =================== handle ==============//
 
@@ -168,9 +173,6 @@ const handleDoneJob = async () => {
     await doneJob(jobId)
   }
 }
-
-
-
 
 const handleIsWarranty = async(jobId)=>{
   modalWarranty.value = true
@@ -227,7 +229,6 @@ async function handleChekedJob(){
 async function handlePriceInput(jobId){
     
   await getTechnicianProfile(props.selectedJob?.selectedTechnician)
-
   modalAddPrice.value = true
 }
 
@@ -238,7 +239,7 @@ const statusConfig = (s) => {
   if (st === 'transport fee paid')      return { color: '#14532d', bg: '#f0fdf4', text: '#14532d', label: st }
   if (st === 'checked')      return { color: '#10b981', bg: '#f4f0ff', text: '#4c1d95', label: st }
   if (st === 'completed') return { color: '#10b981', bg: '#f0fdf4', text: '#14532d', label: st }
-  if (st === 'cancelled') return { color: '#ef4444', bg: '#fef2f2', text: '#7f1d1d', label: st }
+  if (st === 'canceled') return { color: '#ef4444', bg: '#fef2f2', text: '#7f1d1d', label: st }
   return { color: '#8d58ff', bg: '#f4f0ff', text: '#4c1d95', label: s }
 }
  
@@ -250,6 +251,9 @@ watch(() => props.selectedJob,
         profile.value = await getProfile(newVal.idCreator)
         technicianProfile.value = await getProfile(newVal.selectedTechnician)
         console.log('jobs detail:', props.selectedJob)
+        console.log('id review : ', newVal._id)
+        getReview.value = await getReviewByJobId(newVal._id)
+                
       } catch (err) {
         console.error('Gagal ambil profile:', err)
       }
@@ -443,6 +447,48 @@ watch(() => props.selectedJob,
               <div class="divider"></div>
             </div>
  
+            <!-- Cancel Details -->
+            <section 
+              class="section cancel-section" 
+              v-if="selectedJob?.status === 'canceled' && selectedJob?.jobCancel"
+            >
+              <h6 class="section-title cancel-title">
+                <i class="ri-close-circle-line section-icon cancel-icon"></i>
+                Detail Pembatalan
+              </h6>
+
+              <div class="desc-box cancel-box">
+                <div class="cancel-item">
+                  <span class="cancel-label">Dibatalkan Oleh</span>
+                  <div class="cancel-value capitalize">
+                    {{ cancelByName }}
+                  </div>
+                </div>
+
+                <div class="cancel-item">
+                  <span class="cancel-label">Alasan (Kategori)</span>
+                  <div class="cancel-value capitalize">
+                    {{ selectedJob.jobCancel.category?.replace(/_/g, ' ') || '-' }}
+                  </div>
+                </div>
+
+                <div class="cancel-item">
+                  <span class="cancel-label">Catatan</span>
+                  <div 
+                    class="cancel-value" 
+                    v-html="selectedJob.jobCancel.note || '-'"
+                  ></div>
+                </div>
+
+                <div class="cancel-item">
+                  <span class="cancel-label">Tanggal Batal</span>
+                  <div class="cancel-value">
+                    {{ formatDate(selectedJob.jobCancel.canceledAt) }}
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <div class="divider"></div>
  
             <!-- Action buttons -->
@@ -471,15 +517,25 @@ watch(() => props.selectedJob,
 
 
               <!-- aksi client -->
-               <button
+              <button
                 v-if="selectedJob.status === 'transport fee paid' && role === 'client'"
                 class="btn btn--checked"
                 @click="handleChekedJob"
               >
                 <i class="ri-check-line"></i>
-                Sudah diperiksa
+                Sudah diperiksa dan setujui perbaikan
               </button>
-               <button
+
+              <button
+                v-if="selectedJob.status === 'transport fee paid' && role === 'client'"
+                class="btn btn--reject"
+                @click="handleCancelJobs"
+              >
+                <i class="ri-close-line"></i>
+                Cancel Perbaikan
+              </button>
+
+              <button
                 v-if="selectedJob.status === 'repair paid' && role === 'client'"
                 class="btn btn--checked"
                 @click="handleDoneJob"
@@ -500,7 +556,7 @@ watch(() => props.selectedJob,
                 Klaim garansi
               </button>
               <button
-                v-if="selectedJob.status === 'completed' && role === 'client'"
+                v-if="selectedJob.status === 'completed' && role === 'client' && !getReview"
                 class="btn btn--checked"
                 @click="showRatingModal = true"
               >
@@ -580,6 +636,7 @@ watch(() => props.selectedJob,
        :receiver-id="receiverId"
        :job-id="selectedJob?._id"
        @review-submitted="handleReviewSubmitted"
+       @close="showRatingModal = false"
      />
     
     <!-- Modal Pop-up Cancel -->
@@ -596,10 +653,23 @@ watch(() => props.selectedJob,
   position: fixed;
   inset: 0;
   background: rgba(10, 5, 25, 0.5);
-  z-index: 1000;
+  z-index: 2000;
   display: flex;
   justify-content: flex-end;
   align-items: stretch;
+}
+
+/* Memastikan semua modal (seperti AddPriceModal) tampil di atas overlay ini */
+.modal {
+  z-index: 2050 !important;
+}
+.modal-backdrop {
+  z-index: 2040 !important;
+}
+
+/* Memastikan sweetalert tampil paling atas (di atas modal dan overlay) */
+.swal2-container {
+  z-index: 3000 !important;
 }
  
 /* ── Panel ─────────────────────────────────────────────────── */
@@ -1122,6 +1192,53 @@ watch(() => props.selectedJob,
 .modal-footer-custom {
   border-top: 1px solid #ede8ff;
   padding: 14px 20px;
+}
+/* Section khusus cancel */
+.cancel-section {
+}
+
+/* Title */
+.cancel-title {
+  color: #ef4444;
+}
+
+/* Icon */
+.cancel-icon {
+  color: #ef4444;
+  background: #fee2e2;
+}
+
+/* Box utama */
+.cancel-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+/* Item per field */
+.cancel-item {
+  margin-bottom: 8px;
+}
+
+/* Label kecil */
+.cancel-label {
+  font-size: 11px;
+  color: #7f1d1d;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Value */
+.cancel-value {
+  font-size: 13px;
+  color: #450a0a;
+  font-weight: 500;
+}
+
+/* Utility */
+.capitalize {
+  text-transform: capitalize;
 }
  
 /* ── Transition ────────────────────────────────────────────── */

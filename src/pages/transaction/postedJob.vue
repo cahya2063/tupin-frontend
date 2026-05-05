@@ -185,20 +185,19 @@ const openReview = () => {
 
 const review = ref()
 
-async function getReviewByJobId(jobId, userId) {
-  try {
-    const response = await apiFetch(`/review/${jobId}/${userId}/get-review-byJobId`)
-    return response.data.review
-  } catch (error) {
-    console.error(error.message)
-  }
-}
+// async function getReviewByJobId(jobId, userId) {
+//   try {
+//     const response = await apiFetch(`/review/${jobId}/${userId}/get-review-byJobId`)
+//     return response.data.review
+//   } catch (error) {
+//     console.error(error.message)
+//   }
+// }
 
 
 
 onMounted(async () => {
-  const test = await getPostedJobs()
-  console.log('posted jobs : ', test);
+  await getPostedJobs()
   
   socket.emit('register', {
     userId: userId,
@@ -230,11 +229,11 @@ onMounted(async () => {
     updateJobStatus(jobId, status)
   })
 
-  jobs.value.forEach(async (e, i) => {
-    const response = await getReviewByJobId(e._id, e.idCreator)
-    review.value = response
-    console.log('data review : ', review.value)
-  })
+  // jobs.value.forEach(async (e, i) => {
+  //   const response = await getReviewByJobId(e._id, e.idCreator)
+  //   review.value = response
+  //   console.log('data review : ', review.value)
+  // })
 })
 onUnmounted(() => {
   socket.off('job:pending-transport')
