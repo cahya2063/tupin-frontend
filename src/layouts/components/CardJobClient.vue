@@ -47,7 +47,7 @@ const statusConfig = computed(() => {
     return { accent: '#10b981', bg: 'rgba(240,253,244,0.95)', text: '#14532d', border: '#6ee7b7' }
   if (s === 'completed')
     return { accent: '#10b981', bg: 'rgba(240,253,244,0.95)', text: '#14532d', border: '#6ee7b7' }
-  if (s === 'cancelled')
+  if (s === 'canceled')
     return { accent: '#ef4444', bg: 'rgba(254,242,242,0.95)', text: '#7f1d1d', border: '#fca5a5' }
   return { accent: '#8d58ff', bg: 'rgba(243,232,255,0.95)', text: '#4c1d95', border: '#c4b5fd' }
 })

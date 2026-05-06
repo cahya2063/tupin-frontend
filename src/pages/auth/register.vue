@@ -71,6 +71,14 @@ async function registerUser() {
         >Login</RouterLink
       >
     </p>
+    <p class="text-2">
+      Ingin bergabung sebagai teknisi?
+      <RouterLink
+        to="/register-technician"
+        class="router"
+        >Daftar Teknisi</RouterLink
+      >
+    </p>
 
     <!-- form registrasi -->
     <form
@@ -114,12 +122,13 @@ async function registerUser() {
   flex-direction: column;
   margin-block: auto;
   width: 95%;
-  height: 480px;
+  min-height: 480px;
+  height: auto;
   background-color: #dae0e461;
   margin-inline: auto;
   border-radius: 15px;
   text-align: center;
-  padding-top: 30px;
+  padding-block: 30px;
 }
 .teks-register-3 {
   font-family: 'Quicksand';
@@ -131,6 +140,12 @@ async function registerUser() {
   font-family: 'Quicksand';
   margin-bottom: 20px;
   font-size: 16px;
+  color: black;
+}
+.text-2{
+  font-family: 'Quicksand';
+  margin-bottom: 16px;
+  font-size: 14px;
   color: black;
 }
 .router {

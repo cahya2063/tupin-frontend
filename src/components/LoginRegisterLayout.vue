@@ -37,12 +37,13 @@ import craftManImage from '@assets/login/image.png'
 .login-container {
   display: flex;
   width: 70%;
-  height: auto;
+  max-height: calc(100vh - 100px);
   background-color: white;
   margin-inline: auto;
   margin-block: 50px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* tambahkan ini */
   border-radius: 15px;
+  overflow: hidden;
 }
 .login-image {
   margin: 25px;
@@ -69,8 +70,25 @@ import craftManImage from '@assets/login/image.png'
 }
 
 .right-content {
+  min-width: 0;
+  max-height: calc(100vh - 100px);
   flex-grow: 1;
   align-content: center;
+  overflow-y: auto;
+  padding-block: 20px;
+}
+
+.right-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.right-content::-webkit-scrollbar-thumb {
+  background-color: rgba(141, 88, 255, 0.35);
+  border-radius: 999px;
+}
+
+.right-content::-webkit-scrollbar-track {
+  background-color: rgba(141, 88, 255, 0.08);
 }
 
 form {
@@ -85,6 +103,18 @@ form {
   }
   .login-container {
     width: 90%;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-container {
+    max-height: calc(100vh - 32px);
+    margin-block: 16px;
+  }
+
+  .right-content {
+    max-height: calc(100vh - 32px);
+    padding-block: 14px;
   }
 }
 </style>

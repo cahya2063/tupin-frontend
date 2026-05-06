@@ -8,18 +8,12 @@ import { ref, computed } from 'vue'
 const role = localStorage.getItem('role')
 
 const menuItems = computed(() => {
-  if (role === 'client') {
+  if (role === 'admin') {
     return [
-
       {
-        title: 'Teknisi terdekat',
+        title: 'Pendaftaran teknisi',
         icon: 'ri-user-search-line',
-        to: '/search-technician',
-      },
-      {
-        title: 'Posted Job',
-        icon: 'ri-briefcase-line',
-        to: '/posted-jobs',
+        to: '/technician-registration',
       },
 
     ]
@@ -41,7 +35,7 @@ const menuItems = computed(() => {
 </script>
 
 <template>
-  <!-- 👉 Dashboards -->
+  <!-- 👉 Dashboard (SEMUA ROLE BISA LIHAT) -->
   <VerticalNavGroup
     :item="{
       title: 'Menu',
@@ -55,40 +49,46 @@ const menuItems = computed(() => {
       }"
     />
   </VerticalNavGroup>
-
-  <!-- 👉 Apps & Pages -->
   <VerticalNavSectionTitle
-    :item="{
-      heading: 'Apps & Pages',
-    }"
-  />
+      :item="{ heading: 'Apps & Pages' }"
+    />
+
+  <!-- 👉 Kalau BUKAN admin -->
+  <template v-if="role !== 'admin'">
+    
+
+    <VerticalNavLink
+      :item="{
+        title: 'Chat',
+        icon: 'ri-wechat-line',
+        to: '/chat-view',
+      }"
+    />
+
+    <VerticalNavLink
+      :item="{
+        title: 'Pembayaran',
+        icon: 'ri-wechat-line',
+        to: '/payment-tabs',
+      }"
+    />
+
+    <VerticalNavLink
+      :item="{
+        title: 'Profile',
+        icon: 'ri-user-settings-line',
+        to: '/profile',
+      }"
+    />
+  </template>
+
+  <!-- 👉 Menu berdasarkan role -->
   <VerticalNavLink
     v-for="item in menuItems"
     :key="item.title"
     :item="item"
   />
-  <VerticalNavLink
-    :item="{
-      title: 'Chat',
-      icon: 'ri-wechat-line',
-      to: '/chat-view',
-    }"
-  />
-  <VerticalNavLink
-    :item="{
-      title: 'Pembayaran',
-      icon: 'ri-wechat-line',
-      to: '/payment-tabs',
-    }"
-  />
-  <VerticalNavLink
-    :item="{
-      title: 'Profile',
-      icon: 'ri-user-settings-line',
-      to: '/profile',
-    }"
-  />
-  
+</template>
 
   <!-- <VerticalNavLink
     :item="{
@@ -233,4 +233,4 @@ const menuItems = computed(() => {
       target: '_blank',
     }"
   /> -->
-</template>
+<!-- </template> -->

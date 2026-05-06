@@ -108,12 +108,13 @@ async function loginUser() {
   flex-direction: column;
   margin-block: auto;
   width: 95%;
-  height: 480px;
+  min-height: 480px;
+  height: auto;
   background-color: #dae0e461;
   margin-inline: auto;
   border-radius: 15px;
   text-align: center;
-  padding-top: 30px;
+  padding-block: 30px;
 }
 .teks-login-3 {
   font-family: 'Quicksand';
