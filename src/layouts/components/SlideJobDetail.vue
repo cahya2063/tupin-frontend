@@ -1193,9 +1193,7 @@ watch(() => props.selectedJob,
   border-top: 1px solid #ede8ff;
   padding: 14px 20px;
 }
-/* Section khusus cancel */
-.cancel-section {
-}
+
 
 /* Title */
 .cancel-title {

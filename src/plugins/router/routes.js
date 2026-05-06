@@ -1,6 +1,10 @@
 export const routes = [
   { path: '/', component: () => import('@/pages/landing-page.vue') },
   {
+    path: '/register-technician',
+    component: () => import('@/pages/auth/register-technician.vue'),
+  },
+  {
     path: '/',
     component: () => import('@/layouts/default.vue'),
     children: [
@@ -10,7 +14,7 @@ export const routes = [
       },
       {
         path: 'jobs/:technicianId',
-        component: () => import('@/pages/transaction/jobs.vue'),
+        component: () => import('@/pages/transaction/client/jobs.vue'),
       },
       // {
       //   path: 'view-jobs',
@@ -18,7 +22,7 @@ export const routes = [
       // },
       {
         path: 'posted-jobs',
-        component: () => import('@/pages/transaction/postedJob.vue')
+        component: () => import('@/pages/transaction/client/postedJob.vue')
       },
       {
         path: 'technician-detail/:id',
@@ -26,7 +30,7 @@ export const routes = [
       },
       {
         path: 'search-technician',
-        component: ()=> import('@/pages/transaction/searchTechnician.vue')
+        component: ()=> import('@/pages/transaction/client/searchTechnician.vue')
       },
       {
         path: 'chat-view',
@@ -34,7 +38,7 @@ export const routes = [
       },
       {
         path: 'accepted-jobs',
-        component: ()=> import('@/pages/transaction/acceptedJobs.vue')
+        component: ()=> import('@/pages/transaction/technician/acceptedJobs.vue')
       },
       {
         path: 'payment-tabs',
@@ -60,6 +64,10 @@ export const routes = [
       {
         path: 'profile',
         component: () => import('@/views/pages/account-settings/AccountSettingsAccount.vue'),
+      },
+      {
+        path: 'technician-registration',
+        component: ()=> import('@/pages/transaction/admin/technicianRegistration.vue')
       },
       // bawaan template
       {
