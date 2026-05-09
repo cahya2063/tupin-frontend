@@ -36,17 +36,37 @@ function closeDetail() {
   selectedTechnician.value = null
 }
 
-function handleAccept(item) {
-  emit('accept', item)
+async function handleAccept(item) {
+  const result = await sweetAlert.confirm({
+    title: `Apakah kamu ingin menerima teknisi ${item.nama}?`,
+    text: 'Pastikan teknisi sudah mengisikan data dengan benar.',
+    showCancelButton: true,
+    confirmText: 'Ya, Sudah',
+    cancelText: 'Batal',
+  })
+
+  if (result.isConfirmed) {
+    emit('accept', item)
+  }  
 }
 
-function handleReject(item) {
-  emit('reject', item)
+async function handleReject(item) {
+  const result = await sweetAlert.confirm({
+    title: `Apakah kamu ingin menolak teknisi ${item.nama}?`,
+    text: 'Jika teknisi ditolak maka tidak bisa dirubah kembali.',
+    showCancelButton: true,
+    confirmText: 'Ya, Sudah',
+    cancelText: 'Batal',
+  })
+
+  if (result.isConfirmed) {
+    emit('reject', item)
+  } 
 }
 
 function getStatusColor(status) {
   const s = status?.toLowerCase()
-  if (s === 'active' || s === 'aktif' || s === 'approved') return 'success'
+  if (s === 'active' || s === 'aktif' || s === 'approved' || s === 'approve') return 'success'
   if (s === 'pending') return 'warning'
   if (s === 'inactive' || s === 'rejected' || s === 'ditolak') return 'error'
   return 'default'
@@ -57,7 +77,7 @@ function getStatusLabel(status) {
   if (s === 'active' || s === 'aktif') return 'Aktif'
   if (s === 'pending') return 'Menunggu'
   if (s === 'inactive') return 'Tidak Aktif'
-  if (s === 'approved') return 'Disetujui'
+  if (s === 'approved' || s === 'approve') return 'Disetujui'
   if (s === 'rejected' || s === 'ditolak') return 'Ditolak'
   return status
 }

@@ -26,6 +26,42 @@ async function getTechnicianPending(){
     }
 }
 
+async function approveTechnician(item){
+  try {
+    const technicianId = item._id || item.id
+    const response = await apiFetch(`/profile/approve/${technicianId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    sweetAlert.success(response.data?.message || 'Teknisi berhasil disetujui')
+    await getTechnicianPending()
+    
+  } catch (error) {
+    sweetAlert.error(error.message)
+  }
+}
+
+async function rejectTechnician(item){
+  try {
+    const technicianId = item._id || item.id
+    const response = await apiFetch(`/profile/reject/${technicianId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    sweetAlert.success(response.data?.message || 'Teknisi berhasil ditolak')
+    await getTechnicianPending()
+    
+  } catch (error) {
+    sweetAlert.error(error.message)
+  }
+}
+
 onMounted(async()=>{
     await getTechnicianPending()
 })
@@ -35,7 +71,8 @@ onMounted(async()=>{
   <AnalyticsUserTable
     :headers="headers"
     :items="technicians"
-
+    @accept="approveTechnician"
+    @reject="rejectTechnician"
   />
 </template>
 <style scoped>
