@@ -5,6 +5,10 @@ export const routes = [
     component: () => import('@/pages/auth/register-technician.vue'),
   },
   {
+    path: '/technician/activate',
+    component: () => import('@/pages/transaction/technician/activate.vue'),
+  },
+  {
     path: '/',
     component: () => import('@/layouts/default.vue'),
     children: [
