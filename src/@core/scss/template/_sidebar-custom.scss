@@ -74,13 +74,15 @@ $sidebar-shadow: 0 4px 32px rgba(141, 88, 255, 0.13), 0 1.5px 6px rgba(0,0,0,0.0
 
       > :first-child {
         border-radius: 10px;
+        min-block-size: 2.75rem;
+        block-size: auto !important;
         transition:
           background 0.18s ease,
           color 0.18s ease,
           box-shadow 0.18s ease,
           transform 0.15s ease;
         position: relative;
-        overflow: hidden;
+        overflow: visible;
 
         &::before {
           content: '';
@@ -111,11 +113,22 @@ $sidebar-shadow: 0 4px 32px rgba(141, 88, 255, 0.13), 0 1.5px 6px rgba(0,0,0,0.0
       }
 
       .nav-item-title {
+        flex: 1 1 auto;
+        min-inline-size: 0;
+        overflow: visible;
+        text-overflow: unset;
+        white-space: normal;
+        overflow-wrap: break-word;
         font-size: 0.9rem;
         font-weight: 500;
         color: $sidebar-text-main;
         transition: color 0.18s ease;
         letter-spacing: 0.01em;
+        line-height: 1.35;
+      }
+
+      .nav-item-badge:empty {
+        display: none;
       }
     }
 

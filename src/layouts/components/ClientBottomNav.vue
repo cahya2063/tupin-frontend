@@ -22,7 +22,7 @@ const navItems = [
     label: 'Jobs',
     icon: 'ri-briefcase-line',
     iconActive: 'ri-briefcase-fill',
-    to: '/posted-jobs',
+    to: '/job-tabs',
   },
   {
     label: 'Chat',

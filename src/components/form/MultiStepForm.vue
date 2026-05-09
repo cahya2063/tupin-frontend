@@ -8,6 +8,7 @@ import { nextTick } from 'vue'
 import { getCurrentLocation, useDestination } from '@/utils/tools'
 import { config, editor } from '../../utils/tools'
 import sweetAlert from '@/utils/sweetAlert'
+import { useRouter } from 'vue-router'
 
 const {destinationList, handleSearch, getDestination} = useDestination()
 
@@ -20,7 +21,7 @@ const styles = {
 }
  
 const description = ref('')
-
+const router = useRouter()
  
 const userId = localStorage.getItem('userId')
 
@@ -155,6 +156,8 @@ async function postJob() {
     lng.value = 114.3691
     marker?.setLatLng([lat.value, lng.value])
     map?.setView([lat.value, lng.value], 13)
+
+    router.push('/posted-jobs')
   }
   else{
     sweetAlert.error(response.data.message)

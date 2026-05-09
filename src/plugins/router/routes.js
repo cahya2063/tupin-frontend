@@ -45,6 +45,10 @@ export const routes = [
         component: ()=>import('@/pages/transaction/payment/paymentTab.vue')
       },
       {
+        path: 'job-tabs',
+        component: ()=>import('@/pages/transaction/client/jobsTab.vue')
+      },
+      {
         path: 'wallet',
         component: ()=> import('@/pages/transaction/payment/wallet.vue')
       },
@@ -68,6 +72,10 @@ export const routes = [
       {
         path: 'technician-registration',
         component: ()=> import('@/pages/transaction/admin/technicianRegistration.vue')
+      },
+      {
+        path: 'warranty-request',
+        component: ()=> import('@/pages/transaction/warrantyRequest.vue')
       },
       // bawaan template
       {

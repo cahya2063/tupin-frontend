@@ -62,94 +62,9 @@ async function getDetailJobs(id) {
   }
 }
  
-async function technicianRequest(jobId) {
-  try {
-    const response = await apiFetch(`/jobs/${jobId}/technician-request`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-    return response
-  } catch (error) {
-    sweetAlert.error()
-  }
-}
+
  
-async function doneJobRequest(jobId) {
-  try {
-    const response = await apiFetch(`/jobs/${jobId}/done-job`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-    return response.data
-  } catch (error) {
-    sweetAlert.error()
-  }
-}
- 
-async function cancelJob(jobId) {
-  try {
-    const response = await apiFetch(`/jobs/${jobId}/cancel-jobs`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-    return response.data
-  } catch (error) {
-    console.error('gagal melakukan cancel job')
-  }
-}
- 
-const review = ref()
- 
-async function getReviewByJobId(jobId, userId) {
-  try {
-    const response = await apiFetch(`/review/${jobId}/${userId}/get-review-byJobId`)
-    return response.data.review
-  } catch (error) {
-    sweetAlert.error(error.message)
-  }
-}
- 
-async function handleTechnicianRequest() {
-  showSidebar.value = false
-  const result = await sweetAlert.confirm({
-    title: 'Ajukan perbaikan?',
-    text: 'Pastikan anda sudah punya kesepakatan dengan klien melalui chat',
-    confirmText: 'Ya, kirim!',
-    cancelText: 'Batal',
-  })
-  if (result.isConfirmed) {
-    const approveData = await technicianRequest(selectedJob.value._id)
-    sweetAlert.success(approveData.message)
-  }
-}
- 
-async function handleDoneJob() {
-  showSidebar.value = false
-  const result = await sweetAlert.confirm({
-    title: 'Sudah diperbaiki?',
-    text: 'Pastikan anda sudah menyelesaikan perbaikan alat klien',
-    confirmText: 'Ya, sudah!',
-    cancelText: 'Batal',
-  })
-  if (result.isConfirmed) {
-    const approveData = await doneJobRequest(selectedJob.value._id)
-    sweetAlert.success(approveData.message)
-  }
-}
- 
-async function handleCancel() {
-  showSidebar.value = false
-  const result = await sweetAlert.confirm({
-    title: 'Cancel Jobs?',
-    text: 'Apakah anda yakin ingin cancel Job?',
-    confirmText: 'Ya, cancel!',
-    cancelText: 'Batal',
-  })
-  if (result.isConfirmed) {
-    const cancelJobData = await cancelJob(selectedJob.value._id)
-    sweetAlert.success(cancelJobData.message)
-  }
-}
+
  
 onMounted(async () => {
   await getAcceptedJobs(userId)
