@@ -24,6 +24,7 @@ const isOpen = ref(false)
       />
       <span class="nav-item-title">{{ item.title }}</span>
       <span
+        v-if="item.badgeContent"
         class="nav-item-badge"
         :class="item.badgeClass"
       >

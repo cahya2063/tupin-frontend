@@ -112,3 +112,15 @@ export function useJobUpdater(jobs) {
     updateJobStatus
   }
 }
+export function useWarrantyUpdater(warranties){
+  const updateWarrantyStatus = (warrantyId, status)=>{
+    const warranty = warranties.value.find(w => w._id === warrantyId)
+
+    if(warranty){
+      warranty.status = status
+    }
+  }
+  return {
+    updateWarrantyStatus
+  }
+}

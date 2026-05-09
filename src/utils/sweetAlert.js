@@ -18,6 +18,10 @@ const injectStyles = (() => {
     injected = true
     const style = document.createElement('style')
     style.innerHTML = `
+      .swal2-container {
+        z-index: 2000 !important;
+      }
+
       /* Popup container */
       .sa-popup {
         border-radius: 20px !important;

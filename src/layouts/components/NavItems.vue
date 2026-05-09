@@ -27,6 +27,11 @@ const menuItems = computed(() => {
         icon: 'ri-tools-line',
         to: 'accepted-jobs',
       },
+      {
+        title: 'Warranty Request',
+        icon: 'ri-tools-line',
+        to: 'warranty-request',
+      },
     ]
   }
 
@@ -35,7 +40,7 @@ const menuItems = computed(() => {
 </script>
 
 <template>
-  <!-- 👉 Dashboard (SEMUA ROLE BISA LIHAT) -->
+  <!-- 👉 Dashboard -->
   <VerticalNavGroup
     :item="{
       title: 'Menu',
@@ -49,13 +54,20 @@ const menuItems = computed(() => {
       }"
     />
   </VerticalNavGroup>
+
   <VerticalNavSectionTitle
-      :item="{ heading: 'Apps & Pages' }"
-    />
+    :item="{ heading: 'Apps & Pages' }"
+  />
+
+  <!-- 👉 Menu berdasarkan role -->
+  <VerticalNavLink
+    v-for="item in menuItems"
+    :key="item.title"
+    :item="item"
+  />
 
   <!-- 👉 Kalau BUKAN admin -->
   <template v-if="role !== 'admin'">
-    
 
     <VerticalNavLink
       :item="{
@@ -81,13 +93,6 @@ const menuItems = computed(() => {
       }"
     />
   </template>
-
-  <!-- 👉 Menu berdasarkan role -->
-  <VerticalNavLink
-    v-for="item in menuItems"
-    :key="item.title"
-    :item="item"
-  />
 </template>
 
   <!-- <VerticalNavLink
