@@ -81,6 +81,10 @@ export const routes = [
         path: 'warranty-request',
         component: ()=> import('@/pages/transaction/warrantyRequest.vue')
       },
+      {
+        path: 'skill-management',
+        component: ()=> import('@/pages/transaction/admin/skillManagement.vue')
+      },
       // bawaan template
       {
         path: 'typography',
