@@ -165,7 +165,7 @@ onMounted(() => {
 
         <div class="slide-modal-body">
           <CImage
-            :src="`${backendUrl}uploads/jobs/${detailJobs?.photo}`"
+            :src="`${backendUrl}/uploads/jobs/${detailJobs?.photo}`"
             rounded
             width="100%"
             class="job-detail-image"

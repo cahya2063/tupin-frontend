@@ -358,7 +358,7 @@ watch(() => props.selectedJob,
           <div class="carousel-wrap">
             <CCarousel controls indicators>
               <CCarouselItem v-for="(image, index) in selectedJob?.photos || []" :key="index">
-                <img class="carousel-img" :src="`${backendUrl}uploads/jobs/${image}`" />
+                <img class="carousel-img" :src="`${backendUrl}/uploads/jobs/${image}`" />
               </CCarouselItem>
             </CCarousel>
           </div>

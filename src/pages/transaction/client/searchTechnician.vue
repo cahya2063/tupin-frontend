@@ -175,7 +175,7 @@ onMounted( async () => {
               <div class="technician-detail">
                 <CAvatar
                   class="avatar-wrapper"
-                  :src="item.avatar ? `${backendUrl}${item.avatar}` : avatar1"
+                  :src="item.avatar ? `${backendUrl}/${item.avatar}` : avatar1"
                 />
                 <div class="name-block">
                   <div class="technician-name">{{ item.nama }}</div>
