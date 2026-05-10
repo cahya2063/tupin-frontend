@@ -15,6 +15,11 @@ const menuItems = computed(() => {
         icon: 'ri-user-search-line',
         to: '/technician-registration',
       },
+      {
+        title: 'Management skill',
+        icon: 'ri-user-search-line',
+        to: '/skill-management',
+      },
 
     ]
   }
