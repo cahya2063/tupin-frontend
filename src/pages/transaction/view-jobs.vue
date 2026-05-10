@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue'
 import avatar1 from '@images/avatars/avatar-1.png'
 import CardJob from '@/layouts/components/CardJob.vue'
 import Swal from 'sweetalert2'
+import { backendUrl } from '@/utils/tools'
 
 const jobs = ref([])
 const detailJobs = ref()
@@ -164,7 +165,7 @@ onMounted(() => {
 
         <div class="slide-modal-body">
           <CImage
-            :src="`http://localhost:3000/uploads/jobs/${detailJobs?.photo}`"
+            :src="`${backendUrl}uploads/jobs/${detailJobs?.photo}`"
             rounded
             width="100%"
             class="job-detail-image"

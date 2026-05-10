@@ -5,7 +5,7 @@ import { apiFetch } from '@/utils/api'
 import { ref } from 'vue'
 import Swal from 'sweetalert2'
 import ReviewContainer from '@/pages/part/ReviewContainer.vue'
-import { createChat } from '@/utils/tools'
+import { backendUrl, createChat } from '@/utils/tools'
 
 // const route = useRoute()
 // const technicianId = route.params.id // dari :id di path
@@ -92,7 +92,7 @@ onMounted(async () => {
             rounded="lg"
             size="100"
             class="me-6 avatar"
-            :image="accountDataLocal.avatar ? `http://localhost:3000${accountDataLocal.avatar}` : avatar1"
+            :image="accountDataLocal.avatar ? `${backendUrl}${accountDataLocal.avatar}` : avatar1"
           />
 
           <!-- Info -->

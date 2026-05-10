@@ -1,5 +1,6 @@
 <script setup>
 import { getProfile } from '@/utils/api';
+import { backendUrl } from '@/utils/tools';
 import { onMounted, watch } from 'vue';
 
 const props = defineProps({
@@ -28,7 +29,7 @@ console.log('debug rating : ', props.ratings);
         
         <div class="card-profile mx-4">
           <img
-            :src="`http://localhost:3000${props.avatar}`"
+            :src="`${backendUrl}${props.avatar}`"
             class="avatar"
           />
           <span>{{ props.senderName }}</span>

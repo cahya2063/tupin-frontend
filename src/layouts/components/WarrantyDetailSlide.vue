@@ -1,4 +1,5 @@
 <script setup>
+import { backendUrl } from '@/utils/tools'
 import { computed } from 'vue'
 
 const role = localStorage.getItem('role')
@@ -101,7 +102,7 @@ const isRepairing = computed(() => props.warranty?.status === 'repairing')
             <div class="carousel-wrap">
                 <CCarousel controls indicators>
                 <CCarouselItem v-for="(image, index) in warranty.evidence || []" :key="index">
-                    <img class="carousel-img" :src="`http://localhost:3000/uploads/evidence/${image}`" />
+                    <img class="carousel-img" :src="`${backendUrl}/uploads/evidence/${image}`" />
                 </CCarouselItem>
                 </CCarousel>
             </div>

@@ -2,7 +2,7 @@
 import Payment from '@/components/form/Payment.vue';
 import { apiFetch, getProfile } from '@/utils/api';
 import sweetAlert from '@/utils/sweetAlert';
-import { createChat } from '@/utils/tools';
+import { backendUrl, createChat } from '@/utils/tools';
 import { onMounted, ref, watch } from 'vue';
 import ShippingCostModal from './ShippingCostModal.vue';
 import AddPriceModal from './AddPriceModal.vue';
@@ -358,7 +358,7 @@ watch(() => props.selectedJob,
           <div class="carousel-wrap">
             <CCarousel controls indicators>
               <CCarouselItem v-for="(image, index) in selectedJob?.photos || []" :key="index">
-                <img class="carousel-img" :src="`http://localhost:3000/uploads/jobs/${image}`" />
+                <img class="carousel-img" :src="`${backendUrl}uploads/jobs/${image}`" />
               </CCarouselItem>
             </CCarousel>
           </div>

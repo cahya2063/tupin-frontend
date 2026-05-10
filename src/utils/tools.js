@@ -2,6 +2,8 @@ import { ref } from "vue"
 import { apiFetch } from "./api"
 import InlineEditor from '@ckeditor/ckeditor5-build-inline'
 import { io } from 'socket.io-client'
+
+export const backendUrl = process.env.VITE_API_URL
 // ===========CKEDITOR============//
 export const editor = InlineEditor
 export const config = {
@@ -16,7 +18,7 @@ export const config = {
 }
 export const showSidebarPostedJobs = ref(false)
 // mentrigger event connection di server
-export const socket = io('http://localhost:3000')
+export const socket = io(backendUrl)
 export const getCurrentLocation = () => {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {

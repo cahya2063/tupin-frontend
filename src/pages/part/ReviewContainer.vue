@@ -1,6 +1,7 @@
 <script setup>
 import { apiFetch, getProfile } from '@/utils/api'
 import sweetAlert from '@/utils/sweetAlert'
+import { backendUrl } from '@/utils/tools'
 import avatar1 from '@images/avatars/avatar-1.png'
 import { onMounted } from 'vue'
 
@@ -51,7 +52,7 @@ watch(
             <div class="d-flex align-center justify-space-between">
               <div>
                 <VAvatar size="36">
-                  <VImg :src="review.avatar ? `http://localhost:3000${review.avatar}` : avatar1" /> </VAvatar
+                  <VImg :src="review.avatar ? `${backendUrl}${review.avatar}` : avatar1" /> </VAvatar
                 >&nbsp;
                 <strong>{{ review.user }}</strong>
                 <div class="text-grey text-caption">{{ review.date }}</div>

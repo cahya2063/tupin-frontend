@@ -1,6 +1,7 @@
 <script setup>
 import ReadReview from '@/components/form/ReadReview.vue'
 import { apiFetch, getProfile } from '@/utils/api'
+import { backendUrl } from '@/utils/tools'
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -94,7 +95,7 @@ onMounted(async () => {
               <div class="carousel-wrap">
                 <CCarousel controls indicators>
                   <CCarouselItem v-for="(image, index) in job.photos || []" :key="index">
-                    <img class="carousel-img" :src="`http://localhost:3000/uploads/jobs/${image}`" />
+                    <img class="carousel-img" :src="`${backendUrl}uploads/jobs/${image}`" />
                   </CCarouselItem>
                 </CCarousel>
               </div>
