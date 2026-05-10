@@ -1,6 +1,6 @@
 <script setup>
 import { apiFetch, getProfile } from '@/utils/api';
-import { getCurrentLocation } from '@/utils/tools';
+import { backendUrl, getCurrentLocation } from '@/utils/tools';
 import avatar1 from '@images/avatars/avatar-1.png'
 import { computed, ref } from 'vue';
 
@@ -175,7 +175,7 @@ onMounted( async () => {
               <div class="technician-detail">
                 <CAvatar
                   class="avatar-wrapper"
-                  :src="item.avatar ? `http://localhost:3000${item.avatar}` : avatar1"
+                  :src="item.avatar ? `${backendUrl}${item.avatar}` : avatar1"
                 />
                 <div class="name-block">
                   <div class="technician-name">{{ item.nama }}</div>

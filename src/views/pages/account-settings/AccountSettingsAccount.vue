@@ -4,7 +4,7 @@ import { apiFetch } from '@/utils/api'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue'
 import avatar1 from '@images/avatars/avatar-1.png'
 import { ref, onMounted } from 'vue'
-import { config, editor, useDestination } from '@/utils/tools'
+import { backendUrl, config, editor, useDestination } from '@/utils/tools'
 
 const { destinationList, handleSearch } = useDestination()
 
@@ -163,7 +163,7 @@ const phoneModel = computed({
             rounded="lg"
             size="100"
             class="me-6"
-            :image="accountDataLocal.avatar ? `http://localhost:3000${accountDataLocal.avatar}` : avatar1"
+            :image="accountDataLocal.avatar ? `${backendUrl}${accountDataLocal.avatar}` : avatar1"
           />
 
           <!-- 👉 Upload Photo -->
