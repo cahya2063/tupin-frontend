@@ -10,6 +10,8 @@ const selectedSkills = ref([])
 const isLoading = ref(false)
 
 const formatDistance = (distance)=>{
+  console.log('distance : ', distance);
+  
   if(distance < 1){
     return `${Math.round(distance * 1000)} m`
   } else {
@@ -173,9 +175,10 @@ onMounted( async () => {
             <!-- Part 1 – Avatar + Nama + Rating -->
             <div class="part-one">
               <div class="technician-detail">
+                
                 <CAvatar
                   class="avatar-wrapper"
-                  :src="item.avatar ? `${backendUrl}/${item.avatar}` : avatar1"
+                  :src="item.avatar ? `${backendUrl}${item.avatar}` : avatar1"
                 />
                 <div class="name-block">
                   <div class="technician-name">{{ item.nama }}</div>

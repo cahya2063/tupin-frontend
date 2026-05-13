@@ -3,7 +3,7 @@ import { apiFetch } from "./api"
 import InlineEditor from '@ckeditor/ckeditor5-build-inline'
 import { io } from 'socket.io-client'
 
-export const backendUrl = process.env.VITE_API_URL
+export const backendUrl = import.meta.env.VITE_API_URL
 // ===========CKEDITOR============//
 export const editor = InlineEditor
 export const config = {

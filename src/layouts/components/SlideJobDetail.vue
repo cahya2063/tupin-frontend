@@ -7,6 +7,7 @@ import { onMounted, ref, watch } from 'vue';
 import ShippingCostModal from './ShippingCostModal.vue';
 import AddPriceModal from './AddPriceModal.vue';
 import WarrantyModal from './WarrantyModal.vue';
+import ReportModal from './ReportModal.vue';
 import ReviewModal from '@/components/form/ReviewModal.vue'
 import CancelJobModal from './CancelJobModal.vue';
 
@@ -27,11 +28,13 @@ const shippingCost = ref()
 const modalShippingCost = ref(false)
 const modalAddPrice = ref(false)
 const modalWarranty = ref(false)
+const modalReport = ref(false)
 const lastCalculatedJobId = ref(null)
 const showRatingModal = ref(false)
 const showCancelModal = ref(false)
 const receiverId = computed(() => props.selectedJob?.selectedTechnician)
 const getReview = ref()
+const isHaveWarranty = ref(false)
 
 // ambil nama yang melakukan cancel
 const cancelByName = computed(() => {
@@ -131,6 +134,22 @@ async function getReviewByJobId(jobId){
   }
 }
 
+async function getWarrantyByJobId(jobId){
+  try {
+    const warranty = await apiFetch(`/warranty/${jobId}/get-warranty-by-jobId`)
+    console.log('warranties 1 : ', Boolean(warranty.data.warranty));
+    console.log(
+      'warranties 1 : ',
+      Boolean(warranty.data.warranty)
+    );
+
+    return Boolean(warranty.data.warranty)
+    
+  } catch (error) {
+    sweetAlert.error(error.message)
+  }
+}
+
 async function getTechnicianProfile(technicianId){
   try {
     const response = await getProfile(technicianId)
@@ -177,6 +196,13 @@ const handleDoneJob = async () => {
 const handleIsWarranty = async(jobId)=>{
   modalWarranty.value = true
   
+}
+
+const handleReportTechnician = () => {
+  if (role !== 'client' || props.selectedJob?.status !== 'completed')
+    return
+
+  modalReport.value = true
 }
 
 const handleCancelJobs = async()=>{
@@ -250,7 +276,8 @@ watch(() => props.selectedJob,
       try {
         profile.value = await getProfile(newVal.idCreator)
         technicianProfile.value = await getProfile(newVal.selectedTechnician)
-        console.log('jobs detail:', props.selectedJob)
+        isHaveWarranty.value = await getWarrantyByJobId(props.selectedJob._id)
+        console.log('warranties 1:', isHaveWarranty.value)
         console.log('id review : ', newVal._id)
         getReview.value = await getReviewByJobId(newVal._id)
                 
@@ -547,7 +574,8 @@ watch(() => props.selectedJob,
                 v-if="
                   selectedJob.status === 'warranty' &&
                   role === 'client' &&
-                  isWithinWarranty(selectedJob.jobDoneDate)
+                  isWithinWarranty(selectedJob.jobDoneDate) &&
+                  isHaveWarranty == false
                 "
                 class="btn btn--accept"
                 @click="handleIsWarranty(selectedJob?._id)"
@@ -562,6 +590,15 @@ watch(() => props.selectedJob,
               >
                 <i class="ri-check-line"></i>
                 Beri Ulasan
+              </button>
+
+              <button
+                v-if="selectedJob.status === 'completed' && role === 'client'"
+                class="btn btn--reject"
+                @click="handleReportTechnician"
+              >
+                <i class="ri-alarm-warning-line"></i>
+                Laporkan Teknisi
               </button>
               
               <!-- aksi teknisi -->
@@ -627,6 +664,13 @@ watch(() => props.selectedJob,
     :profile="profile"
     :technician-profile="technicianProfile"
     @close="modalWarranty = false"
+   />
+
+   <!-- modal report -->
+   <ReportModal
+    :visible="modalReport"
+    :selected-job="selectedJob"
+    @close="modalReport = false"
    />
 
    <!-- Modal Pop-up Rating -->
