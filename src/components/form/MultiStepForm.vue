@@ -1,10 +1,9 @@
 <script setup>
 import { apiFetch, getProfile } from '@/utils/api'
-import { onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { nextTick } from 'vue'
 import { getCurrentLocation, useDestination } from '@/utils/tools'
 import { config, editor } from '../../utils/tools'
 import sweetAlert from '@/utils/sweetAlert'
@@ -16,9 +15,6 @@ const props = defineProps({
   technicianId: String,
 })
 
-const styles = {
-  '--cui-form-multi-select-cleaner-height': '200px',
-}
  
 const description = ref('')
 const router = useRouter()
@@ -27,6 +23,7 @@ const userId = localStorage.getItem('userId')
 
 const technicianProfile = ref({})
 const uploadedFiles = ref([])
+const errors = reactive({})
 
 const title = ref('')
 const category = ref('Elektronik')
@@ -100,15 +97,63 @@ function onFileChange(newFiles) {
 }
 
 
-
-
 async function getSkills(id){
   const response = await apiFetch(`/skills/${id}`)
   
   return response.data.skill.label
 }
 
+function setFieldError(field, message) {
+  errors[field] = message
+}
+
+function clearErrors() {
+  Object.keys(errors).forEach(key => {
+    delete errors[key]
+  })
+}
+
+function getDescriptionText() {
+  const wrapper = document.createElement('div')
+  wrapper.innerHTML = description.value || ''
+
+  return (wrapper.textContent || '').replace(/\u00a0/g, ' ').trim()
+}
+
+function validateForm() {
+  clearErrors()
+
+  if (!title.value.trim()) {
+    setFieldError('title', 'Judul perbaikan wajib diisi')
+  }
+
+  if (
+    !category.value ||
+    (technicianProfile.value.skills?.length && !technicianProfile.value.skills.includes(category.value))
+  ) {
+    setFieldError('category', 'Pilih kategori kerusakan')
+  }
+
+  if (needDeadline.value && (!vStartDate.value || !vEndDate.value)) {
+    setFieldError('deadline', 'Pilih rentang tanggal pengerjaan')
+  }
+
+  if (!getDescriptionText()) {
+    setFieldError('description', 'Deskripsi kerusakan wajib diisi')
+  }
+
+  if (!selectedDestination.value?.[0]?.value) {
+    setFieldError('destination', 'Kode pos atau lokasi wajib dipilih')
+  }
+
+  return Object.keys(errors).length === 0
+}
+
 async function postJob() {
+  if (!validateForm()) {
+    sweetAlert.error('Periksa kembali data yang wajib diisi')
+    return
+  }
   
   const formData = new FormData()
   formData.append('title', title.value)
@@ -238,12 +283,19 @@ onMounted(async () => {
           <p class="field-hint">Buat judul yang mudah dipahami teknisi</p>
           <CFormInput
             class="field-input"
+            :class="{ invalid: errors.title }"
             v-model="title"
             name="title"
             type="text"
             placeholder="cth: kulkas saya tidak dingin"
             required
           />
+          <small
+            v-if="errors.title"
+            class="error-text"
+          >
+            {{ errors.title }}
+          </small>
           <ul class="example-list">
             <li>lemari pendingin saya tidak dingin</li>
             <li>meja kerja saya permukaannya retak</li>
@@ -258,7 +310,10 @@ onMounted(async () => {
             Kategori Kerusakan
           </label>
           <p class="field-hint">Pilih kategori yang sesuai dengan barangmu</p>
-          <div class="category-options">
+          <div
+            class="category-options"
+            :class="{ invalid: errors.category }"
+          >
             <label
               v-for="opt in technicianProfile.skills"
               :key="opt"
@@ -269,6 +324,12 @@ onMounted(async () => {
               {{ opt }}
             </label>
           </div>
+          <small
+            v-if="errors.category"
+            class="error-text"
+          >
+            {{ errors.category }}
+          </small>
         </div>
       </div>
  
@@ -294,7 +355,14 @@ onMounted(async () => {
             v-model:start-date="vStartDate"
             v-model:end-date="vEndDate"
             class="mt-3"
+            :class="{ invalid: errors.deadline }"
           />
+          <small
+            v-if="errors.deadline"
+            class="error-text"
+          >
+            {{ errors.deadline }}
+          </small>
         </div>
  
         <!-- Foto -->
@@ -334,7 +402,10 @@ onMounted(async () => {
             Deskripsi
           </label>
           <p class="field-hint">Ceritakan lebih detail tentang kerusakan barangmu</p>
-          <div class="editor-wrapper">
+          <div
+            class="editor-wrapper"
+            :class="{ invalid: errors.description }"
+          >
             <ckeditor
               v-if="editor && config"
               v-model="description"
@@ -342,6 +413,12 @@ onMounted(async () => {
               :config="config"
             />
           </div>
+          <small
+            v-if="errors.description"
+            class="error-text"
+          >
+            {{ errors.description }}
+          </small>
         </div>
  
         <!-- Lokasi -->
@@ -365,8 +442,15 @@ onMounted(async () => {
               @change="(val) => { selectedDestination = val }"
               @filter-change="handleSearch"
               placeholder="masukkan kode pos"
+              :class="{ invalid: errors.destination }"
 
             />
+            <small
+              v-if="errors.destination"
+              class="error-text"
+            >
+              {{ errors.destination }}
+            </small>
           <!-- <p>Dipilih: {{ selectedDestination }}</p> -->
           <p class="field-hint">Klik peta atau seret penanda untuk menentukan lokasi</p>
           <div id="map" class="map-container"></div>
@@ -488,10 +572,32 @@ onMounted(async () => {
   color: #6b7280;
   margin: 0;
 }
+
+.error-text {
+  color: #c72f43;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 0.15rem;
+}
  
 /* ===== Input ===== */
 .field-input {
   margin-top: 0.25rem;
+}
+
+.field-input.invalid,
+.editor-wrapper.invalid {
+  border-color: #e45264 !important;
+}
+
+.category-options.invalid .category-chip {
+  border-color: #e45264;
+}
+
+:deep(.c-multi-select.invalid .form-multi-select),
+:deep(.c-date-range-picker.invalid .form-control),
+:deep(.c-date-range-picker.invalid .form-select) {
+  border-color: #e45264 !important;
 }
  
 /* ===== Example list ===== */
