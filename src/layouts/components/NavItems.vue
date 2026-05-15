@@ -20,6 +20,11 @@ const menuItems = computed(() => {
         icon: 'ri-user-search-line',
         to: '/skill-management',
       },
+      {
+        title: 'Laporan pelanggan',
+        icon: 'ri-tools-line',
+        to: 'report-history',
+      },
 
     ]
   }
@@ -28,14 +33,19 @@ const menuItems = computed(() => {
     return [
 
       {
-        title: 'Accepted Jobs',
+        title: 'Pengajuan perbaikan',
         icon: 'ri-tools-line',
         to: 'accepted-jobs',
       },
       {
-        title: 'Warranty Request',
+        title: 'Pengajuan garansi',
         icon: 'ri-tools-line',
         to: 'warranty-request',
+      },
+      {
+        title: 'Laporan pelanggan',
+        icon: 'ri-tools-line',
+        to: 'report-history',
       },
     ]
   }

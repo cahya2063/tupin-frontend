@@ -1,15 +1,25 @@
 <script setup>
 import { apiFetch, getProfile } from '@/utils/api'
-import { nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { nextTick, onMounted, reactive, ref } from 'vue'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
-import { getCurrentLocation, useDestination } from '@/utils/tools'
-import { config, editor } from '../../utils/tools'
+import { config, editor, useLocationPicker } from '@/utils/tools'
 import sweetAlert from '@/utils/sweetAlert'
 import { useRouter } from 'vue-router'
 
-const {destinationList, handleSearch, getDestination} = useDestination()
+const {
+  destinationList,
+  handleSearch,
+  selectedDestination,
+  postCodeError,
+  lat,
+  lng,
+  initLocationMap,
+  getMyLocation,
+  handleDestinationChange,
+  resetLocation,
+} = useLocationPicker({
+  clearDestinationWhenPostCodeChanges: true,
+})
 
 const props = defineProps({
   technicianId: String,
@@ -30,17 +40,7 @@ const category = ref('Elektronik')
 const needDeadline = ref(false)
 const vStartDate = ref(null)
 const vEndDate = ref(null)
-const postCode = ref(null)
-const postCodeError = ref('')
 const today = new Date()
-// const destinationList = ref([])
-const selectedDestination = ref([])
- 
-const lat = ref(-8.2192)
-const lng = ref(114.3691)
- 
-let map
-let marker
  
 // function handleFileUpload(e) {
 //   photoFile.value = e.target.files[0]
@@ -48,33 +48,6 @@ let marker
 function toLocalISODate(date) {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
   return local.toISOString().split('T')[0]
-}
-const getPosCode = async(lat, lng)=>{
-  try {
-    const response = await apiFetch('/ongkir/get-poscode', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({lat: lat, lon: lng})
-    })
-    return response.data.location.address.postcode
-  } catch (error) {
-    console.log('error : ', error);
-    
-  }
-}
-
-const getMyLocation = async () => {
-  try {
-    const posisi = await getCurrentLocation()
-    lat.value = posisi.lat
-    lng.value = posisi.lng
-    map.flyTo([posisi.lat, posisi.lng], 15)
-    marker.setLatLng([posisi.lat, posisi.lng])
-  } catch (err) {
-    console.error('Gagal ambil lokasi:', err)
-  }
 }
 
 function onFileChange(newFiles) {
@@ -195,12 +168,8 @@ async function postJob() {
     vEndDate.value = null
     description.value = ''
     uploadedFiles.value = []
-    postCode.value = null
     destinationList.value = []
-    lat.value = -8.2192
-    lng.value = 114.3691
-    marker?.setLatLng([lat.value, lng.value])
-    map?.setView([lat.value, lng.value], 13)
+    resetLocation()
 
     router.push('/posted-jobs')
   }
@@ -208,25 +177,6 @@ async function postJob() {
     sweetAlert.error(response.data.message)
   }
 }
- 
-watch([lat, lng], async ([lat1, lng1]) => {
-  const location = await getPosCode(lat1, lng1)
-
-  if (!location) {
-    postCode.value = null
-    postCodeError.value = 'Kode pos tidak ditemukan, silakan input manual'
-    return
-  }
-
-  console.log('test : ', location);
-  postCode.value = location
-  postCodeError.value = ''
-
-  // 🔥 auto ambil destination
-  await getDestination(location)
-  
-})
-
 onMounted(async () => {
   
   technicianProfile.value = await getProfile(props.technicianId)
@@ -239,28 +189,7 @@ onMounted(async () => {
   console.log('profile teknisi : ', technicianProfile.value.skills);
   
   await nextTick()
-  map = L.map('map', {
-    zoomControl: false,
-  }).setView([lat.value, lng.value], 13)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap & Carto',
-  }).addTo(map)
- 
-  marker = L.marker([lat.value, lng.value], { draggable: true }).addTo(map)
- 
-  marker.on('dragend', function () {
-    const position = marker.getLatLng()
-    lat.value = position.lat
-    lng.value = position.lng
-  })
- 
-  map.on('click', function (e) {
-    lat.value = e.latlng.lat
-    lng.value = e.latlng.lng
-    marker.setLatLng(e.latlng)
-  })
- 
-  map.invalidateSize()
+  initLocationMap('map')
 })
  
 
@@ -439,7 +368,7 @@ onMounted(async () => {
               :multiple="false"
               :options="destinationList"
               :value="selectedDestination"
-              @change="(val) => { selectedDestination = val }"
+              @change="handleDestinationChange"
               @filter-change="handleSearch"
               placeholder="masukkan kode pos"
               :class="{ invalid: errors.destination }"

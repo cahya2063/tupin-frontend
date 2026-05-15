@@ -74,6 +74,7 @@ const formatRupiah = (val) => 'Rp ' + (val || 0).toLocaleString('id-ID')
         :payer-id="profile?._id"
         :status="selectedJob?.status"
         :receiver-id="selectedJob?.selectedTechnician"
+        @close="emit('close')"
       />
     </CModalFooter>
   </CModal>

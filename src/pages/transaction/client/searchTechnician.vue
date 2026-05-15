@@ -182,9 +182,13 @@ onMounted( async () => {
                 />
                 <div class="name-block">
                   <div class="technician-name">{{ item.nama }}</div>
-                  <div class="address">
+                  <div class="address" v-if="item.receiverLocation?.destinationName">
                     <i class="ri-map-pin-2-line"></i>
-                    {{ item.village }}, {{ item.city }}
+                    {{ item.receiverLocation.destinationName }}
+                  </div>
+                  <div class="address" v-else>
+                    <i class="ri-map-pin-2-line"></i>
+                    {{ item.village }}, {{ item.subdistrict }}, {{ item.city }}
                   </div>
                 </div>
               </div>
