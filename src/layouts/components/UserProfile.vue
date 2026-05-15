@@ -77,7 +77,7 @@ onMounted(async () => {
           <VDivider class="my-2" />
 
           <!-- 👉 Profile -->
-          <VListItem link>
+          <VListItem to="/profile">
             <template #prepend>
               <VIcon
                 class="me-2"

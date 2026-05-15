@@ -59,6 +59,7 @@ async function createWarranty(){
             reason.value = ''
             uploadedFiles.value = []
             showSidebarPostedJobs.value = false
+            emit('close')
         }
     } catch (error) {
         sweetAlert.error(error.message)

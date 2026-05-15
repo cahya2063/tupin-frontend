@@ -85,6 +85,10 @@ export const routes = [
         path: 'skill-management',
         component: ()=> import('@/pages/transaction/admin/skillManagement.vue')
       },
+      {
+        path: 'report-history',
+        component: ()=>import('@/pages/transaction/reportsHistory.vue')
+      },
       // bawaan template
       {
         path: 'typography',

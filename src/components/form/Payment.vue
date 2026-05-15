@@ -14,6 +14,8 @@ const props = defineProps({
   receiverId: String,
 })
 
+const emit = defineEmits(['close'])
+
 // const splitRuleId = ref('splitru_fd9ed2a8-fb35-4e3e-868a-6ea37d3a749b')
 // const idTeknisi = ref(props.subAccountId)
 // async function payGateway() {
@@ -85,6 +87,7 @@ async function payXendit() {
     // ✅ buka di tab baru
     // window.open(payUrl, '_blank')
     sweetAlert.success('Tagihan berhasil dibuat. tunggu pelanggan melakukan pembayaran.')
+    emit('close')
   } catch (error) {
     sweetAlert.error('gagal membuat invoice', error.message)
     console.error(error)

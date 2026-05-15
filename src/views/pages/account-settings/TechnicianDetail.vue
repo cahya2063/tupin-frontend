@@ -92,7 +92,7 @@ onMounted(async () => {
             rounded="lg"
             size="100"
             class="me-6 avatar"
-            :image="accountDataLocal.avatar ? `${backendUrl}/${accountDataLocal.avatar}` : avatar1"
+            :image="accountDataLocal.avatar ? `${backendUrl}${accountDataLocal.avatar}` : avatar1"
           />
 
           <!-- Info -->

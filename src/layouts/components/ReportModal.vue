@@ -16,6 +16,7 @@ const reportCategories = [
   'Hasil tidak sesuai',
   'Penipuan',
   'Pencurian',
+  'Sulit dihubungi',
   'Lainnya',
 ]
 

@@ -94,6 +94,7 @@ const onPriceInput = (e) => {
           :payer-id="profile?._id"
           :status="selectedJob?.status"
           :receiver-id="selectedJob?.selectedTechnician"
+          @close="emit('close')"
         />
       </CModalFooter>
     </CModalBody>

@@ -52,7 +52,7 @@ watch(
             <div class="d-flex align-center justify-space-between">
               <div>
                 <VAvatar size="36">
-                  <VImg :src="review.avatar ? `${backendUrl}/${review.avatar}` : avatar1" /> </VAvatar
+                  <VImg :src="review.avatar ? `${backendUrl}${review.avatar}` : avatar1" /> </VAvatar
                 >&nbsp;
                 <strong>{{ review.user }}</strong>
                 <div class="text-grey text-caption">{{ review.date }}</div>

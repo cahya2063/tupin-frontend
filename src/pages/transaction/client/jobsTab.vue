@@ -1,4 +1,5 @@
 <script setup>
+import ReportsHistory from '../reportsHistory.vue';
 import WarrantyRequest from '../warrantyRequest.vue';
 import PostedJob from './postedJob.vue';
 
@@ -20,6 +21,11 @@ const tabs = [
     title: 'Pengajuan Garansi',
     icon: 'ri-hourglass-line',
     tab: 'warranty-history',
+  },
+  {
+    title: 'Riwayat pelaporan',
+    icon: 'ri-hourglass-line',
+    tab: 'reports-history',
   },
 ]
 
@@ -74,10 +80,15 @@ const tabs = [
       </VWindowItem>
       
 
-      <!-- wallet -->
+      <!-- riwayat garansi -->
       <VWindowItem value="warranty-history">
         <WarrantyRequest></WarrantyRequest>
       </VWindowItem>
+
+      <!-- riwayat pelaporan -->
+       <VWindowItem value="reports-history">
+        <ReportsHistory></ReportsHistory>
+       </VWindowItem>
 
 
     </VWindow>

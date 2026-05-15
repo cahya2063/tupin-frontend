@@ -35,6 +35,7 @@ const showCancelModal = ref(false)
 const receiverId = computed(() => props.selectedJob?.selectedTechnician)
 const getReview = ref()
 const isHaveWarranty = ref(false)
+const isHaveReports = ref(false)
 
 // ambil nama yang melakukan cancel
 const cancelByName = computed(() => {
@@ -84,6 +85,25 @@ const isWithinWarranty = (jobDoneDate) => {
 
   return diffDays >= 0;
 };
+
+// apakah report sudah 24 jam?
+const isWithinReportTime = (jobDoneDate) => {
+  if (!jobDoneDate) return false
+
+  const doneDate = new Date(jobDoneDate)
+  const now = new Date()
+
+  // selisih waktu dalam milidetik
+  const diffTime = now - doneDate
+
+  // konversi ke jam
+  const diffHours = diffTime / (1000 * 60 * 60)
+
+  console.log('report hours : ', diffHours)
+
+  // hanya tampil selama 24 jam
+  return diffHours >= 0 && diffHours <= 24
+}
 
 
 const openGoogleMaps = () => {
@@ -173,6 +193,18 @@ async function doneJob(jobId){
     sweetAlert.success('Job telah diselesaikan kami tunggu ulasanmu ya!')
   } catch (error) {
     sweetAlert.error('terjadi kesalahan saat menyelesaikan job')
+  }
+}
+
+async function getReportsByJobId(jobId){
+  try {
+    const reports = await apiFetch(`/reports/${jobId}/get-reports-by-jobId`)
+    console.log('reports 1 : ', Boolean(reports.data.reports))
+
+    return Boolean(reports.data.reports)
+    
+  } catch (error) {
+    sweetAlert.error(error.message)
   }
 }
 
@@ -277,8 +309,8 @@ watch(() => props.selectedJob,
         profile.value = await getProfile(newVal.idCreator)
         technicianProfile.value = await getProfile(newVal.selectedTechnician)
         isHaveWarranty.value = await getWarrantyByJobId(props.selectedJob._id)
-        console.log('warranties 1:', isHaveWarranty.value)
-        console.log('id review : ', newVal._id)
+        isHaveReports.value = await getReportsByJobId(props.selectedJob._id)
+        console.log('reports 1:', isHaveReports.value)
         getReview.value = await getReviewByJobId(newVal._id)
                 
       } catch (err) {
@@ -584,7 +616,9 @@ watch(() => props.selectedJob,
                 Klaim garansi
               </button>
               <button
-                v-if="selectedJob.status === 'completed' && role === 'client' && !getReview"
+                v-if="selectedJob.status === 'completed' && 
+                role === 'client' && 
+                !getReview"
                 class="btn btn--checked"
                 @click="showRatingModal = true"
               >
@@ -593,7 +627,10 @@ watch(() => props.selectedJob,
               </button>
 
               <button
-                v-if="selectedJob.status === 'completed' && role === 'client'"
+                v-if="selectedJob.status === 'completed' && 
+                role === 'client' && 
+                isHaveReports == false && 
+                isWithinReportTime(selectedJob.jobDoneDate)"
                 class="btn btn--reject"
                 @click="handleReportTechnician"
               >

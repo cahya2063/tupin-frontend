@@ -179,21 +179,6 @@ const openDetail = async job => {
 }
 
 
-const openReview = () => {
-  showSidebarPostedJobs.value = false
-}
-
-const review = ref()
-
-// async function getReviewByJobId(jobId, userId) {
-//   try {
-//     const response = await apiFetch(`/review/${jobId}/${userId}/get-review-byJobId`)
-//     return response.data.review
-//   } catch (error) {
-//     console.error(error.message)
-//   }
-// }
-
 
 
 onMounted(async () => {

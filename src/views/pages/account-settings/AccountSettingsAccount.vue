@@ -3,15 +3,12 @@ import ReviewContainer from '@/pages/part/ReviewContainer.vue'
 import { apiFetch } from '@/utils/api'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue'
 import avatar1 from '@images/avatars/avatar-1.png'
-import { ref, onMounted } from 'vue'
-import { backendUrl, config, editor, useDestination } from '@/utils/tools'
-
-const { destinationList, handleSearch } = useDestination()
+import { computed, nextTick, onMounted, ref } from 'vue'
+import { backendUrl, config, editor, useLocationPicker } from '@/utils/tools'
+import sweetAlert from '@/utils/sweetAlert'
 
 const userId = localStorage.getItem('userId')
 const role = localStorage.getItem('role')
-
-const selectedDestination = ref([])
 
 const accountDataLocal = ref({
   id: '',
@@ -26,18 +23,65 @@ const accountDataLocal = ref({
   zip_code: '',
   description: '',
   receiverLocation: null,
+  location: null,
+})
+
+function syncDestinationToProfile(selected) {
+  if (!selected) {
+    accountDataLocal.value.receiverLocation = null
+    return
+  }
+
+  accountDataLocal.value.zip_code = selected.zipCode || accountDataLocal.value.zip_code
+  accountDataLocal.value.receiverLocation = {
+    destinationId: selected.value,
+    destinationName: selected.label,
+  }
+}
+
+const {
+  destinationList,
+  handleSearch,
+  selectedDestination,
+  postCode,
+  postCodeError,
+  lat,
+  lng,
+  hasLocationValue,
+  initLocationMap,
+  setMapPosition,
+  getMyLocation,
+  handleDestinationChange,
+} = useLocationPicker({
+  clearDestinationWhenPostCodeChanges: true,
+  onDestinationChange: syncDestinationToProfile,
+  onPostCodeFound: code => {
+    accountDataLocal.value.zip_code = code
+  },
+  onCurrentLocationError: () => {
+    alert('Gagal mengambil lokasi. Pastikan izin lokasi browser aktif.')
+  },
 })
 
 // const description = ref('')
 const refInputEl = ref()
 
-onMounted(getProfile)
+onMounted(async () => {
+  await getProfile()
+  if(role == 'technician'){
+
+    await nextTick()
+    initLocationMap('profile-map')
+  }
+})
 
 // ================== API ==================
 
 async function updateProfile() {
   try {
     const dest = selectedDestination.value[0] || {}
+    const destinationId = dest.value || accountDataLocal.value.receiverLocation?.destinationId || ''
+    const destinationName = dest.label || accountDataLocal.value.receiverLocation?.destinationName || ''
 
     const payload = {
       nama: accountDataLocal.value.name,
@@ -46,12 +90,22 @@ async function updateProfile() {
       village: accountDataLocal.value.village,
       subdistrict: accountDataLocal.value.subdistrict,
       city: accountDataLocal.value.city,
-      zip_code: dest.zipCode || accountDataLocal.value.zip_code,
+      zip_code: dest.zipCode || postCode.value || accountDataLocal.value.zip_code,
       description: accountDataLocal.value.description,
-      receiverLocation: {
-        destinationId: dest.value,
-        destinationName: dest.label,
-      },
+    }
+
+    if (hasLocationValue.value) {
+      payload.location = {
+        type: 'Point',
+        coordinates: [Number(lng.value), Number(lat.value)],
+      }
+    }
+
+    if (destinationId && destinationName) {
+      payload.receiverLocation = {
+        destinationId,
+        destinationName,
+      }
     }
 
     const res = await apiFetch(`/profile/${userId}`, {
@@ -60,10 +114,10 @@ async function updateProfile() {
       body: JSON.stringify(payload),
     })
 
-    alert(res.data.message)
+    sweetAlert.success(res.data.message)
   } catch (err) {
     console.error(err)
-    alert('Gagal update profile ❌')
+    sweetAlert.error(err.message)
   }
 }
 
@@ -85,7 +139,29 @@ async function getProfile() {
       avatar: user.avatar || null,
       description: user.description || '',
       receiverLocation: user.receiverLocation || null,
+      location: user.location || null,
     })
+
+    if (user.receiverLocation?.destinationId && user.receiverLocation?.destinationName) {
+      selectedDestination.value = [{
+        value: user.receiverLocation.destinationId,
+        label: user.receiverLocation.destinationName,
+        zipCode: user.zip_code || '',
+      }]
+    }
+
+    postCode.value = user.zip_code || null
+
+    const coordinates = user.location?.coordinates
+
+    if (Array.isArray(coordinates) && coordinates.length === 2) {
+      const savedLng = Number(coordinates[0])
+      const savedLat = Number(coordinates[1])
+
+      if (Number.isFinite(savedLat) && Number.isFinite(savedLng))
+        setMapPosition(savedLat, savedLng, { zoom: 13, fly: false })
+    }
+
     console.log('profile', accountDataLocal.value)
 
   } catch (err) {
@@ -132,7 +208,13 @@ function resetForm() {
     subdistrict: '',
     city: '',
     zip_code: '',
+    receiverLocation: null,
+    location: null,
   })
+  selectedDestination.value = []
+  postCode.value = null
+  postCodeError.value = ''
+  hasLocationValue.value = false
 }
 
 const phoneModel = computed({
@@ -163,7 +245,7 @@ const phoneModel = computed({
             rounded="lg"
             size="100"
             class="me-6"
-            :image="accountDataLocal.avatar ? `${backendUrl}/${accountDataLocal.avatar}` : avatar1"
+            :image="accountDataLocal.avatar ? `${backendUrl}${accountDataLocal.avatar}` : avatar1"
           />
 
           <!-- 👉 Upload Photo -->
@@ -213,7 +295,7 @@ const phoneModel = computed({
           <!-- 👉 Form -->
           <VForm class="mt-6">
             <VRow>              
-              <VCol cols="12">
+              <VCol cols="12" v-if="role == 'technician'">
                 <div class="ckeditor-wrapper">
                   <ckeditor
                     v-if="editor && config"
@@ -317,20 +399,58 @@ const phoneModel = computed({
               <!-- 👉 Zip Code -->
               <VCol
                 cols="12"
-                md="6"
-              >
+                md="12"
+                v-if="role == 'technician'"
+                >
+                <div class="location-section">
+                  <div class="location-header">
+                    <div>
+                      <h3>Lokasi dan kode pos</h3>
+                      <p>Pilih kode pos, lalu klik peta atau ambil lokasi saat ini.</p>
+                    </div>
+                    <div class="coordinate-pill">
+                      {{ lat.toFixed(5) }}, {{ lng.toFixed(5) }}
+                    </div>
+                  </div>
+
+                  <p
+                    v-if="postCodeError"
+                    class="location-error"
+                  >
+                    {{ postCodeError }}
+                  </p>
+
                   <CMultiSelect
                     :multiple="false"
                     :options="destinationList"
                     :value="selectedDestination"
-                    @change="(val) => { selectedDestination = val }"
+                    @change="handleDestinationChange"
                     @filter-change="handleSearch"
-                    :placeholder="`(Kode Pos) ${accountDataLocal.receiverLocation?.destinationName || 'Masukkan kode pos'}`"
+                    :placeholder="`(Kode Pos) ${accountDataLocal.receiverLocation?.destinationName || postCode || 'Masukkan kode pos'}`"
                     virtual-scroller
                     teleport="body"
-                    
                   />
-                
+
+                  <div
+                    id="profile-map"
+                    class="profile-map"
+                  ></div>
+
+                  <div class="map-footer">
+                    <button
+                      type="button"
+                      class="btn-location"
+                      @click.prevent="getMyLocation"
+                    >
+                      <i class="ri-map-pin-user-line"></i>
+                      Ambil Lokasi Saya
+                    </button>
+
+                    <span class="location-note">
+                      Data ini akan disimpan ke field location user.
+                    </span>
+                  </div>
+                </div>
               </VCol>
 
               
@@ -356,28 +476,7 @@ const phoneModel = computed({
       </VCard>
     </VCol>
 
-    <VCol
-      cols="12"
-      v-show="role == 'technician'"
-    >
-      <!-- 👉 Data Sertifikat -->
-      <VCard title="Data Sertifikat">
-        <VCardText>
-          <div>
-            <VCheckbox label="I confirm my account deactivation" />
-          </div>
-
-          <VBtn
-            color="error"
-            class="mt-3"
-          >
-            Deactivate Account
-          </VBtn>
-        </VCardText>
-      </VCard>
-    </VCol>
-
-    <ReviewContainer :userId="accountDataLocal.id" />
+    <ReviewContainer v-if="role == 'technician'" :userId="accountDataLocal.id" />
   </VRow>
 </template>
 
@@ -386,5 +485,117 @@ const phoneModel = computed({
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 5px;
+}
+
+.location-section {
+  padding: 18px;
+  border: 1px solid #e5e1ff;
+  border-radius: 14px;
+  background: #fbfaff;
+}
+
+.location-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.location-header h3 {
+  margin: 0;
+  color: #1f2140;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.location-header p {
+  margin: 4px 0 0;
+  color: #74778d;
+  font-size: 13px;
+}
+
+.coordinate-pill {
+  flex-shrink: 0;
+  padding: 7px 11px;
+  border: 1px solid #d8d3ff;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #8d58ff;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.location-error {
+  margin: 0 0 10px;
+  color: #c72f43;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.profile-map {
+  width: 100%;
+  height: 280px;
+  margin-top: 14px;
+  overflow: hidden;
+  border: 1px solid #e5e1ff;
+  border-radius: 12px;
+  background: #f4f2ff;
+}
+
+.map-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.btn-location {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1.5px solid #8d58ff;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #8d58ff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn-location:hover {
+  background: #f3efff;
+}
+
+.location-note {
+  color: #74778d;
+  font-size: 12px;
+  text-align: right;
+}
+
+@media (max-width: 600px) {
+  .location-header,
+  .map-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .coordinate-pill,
+  .btn-location {
+    width: 100%;
+  }
+
+  .location-note {
+    text-align: left;
+  }
+
+  .profile-map {
+    height: 220px;
+  }
 }
 </style>
