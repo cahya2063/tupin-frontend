@@ -17,6 +17,18 @@ export const routes = [
         component: () => import('@/pages/transaction/dashboard.vue'),
       },
       {
+        path: 'dashboard-client',
+        component: () => import('@/pages/transaction/client/dashboardClient.vue')
+      },
+      {
+        path: 'dashboard-technician',
+        component: () => import('@/pages/transaction/technician/dashboardTechnician.vue')
+      },
+      {
+        path: 'dashboard-admin',
+        component: () => import('@/pages/transaction/admin/dashboardAdmin.vue')
+      },
+      {
         path: 'jobs/:technicianId',
         component: () => import('@/pages/transaction/client/jobs.vue'),
       },
