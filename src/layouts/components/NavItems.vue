@@ -23,7 +23,12 @@ const menuItems = computed(() => {
       {
         title: 'Laporan pelanggan',
         icon: 'ri-tools-line',
-        to: 'report-history',
+        to: '/report-history',
+      },
+      {
+        title: 'Pelanggaran teknisi',
+        icon: 'ri-tools-line',
+        to: '/penalty-point',
       },
 
     ]
@@ -35,17 +40,17 @@ const menuItems = computed(() => {
       {
         title: 'Pengajuan perbaikan',
         icon: 'ri-tools-line',
-        to: 'accepted-jobs',
+        to: '/accepted-jobs',
       },
       {
         title: 'Pengajuan garansi',
         icon: 'ri-tools-line',
-        to: 'warranty-request',
+        to: '/warranty-request',
       },
       {
         title: 'Laporan pelanggan',
         icon: 'ri-tools-line',
-        to: 'report-history',
+        to: '/report-history',
       },
     ]
   }

@@ -58,6 +58,54 @@ export async function createChat(clientId, technicianId) {
     console.error('Gagal membuat chat:', error)
   }
 }
+export const getStatusJobNormalize = (statusJob)=>{
+  const normalizedJobStatus = statusJob?.toLowerCase()
+  if(normalizedJobStatus == 'open'){
+    return {
+      label: 'pengajuan perbaikan'
+    }
+  }
+  if(normalizedJobStatus == 'pending transport fee'){
+    return {
+      label: 'menunggu pembayaran transportasi'
+    }
+  }
+  if(normalizedJobStatus == 'transport fee paid'){
+    return {
+      label: 'biaya transportasi sudah dibayar'
+    }
+  }
+  if(normalizedJobStatus == 'checked'){
+    return {
+      label: 'Kerusakan sudah diperiksa'
+    }
+  }
+  if(normalizedJobStatus == 'pending repair payment'){
+    return {
+      label: 'menunggu pembayaran perbaikan'
+    }
+  }
+  if(normalizedJobStatus == 'repair paid'){
+    return {
+      label: 'biaya perbaikan sudah dibayar'
+    }
+  }
+  if(normalizedJobStatus == 'warranty'){
+    return {
+      label: 'masa garansi'
+    }
+  }
+  if(normalizedJobStatus == 'completed'){
+    return {
+      label: 'perbaikan selesai'
+    }
+  }
+  if(normalizedJobStatus == 'canceled'){
+    return {
+      label: 'perbaikan dibatalkan'
+    }
+  }
+}
 
 export function useDestination() {
   const destinationList = ref([])

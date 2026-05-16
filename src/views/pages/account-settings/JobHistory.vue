@@ -1,7 +1,7 @@
 <script setup>
 import ReadReview from '@/components/form/ReadReview.vue'
 import { apiFetch, getProfile } from '@/utils/api'
-import { backendUrl } from '@/utils/tools'
+import { backendUrl, getStatusJobNormalize } from '@/utils/tools'
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -113,7 +113,7 @@ onMounted(async () => {
                     size="small"
                     variant="tonal"
                   >
-                    {{ job.status }}
+                    {{ getStatusJobNormalize(job.status).label }}
                   </VChip>
                 </div>
 

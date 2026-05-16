@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { apiFetch } from '@/utils/api'
 
 const props = defineProps({
   id: String,
@@ -7,7 +8,7 @@ const props = defineProps({
   deadline: Object,
   desc: String,
   category: String,
-  status: String,
+  status: Object,
   creator: String,
   technicianName: String,
   avatarPlaceholder: String,
@@ -36,18 +37,18 @@ const toggleShow = () => {
 const hasLongDesc = computed(() => stripHtml(props.desc).split(' ').length > 60)
 
 const statusConfig = computed(() => {
-  const s = props.status?.toLowerCase()
-  if (s === 'open')
+  const s = props.status?.label?.toLowerCase()
+  if (s === 'pengajuan perbaikan')
     return { accent: '#f59e0b', bg: 'rgba(253,246,220,0.95)', text: '#92400e', border: '#fcd34d' }
-  if (s === 'pending transport fee')
+  if (s === 'menunggu pembayaran transportasi')
     return { accent: '#3b82f6', bg: 'rgba(239,246,255,0.95)', text: '#1e3a8a', border: '#93c5fd' }
-  if (s === 'transport fee paid')
+  if (s === 'biaya transportasi sudah dibayar')
     return { accent: '#14532d', bg: 'rgba(240,253,244,0.95)', text: '#14532d', border: '#6ee7b7' }
-  if (s === 'checked')
+  if (s === 'Kerusakan sudah diperiksa')
     return { accent: '#10b981', bg: 'rgba(240,253,244,0.95)', text: '#14532d', border: '#6ee7b7' }
-  if (s === 'completed')
+  if (s === 'perbaikan selesai')
     return { accent: '#10b981', bg: 'rgba(240,253,244,0.95)', text: '#14532d', border: '#6ee7b7' }
-  if (s === 'canceled')
+  if (s === 'perbaikan dibatalkan')
     return { accent: '#ef4444', bg: 'rgba(254,242,242,0.95)', text: '#7f1d1d', border: '#fca5a5' }
   return { accent: '#8d58ff', bg: 'rgba(243,232,255,0.95)', text: '#4c1d95', border: '#c4b5fd' }
 })
@@ -58,6 +59,42 @@ const creatorInitials = computed(() => {
 })
 
 const shortId = computed(() => props.id?.slice(-6) ?? '------')
+
+const paymentStatus = ref('')
+
+const isPaymentStatusVisible = computed(() => {
+  const s = props.status?.label?.toLowerCase()
+  return [
+    'menunggu pembayaran transportasi', 
+    'biaya transportasi sudah dibayar',
+    'menunggu pembayaran perbaikan',
+    'biaya perbaikan sudah dibayar',
+    // 'pending transport fee',
+    // 'transport fee paid',
+    // 'pending repair payment',
+    // 'repair paid'
+  ].includes(s)
+})
+
+const fetchPaymentStatus = async () => {
+  if (!isPaymentStatusVisible.value) return
+  try {
+    const response = await apiFetch(`/payment/${props.id}/get-invoice-by-jobId`)
+    if (response.data) {
+      paymentStatus.value = response.data.payment.status
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+onMounted(() => {
+  fetchPaymentStatus()
+})
+
+watch(() => props.status, () => {
+  fetchPaymentStatus()
+}, { deep: true })
 </script>
 
 <template>
@@ -79,16 +116,31 @@ const shortId = computed(() => props.id?.slice(-6) ?? '------')
         <span class="job-id-header">#{{ shortId }}</span>
       </div>
 
-      <div
-        class="status-badge"
-        :style="{
-          background: statusConfig.bg,
-          color: statusConfig.text,
-          borderColor: statusConfig.border,
-        }"
-      >
-        <span class="status-dot" :style="{ background: statusConfig.text }"></span>
-        {{ status }}
+      <div class="status-wrapper">
+
+        <div
+          class="status-badge"
+          :style="{
+            background: statusConfig.bg,
+            color: statusConfig.text,
+            borderColor: statusConfig.border,
+          }"
+          >
+          <span class="status-dot" :style="{ background: statusConfig.text }"></span>
+          {{ status.label }}
+        </div>
+        <div 
+          class="status-badge payment-status-badge"
+          :style="{
+              background: statusConfig.bg,
+              color: statusConfig.text,
+              borderColor: statusConfig.border,
+            }"
+          v-if="isPaymentStatusVisible"
+          >
+            <span class="status-dot" :style="{ background: statusConfig.text }"></span>
+            {{ paymentStatus === 'PAID' || paymentStatus === 'SETTLED' ? 'Sudah bayar' : 'Belum bayar' }}
+        </div>
       </div>
     </div>
 
@@ -282,6 +334,12 @@ const shortId = computed(() => props.id?.slice(-6) ?? '------')
 }
 
 /* Status badge (tampil di header) */
+
+.status-wrapper{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .status-badge {
   display: inline-flex;
   align-items: center;
