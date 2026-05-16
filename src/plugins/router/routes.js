@@ -89,6 +89,14 @@ export const routes = [
         path: 'report-history',
         component: ()=>import('@/pages/transaction/reportsHistory.vue')
       },
+      {
+        path: 'report-history/:technicianId',
+        component: ()=>import('@/pages/transaction/reportsHistory.vue')
+      },
+      {
+        path: 'penalty-point',
+        component: ()=>import('@/pages/transaction/admin/penaltyPoint.vue')
+      },
       // bawaan template
       {
         path: 'typography',

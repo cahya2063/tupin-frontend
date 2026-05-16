@@ -29,7 +29,7 @@ console.log('debug rating : ', props.ratings);
         
         <div class="card-profile mx-4">
           <img
-            :src="`${backendUrl}/${props.avatar}`"
+            :src="`${backendUrl}${props.avatar}`"
             class="avatar"
           />
           <span>{{ props.senderName }}</span>

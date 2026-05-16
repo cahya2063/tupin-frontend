@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { apiFetch } from '@/utils/api'
 
 const props = defineProps({
   id: String,
@@ -7,7 +8,7 @@ const props = defineProps({
   deadline: Object,
   desc: String,
   category: String,
-  status: String,
+  status: Object,
   creator: String,
   avatarPlaceholder: String,
 })
@@ -36,13 +37,13 @@ const toggleShow = () => {
 const hasLongDesc = computed(() => stripHtml(props.desc).split(' ').length > 60)
 
 const statusConfig = computed(() => {
-  const s = props.status?.toLowerCase()
-  if (s === 'open')   return { accent: '#f59e0b', bg: '#fff8e6', text: '#92400e', border: '#fcd34d', avatarBg: '#f59e0b' }
-  if (s === 'pending transport fee')   return { accent: '#3b82f6', bg: '#eff6ff', text: '#1e3a8a', border: '#93c5fd', avatarBg: '#3b82f6' }
-  if (s === 'transport fee paid')  return { accent: '#14532d', bg: '#f0fdf4', text: '#14532d', border: '#14532d', avatarBg: '#14532d' }
-  if (s === 'checked')      return { accent: '#10b981', bg: '#f0fdf4', text: '#14532d', border: '#6ee7b7', avatarBg: '#10b981' }
-  if (s === 'completed')      return { accent: '#10b981', bg: '#f0fdf4', text: '#14532d', border: '#6ee7b7', avatarBg: '#10b981' }
-  if (s === 'canceled') return { accent: '#ef4444', bg: '#fef2f2', text: '#7f1d1d', border: '#fca5a5', avatarBg: '#ef4444' }
+  const s = props.status?.label?.toLowerCase()
+  if (s === 'pengajuan perbaikan')   return { accent: '#f59e0b', bg: '#fff8e6', text: '#92400e', border: '#fcd34d', avatarBg: '#f59e0b' }
+  if (s === 'menunggu pembayaran transportasi')   return { accent: '#3b82f6', bg: '#eff6ff', text: '#1e3a8a', border: '#93c5fd', avatarBg: '#3b82f6' }
+  if (s === 'biaya transportasi sudah dibayar')  return { accent: '#14532d', bg: '#f0fdf4', text: '#14532d', border: '#14532d', avatarBg: '#14532d' }
+  if (s === 'Kerusakan sudah diperiksa')      return { accent: '#10b981', bg: '#f0fdf4', text: '#14532d', border: '#6ee7b7', avatarBg: '#10b981' }
+  if (s === 'perbaikan selesai')      return { accent: '#10b981', bg: '#f0fdf4', text: '#14532d', border: '#6ee7b7', avatarBg: '#10b981' }
+  if (s === 'perbaikan dibatalkan') return { accent: '#ef4444', bg: '#fef2f2', text: '#7f1d1d', border: '#fca5a5', avatarBg: '#ef4444' }
   return { accent: '#8d58ff', bg: '#f4f0ff', text: '#4c1d95', border: '#c4b5fd', avatarBg: '#8d58ff' }
 })
 
@@ -52,6 +53,42 @@ const creatorInitials = computed(() => {
 })
 
 const shortId = computed(() => props.id?.slice(-6) ?? '------')
+
+const paymentStatus = ref('')
+
+const isPaymentStatusVisible = computed(() => {
+  const s = props.status?.label?.toLowerCase()
+  return [
+    'menunggu pembayaran transportasi', 
+    'biaya transportasi sudah dibayar',
+    'menunggu pembayaran perbaikan',
+    'biaya perbaikan sudah dibayar',
+    // 'pending transport fee',
+    // 'transport fee paid',
+    // 'pending repair payment',
+    // 'repair paid'
+  ].includes(s)
+})
+
+const fetchPaymentStatus = async () => {
+  if (!isPaymentStatusVisible.value) return
+  try {
+    const response = await apiFetch(`/payment/${props.id}/get-invoice-by-jobId`)
+    if (response.data) {
+      paymentStatus.value = response.data.payment.status
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+onMounted(() => {
+  fetchPaymentStatus()
+})
+
+watch(() => props.status, () => {
+  fetchPaymentStatus()
+}, { deep: true })
 </script>
 
 <template>
@@ -74,16 +111,30 @@ const shortId = computed(() => props.id?.slice(-6) ?? '------')
           </div>
         </div>
 
-        <div
-          class="status-badge"
-          :style="{
-            background: statusConfig.bg,
-            color: statusConfig.text,
-            borderColor: statusConfig.border,
-          }"
-        >
-          <span class="status-dot" :style="{ background: statusConfig.text }"></span>
-          {{ status }}
+        <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+          <div
+            class="status-badge"
+            :style="{
+              background: statusConfig.bg,
+              color: statusConfig.text,
+              borderColor: statusConfig.border,
+            }"
+          >
+            <span class="status-dot" :style="{ background: statusConfig.text }"></span>
+            {{ status.label }}
+          </div>
+          <div 
+            class="status-badge payment-status-badge"
+            :style="{
+                background: statusConfig.bg,
+                color: statusConfig.text,
+                borderColor: statusConfig.border,
+              }"
+            v-if="isPaymentStatusVisible"
+            >
+              <span class="status-dot" :style="{ background: statusConfig.text }"></span>
+              {{ paymentStatus === 'PAID' || paymentStatus === 'SETTLED' ? 'Sudah bayar' : 'Belum bayar' }}
+          </div>
         </div>
       </div>
 

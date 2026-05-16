@@ -2,7 +2,7 @@
 import Payment from '@/components/form/Payment.vue';
 import { apiFetch, getProfile } from '@/utils/api';
 import sweetAlert from '@/utils/sweetAlert';
-import { backendUrl, createChat } from '@/utils/tools';
+import { backendUrl, createChat, getStatusJobNormalize } from '@/utils/tools';
 import { onMounted, ref, watch } from 'vue';
 import ShippingCostModal from './ShippingCostModal.vue';
 import AddPriceModal from './AddPriceModal.vue';
@@ -292,13 +292,13 @@ async function handlePriceInput(jobId){
 
 const statusConfig = (s) => {
   const st = s?.toLowerCase()
-  if (st === 'open')      return { color: '#f59e0b', bg: '#fff8e6', text: '#92400e', label: st }
-  if (st === 'pending transport fee')   return { color: '#3b82f6', bg: '#eff6ff', text: '#1e3a8a', label: st }
-  if (st === 'transport fee paid')      return { color: '#14532d', bg: '#f0fdf4', text: '#14532d', label: st }
-  if (st === 'checked')      return { color: '#10b981', bg: '#f4f0ff', text: '#4c1d95', label: st }
-  if (st === 'completed') return { color: '#10b981', bg: '#f0fdf4', text: '#14532d', label: st }
-  if (st === 'canceled') return { color: '#ef4444', bg: '#fef2f2', text: '#7f1d1d', label: st }
-  return { color: '#8d58ff', bg: '#f4f0ff', text: '#4c1d95', label: s }
+  if (st === 'open')      return { color: '#f59e0b', bg: '#fff8e6', text: '#92400e', status: getStatusJobNormalize(st) }
+  if (st === 'pending transport fee')   return { color: '#3b82f6', bg: '#eff6ff', text: '#1e3a8a', status: getStatusJobNormalize(st) }
+  if (st === 'transport fee paid')      return { color: '#14532d', bg: '#f0fdf4', text: '#14532d', status: getStatusJobNormalize(st) }
+  if (st === 'checked')      return { color: '#10b981', bg: '#f4f0ff', text: '#4c1d95', status: getStatusJobNormalize(st) }
+  if (st === 'completed') return { color: '#10b981', bg: '#f0fdf4', text: '#14532d', status: getStatusJobNormalize(st) }
+  if (st === 'canceled') return { color: '#ef4444', bg: '#fef2f2', text: '#7f1d1d', status: getStatusJobNormalize(st) }
+  return { color: '#8d58ff', bg: '#f4f0ff', text: '#4c1d95', status: getStatusJobNormalize(st) }
 }
  
 
@@ -359,20 +359,20 @@ watch(() => props.selectedJob,
             class="status-text"
             :style="{ color: statusConfig(selectedJob?.status).text }"
           >
-            {{ statusConfig(selectedJob?.status).label }}
+            {{ statusConfig(selectedJob?.status).status.label }}
           </span>
 
 
           <!-- pesan pada slide job technician -->
           <span
-            v-if="selectedJob?.status === 'transport fee paid' && role === 'technician'"
+            v-if="statusConfig(selectedJob?.status).status.label === 'biaya transportasi sudah dibayar' && role === 'technician'"
             class="status-hint"
             :style="{ color: statusConfig(selectedJob?.status).text }"
           >
             — segera lakukan pengecekan kerusakan
           </span>
           <span
-            v-if="selectedJob?.status === 'repair paid' && role == 'technician'" 
+            v-if="statusConfig(selectedJob?.status).status.label === 'biaya perbaikan sudah dibayar' && role == 'technician'" 
             class="status-hint"
             :style="{ color: statusConfig(selectedJob?.status).text }"
           >
@@ -381,28 +381,28 @@ watch(() => props.selectedJob,
 
           <!-- pesan pada slide job client -->
            <span
-            v-if="selectedJob?.status === 'pending transport fee' && role === 'client'"
+            v-if="statusConfig(selectedJob?.status).status.label === 'menunggu pembayaran transportasi' && role === 'client'"
             class="status-hint"
             :style="{ color: statusConfig(selectedJob?.status).text }"
           >
-            — menunggu pembayaran transportasi
+            — segera bayar biaya transportasi
           </span>
           <span
-            v-if="selectedJob?.status === 'transport fee paid' && role === 'client'"
+            v-if="statusConfig(selectedJob?.status).status.label === 'biaya transportasi sudah dibayar' && role === 'client'"
             class="status-hint"
             :style="{ color: statusConfig(selectedJob?.status).text }"
           >
             — menunggu pengecekan teknisi
           </span>
           <span
-            v-if="selectedJob?.status === 'repair paid' && role == 'client'" 
+            v-if="statusConfig(selectedJob?.status).status.label === 'biaya perbaikan sudah dibayar' && role == 'client'" 
             class="status-hint"
             :style="{ color: statusConfig(selectedJob?.status).text }"
           >
             — Tunggu teknisi selesai memperbaiki alatmu
           </span>
           <span
-            v-if="selectedJob?.status === 'warranty' && role == 'client'" 
+            v-if="statusConfig(selectedJob?.status).status.label === 'masa garansi' && role == 'client'" 
             class="status-hint"
             :style="{ color: statusConfig(selectedJob?.status).text }"
           >
@@ -439,7 +439,7 @@ watch(() => props.selectedJob,
                     color: statusConfig(selectedJob.status).text
                   }"
                 >
-                  {{ statusConfig(selectedJob.status).label }}
+                  {{ statusConfig(selectedJob?.status).status.label }}
                 </span>
               </div>
               <div class="info-card info-card--wide">

@@ -9,7 +9,7 @@ import ReviewModal from '@/components/form/ReviewModal.vue'
 import Payment from '@/components/form/Payment.vue'
 import SlideJobDetail from '@/layouts/components/SlideJobDetail.vue'
 import CardJobClient from '@/layouts/components/CardJobClient.vue'
-import { showSidebarPostedJobs, socket, useJobUpdater } from '@/utils/tools'
+import { getStatusJobNormalize, showSidebarPostedJobs, socket, useJobUpdater } from '@/utils/tools'
 
 
 const selectedJob = ref(null)
@@ -258,7 +258,7 @@ onUnmounted(() => {
             :deadline="item.deadline"
             :desc="item.description"
             :category="item.category"
-            :status="item.status"
+            :status="getStatusJobNormalize(item.status)"
             :creator="item.creatorName"
             :technician-name="item.technicianName"
             :avatarPlaceholder="avatar1"

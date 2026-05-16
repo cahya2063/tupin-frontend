@@ -7,7 +7,7 @@ import sweetAlert from '@/utils/sweetAlert'
 import ReviewModal from '@/components/form/ReviewModal.vue'
 import SlideJobDetail from '@/layouts/components/SlideJobDetail.vue'
 import CardJobTechnician from '@/layouts/components/CardJobTechnician.vue'
-import { socket, useJobUpdater } from '@/utils/tools'
+import { getStatusJobNormalize, socket, useJobUpdater } from '@/utils/tools'
 
 const avatars = ref({})
 const role = localStorage.getItem('role')
@@ -143,7 +143,7 @@ onUnmounted(() => {
             :deadline="item.deadline"
             :desc="item.description"
             :category="item.category"
-            :status="item.status"
+            :status="getStatusJobNormalize(item.status)"
             :creator="item.creatorName"
             :avatarPlaceholder="avatar1"
             class="job-card-item"

@@ -1,12 +1,16 @@
 <script setup>
-import { apiFetch } from '@/utils/api'
+import { apiFetch, getProfile } from '@/utils/api'
 import sweetAlert from '@/utils/sweetAlert'
 import { backendUrl } from '@/utils/tools'
 import { computed, onMounted, ref } from 'vue'
 import ReportActionModal from '@/layouts/components/ReportActionModal.vue'
+import { useRoute } from 'vue-router'
 
 const userId = localStorage.getItem('userId')
 const role = localStorage.getItem('role')
+
+const route = useRoute()
+const technicianId = route.params.technicianId
 
 const reports = ref([])
 const jobs = ref([])
@@ -17,23 +21,28 @@ const activeFilter = ref('all')
 const isActionModalOpen = ref(false)
 const actionType = ref('approve')
 const isActionLoading = ref(false)
+const technicianPoint = ref()
 
 const reportCategories = [
   {
+    //barang tetap rusak
     category: 'Hasil tidak sesuai',
     point: 5
   },
   {
+    // ada biaya tambahan diluar biaya awal
     category: 'Penipuan',
-    point: 15
+    point: 20
   },
   {
+    // membawa alat pelanggan dan tidak dikembalikan
     category: 'Pencurian',
     point: 50
   },
   {
+    // slow respon
     category: 'Sulit dihubungi',
-    point: 50
+    point: 15
   },
   {
     category: 'Lainnya',
@@ -208,6 +217,28 @@ async function getReportsByUserId(id) {
     isLoading.value = false
   }
 }
+async function getReportsByTechnicianId(technicianId) {
+  if (!technicianId) {
+    sweetAlert.error('User tidak ditemukan, silakan login ulang')
+    return
+  }
+
+  try {
+    isLoading.value = true
+
+    console.log('technicianId : ', technicianId);
+    
+    const response = await apiFetch(`/reports/${technicianId}/get-reports-by-technicianId`)
+
+    reports.value = response.data?.reports || []
+    jobs.value = response.data?.jobs || []
+    console.log('reports : ', response.data)
+  } catch (error) {
+    sweetAlert.error(error.message || 'Gagal mengambil riwayat pelaporan')
+  } finally {
+    isLoading.value = false
+  }
+}
 
 function openActionModal(type) {
   actionType.value = type
@@ -270,10 +301,23 @@ async function getAllReports(){
 onMounted(async () => {
   if(role == 'admin'){
     await getAllReports()
+
+    if(technicianId){      
+      await getReportsByTechnicianId(technicianId)
+    }
+  }
+  else if(role == 'technician'){
+
+    const profile = await getProfile(userId)
+
+    technicianPoint.value = profile.penaltyPoint || 0
+
+    console.log('teknisi point : ', technicianPoint.value);
+
+    await getReportsByUserId(userId)
   }
   else{
-
-      await getReportsByUserId(userId)
+    await getReportsByUserId(userId)
   }
 
 })
@@ -291,7 +335,7 @@ onMounted(async () => {
 
         <div class="summary-panel" v-if="role == 'technician'">
           <div class="summary-item">
-            <span class="summary-value">{{ totalPenaltyPoints }}</span>
+            <span class="summary-value">{{ technicianPoint }}</span>
             <span class="summary-label">Poin Penalti</span>
           </div>
         </div>

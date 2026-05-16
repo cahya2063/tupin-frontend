@@ -65,7 +65,6 @@ const emit = defineEmits(['close'])
       </div>
       <div class="modal-section" v-show="role == 'client'">
         <small class="modal-section-label">Kategori</small>
-        <CFormCheck type="radio" id="flexRadioVModel1" inline label="kerusakan terlalu parah" value="repair_not_worth_it" v-model="category"/>
         <CFormCheck type="radio" id="flexRadioVModel3" inline label="Harga terlalu mahal" value="price_too_high" v-model="category"/>
         <CFormCheck type="radio" id="flexRadioVModel2" inline label="berubah pikiran" value="changed_mind_after_inspection" v-model="category"/>
       </div>

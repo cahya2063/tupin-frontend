@@ -6,6 +6,7 @@ import { ref } from 'vue'
 import Swal from 'sweetalert2'
 import ReviewContainer from '@/pages/part/ReviewContainer.vue'
 import { backendUrl, createChat } from '@/utils/tools'
+import sweetAlert from '@/utils/sweetAlert'
 
 // const route = useRoute()
 // const technicianId = route.params.id // dari :id di path
@@ -19,6 +20,9 @@ const props = defineProps({
   technicianId : String
 })
 
+const rating = ref(0)
+const jobsCompletedCount = ref(0)
+
 const accountDataLocal = ref({
   id: '',
   name: '',
@@ -31,10 +35,23 @@ const accountDataLocal = ref({
   subdistrict: '',
   city: '',
   zip_code: '',
-  ratings : 0,
+  // ratings : 0,
   description: '',
-  skills: []
+  skills: [],
+  isActive: true
 })
+
+async function getTechnicianStatistics(receiverId){
+  try {
+    const response = await apiFetch(`/review/${receiverId}/get-technician-statistics`)
+    console.log('data statistics : ', response.data);
+    rating.value = response.data.avgRating
+    jobsCompletedCount.value = response.data.completedJobs
+    
+  } catch (error) {
+    sweetAlert.error(error.message)
+  }
+}
 
 async function getProfile() {
   try {
@@ -54,9 +71,10 @@ async function getProfile() {
       city: response.data.user.city || '',
       zip_code: response.data.user.zip_code || '',
       avatar: response.data.user.avatar || null, // default avatar jika kosong
-      ratings: response.data.user.ratings || 0,
+      // ratings: response.data.user.ratings || 0,
       description: response.data.user.description || '',
       skills: response.data.user.skills || [],
+      isActive: response.data.user.isActive
     }    
   } catch (err) {
     console.error(err.message)
@@ -76,6 +94,7 @@ onMounted(async () => {
       return await getSkills(skillId)
     })
   )
+  await getTechnicianStatistics(props.technicianId)
   // getDetailJobs(jobId)
 })
 </script>
@@ -100,11 +119,11 @@ onMounted(async () => {
             <div class="name">
               {{ accountDataLocal.name }}
             </div>
-            <CRating v-model="accountDataLocal.ratings" />
+            <CRating readOnly :precision="0.25" v-model="rating" class="card-rating" />
             
 
             <div class="completed-job">
-              4 pekerjaan terselesaikan
+              {{ jobsCompletedCount }} pekerjaan terselesaikan
             </div>
           </div>
 
