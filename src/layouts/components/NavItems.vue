@@ -11,6 +11,11 @@ const menuItems = computed(() => {
   if (role === 'admin') {
     return [
       {
+        title: 'Dashboard',
+        icon: 'ri-home-line',
+        to: '/dashboard-admin',
+      },
+      {
         title: 'Pendaftaran teknisi',
         icon: 'ri-user-search-line',
         to: '/technician-registration',
@@ -38,6 +43,11 @@ const menuItems = computed(() => {
     return [
 
       {
+        title: 'Dashboard',
+        icon: 'ri-home-line',
+        to: '/dashboard-technician',
+      },
+      {
         title: 'Pengajuan perbaikan',
         icon: 'ri-tools-line',
         to: '/accepted-jobs',
@@ -61,23 +71,7 @@ const menuItems = computed(() => {
 
 <template>
   <!-- 👉 Dashboard -->
-  <VerticalNavGroup
-    :item="{
-      title: 'Menu',
-      icon: 'ri-home-smile-line',
-    }"
-  >
-    <VerticalNavLink
-      :item="{
-        title: 'Home',
-        to: '/dashboard',
-      }"
-    />
-  </VerticalNavGroup>
-
-  <VerticalNavSectionTitle
-    :item="{ heading: 'Apps & Pages' }"
-  />
+ 
 
   <!-- 👉 Menu berdasarkan role -->
   <VerticalNavLink

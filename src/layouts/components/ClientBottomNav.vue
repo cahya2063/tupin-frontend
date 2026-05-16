@@ -10,7 +10,7 @@ const navItems = [
     label: 'Home',
     icon: 'ri-home-5-line',
     iconActive: 'ri-home-5-fill',
-    to: '/dashboard',
+    to: '/dashboard-client',
   },
   {
     label: 'Teknisi',

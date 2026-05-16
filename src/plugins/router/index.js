@@ -22,7 +22,15 @@ router.beforeEach((to, from, next) => {
     })
   }
   if (token && guestPages.includes(to.path)) {
-    // Kalau sudah login redirect ke dashboard
+    const role = localStorage.getItem('role')
+    if (role === 'pelanggan' || role === 'client') {
+      return next({ path: '/dashboard-client' })
+    } else if (role === 'admin') {
+      return next({ path: '/dashboard-admin' })
+    } else if (role === 'teknisi' || role === 'technician') {
+      return next({ path: '/dashboard-technician' })
+    }
+    // Kalau sudah login redirect ke dashboard default
     return next({ path: '/dashboard' })
   }
   // if (to.meta?.roles) {

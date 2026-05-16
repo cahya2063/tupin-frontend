@@ -35,7 +35,16 @@ async function loginUser() {
       localStorage.setItem('userId', result.data.id)
       localStorage.setItem('role', result.data.role)
       setTimeout(() => {
-        router.push('/dashboard')
+        const userRole = result.data.role
+        if (userRole === 'pelanggan' || userRole === 'client') {
+          router.push('/dashboard-client')
+        } else if (userRole === 'admin') {
+          router.push('/dashboard-admin')
+        } else if (userRole === 'teknisi' || userRole === 'technician') {
+          router.push('/dashboard-technician')
+        } else {
+          router.push('/dashboard')
+        }
       }, 2000)
     }
   } catch (error) {
