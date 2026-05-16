@@ -118,7 +118,7 @@ export const routes = [
   },
   {
     path: '/',
-    component: () => import('@/components/LoginRegisterLayout.vue'),
+    component: () => import('@/pages/auth/LoginRegisterLayout.vue'),
     children: [
       {
         path: 'login',

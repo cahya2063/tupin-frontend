@@ -10,22 +10,38 @@ import TemplateFooter from '@/views/TemplateFooter.vue'
 <template>
   <div class="landing-page">
     <Navbar />
-    <FirstContent />
-    <SecondContent></SecondContent>
-    <ThirdContent></ThirdContent>
-    <FourthContent></FourthContent>
+    <main class="landing-content">
+      <FirstContent />
+      <SecondContent />
+      <ThirdContent />
+      <FourthContent />
+    </main>
+    <footer class="footer">
+      <TemplateFooter />
+    </footer>
   </div>
-  <footer class="footer">
-    <TemplateFooter />
-  </footer>
-  <!-- <teleport to="footer">
-    </teleport> -->
 </template>
 
 <style scoped>
 .landing-page {
-  width: 85%;
-  margin-inline: auto;
-  margin-top: 20px;
+  font-family: 'Quicksand', 'Poppins', sans-serif;
+  background-color: #ffffff;
+  color: #171421;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-content {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+
+.footer {
+  margin-top: auto;
 }
 </style>
