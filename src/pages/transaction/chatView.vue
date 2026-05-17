@@ -1,8 +1,10 @@
 <script setup>
 import { apiFetch } from '@/utils/api'
 import { onMounted, ref } from 'vue'
-import { socket } from '@/utils/tools'
+import { backendUrl, socket } from '@/utils/tools'
 import sweetAlert from '@/utils/sweetAlert'
+import avatar1 from '@images/avatars/avatar-1.png'
+
 
 
 
@@ -15,6 +17,23 @@ const messages = ref([])
 const newMessage = ref('')
 const isMobileView = ref(false)
 const showChat = ref(false)
+const uploadedFiles = ref([])
+const showUploadArea = ref(false)
+
+function onFileChange(newFiles) {
+  if (newFiles.length < uploadedFiles.value.length) {
+    uploadedFiles.value = newFiles
+    return
+  }
+  const merged = [...uploadedFiles.value, ...newFiles]
+  uploadedFiles.value = merged.filter((file, index, self) =>
+    index === self.findIndex(f =>
+      f.name === file.name &&
+      f.size === file.size &&
+      f.lastModified === file.lastModified
+    )
+  )
+}
 
 async function getProfile(userId) {
   try {
@@ -44,8 +63,14 @@ onMounted(async () => {
       const profileTeknisi = await getProfile(item.technicianId)
       return {
         ...item,
-        client: { nama: profileClient?.user?.nama || 'Client' },
-        teknisi: { nama: profileTeknisi?.user?.nama || 'Teknisi' },
+        client: { 
+          nama: profileClient?.user?.nama || 'Client',
+          avatar: profileClient.user?.avatar || avatar1
+        },
+        teknisi: { 
+          nama: profileTeknisi?.user?.nama || 'Teknisi',
+          avatar: profileTeknisi?.user.avatar || avatar1
+        },
       }
     }),
   )
@@ -82,26 +107,48 @@ async function selectChat(chat) {
 }
 
 async function sendMessage() {
-  if (!newMessage.value.trim() || !selectedChat.value) return
+  if (!newMessage.value.trim() && uploadedFiles.value.length === 0) return
+  if (!selectedChat.value) return
 
-  const msg = {
-    chatId: selectedChat.value._id,
-    senderId: userId,
-    message: newMessage.value,
-    messageType: 'message',
-    createdAt: new Date(),
+  if (uploadedFiles.value.length > 0) {
+    const formData = new FormData()
+    formData.append('chatId', selectedChat.value._id)
+    formData.append('senderId', userId)
+    formData.append('messageType', 'image')
+    formData.append('message', newMessage.value)
+    
+    uploadedFiles.value.forEach(file => {
+      formData.append('images', file)
+    })
+
+    uploadedFiles.value = []
+    newMessage.value = ''
+    showUploadArea.value = false
+
+    await apiFetch(`/messages/send`, {
+      method: 'POST',
+      body: formData,
+    })
+  } else {
+    const msg = {
+      chatId: selectedChat.value._id,
+      senderId: userId,
+      message: newMessage.value,
+      messageType: 'message',
+      createdAt: new Date(),
+    }
+
+    // mentrigger event send_message di server
+    socket.emit('send_message', msg)
+
+    await apiFetch(`/messages/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(msg),
+    })
+
+    newMessage.value = ''
   }
-
-  // mentrigger event send_message di server
-  socket.emit('send_message', msg)
-
-  await apiFetch(`/messages/send`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(msg),
-  })
-
-  newMessage.value = ''
 }
 
 async function shareLocation() {
@@ -114,13 +161,6 @@ async function shareLocation() {
   navigator.geolocation.getCurrentPosition(async position => {
     const { latitude, longitude } = position.coords
 
-    // const msg = {
-    //   chatId: selectedChat.value._id,
-    //   senderId: userId,
-    //   messageType: 'location',
-    //   message: `https://www.google.com/maps?q=${latitude},${longitude}`,
-    //   // createdAt: new Date()
-    // }
     const msg = {
       chatId: selectedChat.value._id,
       senderId: userId,
@@ -175,7 +215,9 @@ function formatDate(date) {
           :class="{ active: chat._id === selectedChat?._id }"
           @click="selectChat(chat)"
         >
-          <div class="avatar"></div>
+          <div class="avatar">
+            <img :src="userRole == 'technician'? backendUrl+chat.client?.avatar : backendUrl+chat.teknisi?.avatar" alt="avatar">
+          </div>
           <div class="chat-meta">
             <h4>
               {{ userRole == 'technician' ? chat.client?.nama : chat.teknisi?.nama }}
@@ -183,6 +225,7 @@ function formatDate(date) {
             <p class="last">Klik untuk membuka percakapan</p>
           </div>
           <span class="chat-time">Oct 26</span>
+          
         </li>
       </ul>
     </aside>
@@ -202,7 +245,9 @@ function formatDate(date) {
           >
             ←
           </button>
-          <div class="avatar header"></div>
+          <div class="avatar">
+            <img :src="userRole == 'technician' ? backendUrl+selectedChat.client?.avatar : backendUrl+selectedChat.teknisi?.avatar" alt="avatar">
+          </div>
           <div>
             <h4>{{ userRole == 'technician' ? selectedChat.client?.nama : selectedChat.teknisi?.nama }}</h4>
             <small>{{ userRole == 'technician' ? `client` : `teknisi` }}</small>
@@ -221,9 +266,7 @@ function formatDate(date) {
             <p>{{ msg.message }}</p>
             <iframe
               :src="`https://www.google.com/maps?q=${msg.latitude},${msg.longitude}&hl=es;z=14&output=embed`"
-              width="250"
-              height="150"
-              style="border: 0; border-radius: 8px; margin-top: 5px"
+              style="width: 100%; max-width: 250px; height: 150px; border: 0; border-radius: 8px; margin-top: 5px"
               allowfullscreen=""
               loading="lazy"
             ></iframe>
@@ -238,6 +281,22 @@ function formatDate(date) {
             </a>
           </template>
 
+          <!-- Jika pesan gambar -->
+          <template v-else-if="msg.messageType === 'image'">
+            <p v-if="msg.message">{{ msg.message }}</p>
+            <div v-if="msg.images && msg.images.length > 0" class="image-gallery">
+              <a 
+                v-for="img in msg.images" 
+                :key="img" 
+                :href="`${backendUrl}/uploads/chat/${img}`" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <img :src="`${backendUrl}/uploads/chat/${img}`" class="chat-img" />
+              </a>
+            </div>
+          </template>
+
           <!-- Jika pesan biasa -->
           <template v-else>
             <p>{{ msg.message }}</p>
@@ -247,21 +306,32 @@ function formatDate(date) {
         </div>
       </div>
 
-      <footer class="chat-footer">
-        <input
-          v-model="newMessage"
-          type="text"
-          placeholder="Type your message"
-          @keyup.enter="sendMessage"
-        />
-        <button @click="shareLocation">
-          <i
-            class="ri-map-pin-line"
-            style="font-size: 24px"
-          ></i>
-        </button>
-        <button @click="sendMessage">Send ➤</button>
-      </footer>
+      <div class="footer-container">
+        <div v-if="showUploadArea" class="upload-area">
+          <v-file-upload
+            :model-value="uploadedFiles"
+            @update:modelValue="onFileChange"
+            multiple
+            clearable
+            accept="image/*"
+          />
+        </div>
+        <footer class="chat-footer">
+          <button @click="showUploadArea = !showUploadArea" class="btn-icon">
+            <i class="ri-attachment-line" style="font-size: 24px"></i>
+          </button>
+          <input
+            v-model="newMessage"
+            type="text"
+            placeholder="Type your message"
+            @keyup.enter="sendMessage"
+          />
+          <button @click="shareLocation" class="btn-icon">
+            <i class="ri-map-pin-line" style="font-size: 24px"></i>
+          </button>
+          <button @click="sendMessage">Send ➤</button>
+        </footer>
+      </div>
     </main>
 
     <main
@@ -348,6 +418,14 @@ function formatDate(date) {
   background: #a855f7;
   border-radius: 50%;
   margin-right: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .avatar.small {
@@ -400,6 +478,7 @@ function formatDate(date) {
   height: 45px;
   background: #a855f7;
   border-radius: 50%;
+  margin-right: 0;
 }
 
 .chat-body {
@@ -460,15 +539,31 @@ function formatDate(date) {
 }
 
 /* Input */
+.footer-container {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-top: 1px solid #eee;
+}
+
+.upload-area {
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #eee;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 .chat-footer {
   display: flex;
+  align-items: center;
   padding: 1rem 2rem;
-  border-top: 1px solid #eee;
   background: #fff;
+  gap: 10px;
 }
 
 .chat-footer input {
   flex: 1;
+  min-width: 0;
   border: none;
   border-radius: 20px;
   padding: 0.8rem 1rem;
@@ -478,7 +573,6 @@ function formatDate(date) {
 }
 
 .chat-footer button {
-  margin-left: 1rem;
   padding: 0.6rem 1.2rem;
   border: none;
   background: #a855f7;
@@ -487,10 +581,41 @@ function formatDate(date) {
   cursor: pointer;
   font-weight: 500;
   transition: background 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .chat-footer button:hover {
   background: #9333ea;
+}
+
+.chat-footer .btn-icon {
+  background: transparent;
+  color: #6b7280;
+  padding: 0.5rem;
+  border-radius: 50%;
+}
+
+.chat-footer .btn-icon:hover {
+  background: #f0f2f5;
+  color: #a855f7;
+}
+
+.image-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.chat-img {
+  width: 100%;
+  /* height: 120px; */
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 /* Empty */
@@ -507,6 +632,23 @@ function formatDate(date) {
   }
 }
 @media (max-width: 992px) {
+  .msg {
+    max-width: 85%;
+  }
+
+  .upload-area {
+    padding: 0.8rem 1rem;
+  }
+
+  .chat-footer {
+    padding: 0.8rem 1rem;
+    gap: 8px;
+  }
+  
+  .chat-footer button {
+    padding: 0.6rem 1rem;
+  }
+
   .chat-wrapper {
     position: relative; /* pastikan anak-anak bisa absolute penuh */
     width: 100%;
