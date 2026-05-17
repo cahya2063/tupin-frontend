@@ -28,7 +28,21 @@ const activationToken = computed(() => {
   return token || ''
 })
 
+const activationRole = computed(() => {
+  const role = route.query.role
 
+  if (Array.isArray(role))
+    return role[0] || ''
+
+  return role || ''
+})
+
+const activationEndpoint = computed(() => {
+  if (activationRole.value === 'client')
+    return '/client/activate'
+
+  return '/technician/activate'
+})
 
 const canSubmit = computed(() => Boolean(activationToken.value) && !isSubmitting.value)
 
@@ -66,7 +80,7 @@ function validateForm() {
 }
 
 
-async function activateTechnician() {
+async function activateAccount() {
   alertMessage.value = ''
   status.value = 'idle'
 
@@ -76,7 +90,7 @@ async function activateTechnician() {
   try {
     isSubmitting.value = true
 
-    const response = await apiFetch(`/technician/activate`, {
+    const response = await apiFetch(activationEndpoint.value, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -87,24 +101,30 @@ async function activateTechnician() {
       })
     })
 
-    console.log('response : ', response);
-    
+    console.log('response : ', response)
 
     if (response.status != 200) {
       status.value = 'error'
-      alertMessage.value = response.message || 'Token aktivasi tidak valid atau sudah kedaluwarsa.'
+      alertMessage.value =
+        response.message || 'Token aktivasi tidak valid atau sudah kedaluwarsa.'
+
       return
     }
 
     status.value = 'success'
-    alertMessage.value = response.message || 'Password berhasil dibuat. Silakan login dengan akun teknisi kamu.'
+
+    alertMessage.value =
+      response.message || 'Password berhasil dibuat.'
+
     form.password = ''
     form.passwordConfirmation = ''
   }
   catch (error) {
-    console.error('Gagal aktivasi teknisi:', error)
+    console.error('Gagal aktivasi akun:', error)
+
     status.value = 'error'
-    alertMessage.value = 'Tidak bisa terhubung ke server. Coba lagi beberapa saat lagi.'
+    alertMessage.value =
+      'Tidak bisa terhubung ke server. Coba lagi beberapa saat lagi.'
   }
   finally {
     isSubmitting.value = false
@@ -133,18 +153,12 @@ function goLogin() {
         <span>Fixify</span>
       </button>
 
-      <RouterLink
-        to="/login"
-        class="login-shortcut"
-      >
-        Masuk
-      </RouterLink>
+      
     </nav>
 
     <section class="activation-layout">
       <aside class="activation-copy">
         <div>
-          <span class="eyebrow">Aktivasi akun teknisi</span>
           <h1>Buat password baru untuk mulai menerima pekerjaan.</h1>
           <p>
             Akun teknisi kamu sudah disetujui. Amankan akun dengan password baru
@@ -208,7 +222,7 @@ function goLogin() {
           v-if="activationToken && status !== 'success'"
           class="password-form"
           novalidate
-          @submit.prevent="activateTechnician"
+          @submit.prevent="activateAccount"
         >
           <label class="field-group">
             <span>Password Baru</span>
@@ -240,34 +254,7 @@ function goLogin() {
             </small>
           </label>
 
-          <!-- <div class="strength-box">
-            <div class="strength-top">
-              <span>Kekuatan password</span>
-              <strong>{{ strengthLabel }}</strong>
-            </div>
-
-            <div
-              class="strength-meter"
-              aria-hidden="true"
-            >
-              <span
-                :style="{ width: strengthProgress }"
-                :class="`score-${passwordScore}`"
-              ></span>
-            </div>
-
-            <ul class="rule-list">
-              <li
-                v-for="rule in passwordRules"
-                :key="rule.label"
-                :class="{ valid: rule.valid }"
-              >
-                <i :class="rule.valid ? 'ri-checkbox-circle-line' : 'ri-circle-line'"></i>
-                <span>{{ rule.label }}</span>
-              </li>
-            </ul>
-          </div> -->
-
+        
           <label class="field-group">
             <span>Konfirmasi Password</span>
             <div
@@ -317,14 +304,6 @@ function goLogin() {
           </span>
           <h3>Password berhasil diperbarui</h3>
           <p>Akun teknisi kamu sudah siap digunakan di Fixify.</p>
-          <button
-            type="button"
-            class="primary-button"
-            @click="goLogin"
-          >
-            <i class="ri-login-circle-line"></i>
-            Masuk Sekarang
-          </button>
         </div>
 
         <div
