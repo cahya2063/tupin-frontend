@@ -146,9 +146,10 @@ onUnmounted(() => {
             :status="getStatusJobNormalize(item.status)"
             :creator="item.creatorName"
             :avatarPlaceholder="avatar1"
+            :selectedJob="item"
             class="job-card-item"
-            @click="getDetailJobs(item._id)"
-          />
+            />
+            <!-- @click="getDetailJobs(item._id)" -->
         </div>
       </template>
  
@@ -172,12 +173,7 @@ onUnmounted(() => {
     </div>
   </div>
  
-  <!-- ── Sidebar detail job ── -->
-  <SlideJobDetail
-    :showSidebar="showSidebar"
-    :selectedJob="selectedJob"
-    @close="showSidebar = false"
-  />
+  
  
   <!-- ── Review modal ── -->
   <ReviewModal

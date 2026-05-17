@@ -1,6 +1,15 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { apiFetch } from '@/utils/api'
+import SlideJobDetail from './SlideJobDetail.vue'
+import { showSidebarPostedJobs } from '@/utils/tools'
+import sweetAlert from '@/utils/sweetAlert'
+import CancelJobModal from './CancelJobModal.vue'
+import WarrantyModal from './WarrantyModal.vue'
+import ReviewModal from '@/components/form/ReviewModal.vue'
+import ReportModal from './ReportModal.vue'
+
+const role = localStorage.getItem('role')
 
 const props = defineProps({
   id: String,
@@ -11,10 +20,27 @@ const props = defineProps({
   status: Object,
   creator: String,
   technicianName: String,
+  selectedJob: Object,
   avatarPlaceholder: String,
 })
 
+
 const showFull = ref(false)
+const showCancelModal = ref(false)
+const isHaveWarranty = ref(false)
+const modalWarranty = ref(false)
+const showRatingModal = ref(false)
+const getReview = ref()
+const userId = localStorage.getItem('userId')
+const receiverId = computed(() => props.selectedJob?.selectedTechnician)
+const modalReport = ref(false)
+const isHaveReports = ref(false)
+
+
+const profile = ref()
+
+
+
 
 const stripHtml = text => text?.replace(/<[^>]*>/g, '').trim() ?? ''
 
@@ -88,7 +114,165 @@ const fetchPaymentStatus = async () => {
   }
 }
 
-onMounted(() => {
+async function checkedJob(jobId){
+  try {
+    const response = await apiFetch(`/jobs/${jobId}/checked-job`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    sweetAlert.success(response.data.message)
+  } catch (error) {
+    sweetAlert.error('Gagal mengonfirmasi pengecekan')
+  }
+
+}
+async function handleChekedJob(jobId){
+
+  const result = await sweetAlert.confirm({
+    title: 'Apakah teknisi sudah melakukan pengecekan kerusakan?',
+    text: 'Pastikan teknisi sudah melakukan pengecekan kerusakan dengan benar sebelum mengonfirmasi.',
+    showCancelButton: false,
+    showCancelButton: true,
+    confirmText: 'Ya, Sudah'
+  })
+
+  if (result.isConfirmed) {
+    await checkedJob(jobId)
+  }
+}
+
+const handleCancelJobs = async()=>{
+  showCancelModal.value = true
+}
+
+async function doneJob(jobId){
+  try {
+    const response = await apiFetch(`/jobs/${jobId}/done-job`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    console.log('done job : ', response);
+    sweetAlert.success('Job telah diselesaikan kami tunggu ulasanmu ya!')
+  } catch (error) {
+    sweetAlert.error('terjadi kesalahan saat menyelesaikan job')
+  }
+}
+
+const handleDoneJob = async () => {
+  const jobId = props.selectedJob._id
+  const result = await sweetAlert.confirm({
+    title: 'Apakah teknisi sudah memperbaiki kerusakan?',
+    text: 'Pastikan teknisi sudah melakukan perbaikan dengan benar sebelum mengonfirmasi.',
+    showCancelButton: false,
+    showCancelButton: true,
+    confirmText: 'Ya, Sudah'
+  })
+
+  if (result.isConfirmed) {
+    await doneJob(jobId)
+  }
+}
+
+async function getWarrantyByJobId(jobId){
+  try {
+    const warranty = await apiFetch(`/warranty/${jobId}/get-warranty-by-jobId`)
+    console.log('warranties 1 : ', Boolean(warranty.data.warranty));
+    console.log(
+      'warranties 1 : ',
+      Boolean(warranty.data.warranty)
+    );
+
+    return Boolean(warranty.data.warranty)
+    
+  } catch (error) {
+    sweetAlert.error(error.message)
+  }
+}
+
+const handleIsWarranty = async(jobId)=>{
+  modalWarranty.value = true
+  
+}
+
+// validasi garansi 3 hari
+const isWithinWarranty = (jobDoneDate) => {
+  if (!jobDoneDate) return false;
+
+  const doneDate = new Date(jobDoneDate);
+  const now = new Date();
+  
+  // hitung selisi ms
+  const diffTime = now - doneDate;
+  // 1 hari = 1000 ms * 60 detik * 60 menit * 24 jam
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+  console.log('warranty debug : ', diffDays);
+
+  return diffDays >= 0;
+};
+
+
+async function getReviewByJobId(jobId){
+  try {
+    const response = await apiFetch(`/review/${jobId}/get-review-byJobId`)
+    return response.data.review
+    
+  } catch (error) {
+    console.error('error : ', error);
+    
+  }
+}
+
+function handleReviewSubmitted(data) {
+  console.log('Review tersimpan:', data)
+  // bisa tambahkan logika refresh data job, dll.
+}
+
+
+// apakah report sudah 24 jam?
+const isWithinReportTime = (jobDoneDate) => {
+  if (!jobDoneDate) return false
+
+  const doneDate = new Date(jobDoneDate)
+  const now = new Date()
+
+  // selisih waktu dalam milidetik
+  const diffTime = now - doneDate
+
+  // konversi ke jam
+  const diffHours = diffTime / (1000 * 60 * 60)
+
+  console.log('report hours : ', diffHours)
+
+  // hanya tampil selama 24 jam
+  return diffHours >= 0 && diffHours <= 24
+}
+
+const handleReportTechnician = () => {
+  if (role !== 'client' || props.selectedJob?.status !== 'completed')
+    return
+
+  modalReport.value = true
+}
+async function getReportsByJobId(jobId){
+  try {
+    const reports = await apiFetch(`/reports/${jobId}/get-reports-by-jobId`)
+
+    return Boolean(reports.data.reports)
+    
+  } catch (error) {
+    sweetAlert.error(error.message)
+  }
+}
+
+onMounted(async () => {
+  isHaveWarranty.value = await getWarrantyByJobId(props.selectedJob._id)
+  getReview.value = await getReviewByJobId(props.selectedJob._id)
+  isHaveReports.value = await getReportsByJobId(props.selectedJob._id)
+  console.log('reports 1:', isHaveReports.value)
   fetchPaymentStatus()
 })
 
@@ -98,102 +282,233 @@ watch(() => props.status, () => {
 </script>
 
 <template>
-  <div class="card">
+  <div class="wrapper">
 
-    <!-- Top accent bar with stripe pattern -->
-    <div class="card-topbar"></div>
-
-    <!-- Hero header dengan warna dominan ungu -->
-    <div class="card-header">
-      <div class="header-left">
-        <div class="role-badge">
-          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 1.5C6.07 1.5 4.5 3.07 4.5 5c0 .74.22 1.43.6 2H2.5a1 1 0 00-1 1v6a1 1 0 001 1h11a1 1 0 001-1V8a1 1 0 00-1-1h-2.6c.38-.57.6-1.26.6-2 0-1.93-1.57-3.5-3.5-3.5z" stroke="currentColor" stroke-width="1.2"/>
-          </svg>
-          {{creator}}
+    <div class="card">
+  
+      <!-- Top accent bar with stripe pattern -->
+      <div class="card-topbar"></div>
+  
+      <!-- Hero header dengan warna dominan ungu -->
+      <div class="card-header">
+        <div class="header-left">
+          <div class="role-badge">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 1.5C6.07 1.5 4.5 3.07 4.5 5c0 .74.22 1.43.6 2H2.5a1 1 0 00-1 1v6a1 1 0 001 1h11a1 1 0 001-1V8a1 1 0 00-1-1h-2.6c.38-.57.6-1.26.6-2 0-1.93-1.57-3.5-3.5-3.5z" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+            {{creator}}
+          </div>
+          <h3 class="card-title">{{ title }}</h3>
+          <span class="job-id-header">#{{ shortId }}</span>
         </div>
-        <h3 class="card-title">{{ title }}</h3>
-        <span class="job-id-header">#{{ shortId }}</span>
-      </div>
-
-      <div class="status-wrapper">
-
-        <div
-          class="status-badge"
-          :style="{
-            background: statusConfig.bg,
-            color: statusConfig.text,
-            borderColor: statusConfig.border,
-          }"
-          >
-          <span class="status-dot" :style="{ background: statusConfig.text }"></span>
-          {{ status.label }}
-        </div>
-        <div 
-          class="status-badge payment-status-badge"
-          :style="{
+  
+        <div class="status-wrapper">
+  
+          <div
+            class="status-badge"
+            :style="{
               background: statusConfig.bg,
               color: statusConfig.text,
               borderColor: statusConfig.border,
             }"
-          v-if="isPaymentStatusVisible"
-          >
+            >
             <span class="status-dot" :style="{ background: statusConfig.text }"></span>
-            {{ paymentStatus === 'PAID' || paymentStatus === 'SETTLED' ? 'Sudah bayar' : 'Belum bayar' }}
+            {{ status.label }}
+          </div>
+          <div 
+            class="status-badge payment-status-badge"
+            :style="{
+                background: statusConfig.bg,
+                color: statusConfig.text,
+                borderColor: statusConfig.border,
+              }"
+            v-if="isPaymentStatusVisible"
+            >
+              <span class="status-dot" :style="{ background: statusConfig.text }"></span>
+              {{ paymentStatus === 'PAID' || paymentStatus === 'SETTLED' ? 'Sudah bayar' : 'Belum bayar' }}
+          </div>
         </div>
+      </div>
+  
+      <div class="card-body">
+  
+        <!-- Creator row dengan background ungu muda -->
+        <div class="creator-row">
+          <div class="creator-avatar">
+            {{ creatorInitials }}
+          </div>
+          <div class="creator-info">
+            <span class="creator-lbl">Diajukan kepada</span>
+            <span class="creator-nm">{{ technicianName }}</span>
+          </div>
+          <span class="creator-tag">Client</span>
+        </div>
+  
+        <!-- Meta: deadline + kategori -->
+        <div class="meta-row">
+          <div v-if="deadline" class="pill pill-deadline">
+            <i class="ri-calendar-event-line pill-icon"></i>
+            Jangka waktu: <strong>{{ formatDate(deadline?.start_date) }}</strong> sampai <strong>{{ formatDate(deadline?.end_date) }}</strong>
+          </div>
+          <div class="pill pill-category">
+            <i class="ri-price-tag-3-line pill-icon"></i>
+            {{ category }}
+          </div>
+        </div>
+  
+        <!-- Deskripsi dengan aksen garis kiri ungu -->
+        <div class="desc-wrap">
+          <p class="desc-text">
+            {{ displayedText }}
+            <template v-if="hasLongDesc">
+              <span class="see-more" @click.stop="toggleShow">
+                {{ showFull ? ' Sembunyikan' : ' Lihat selengkapnya' }}
+              </span>
+            </template>
+          </p>
+        </div>
+  
+        <!-- Footer -->
+        <div class="card-footer">
+          <div class="cat-tag">
+            <i class="ri-price-tag-3-line"></i>
+            {{ category }}
+          </div>
+          
+          <div class="card-actions">
+            <button
+              v-if="role === 'client'"
+              class="action-btn btn-detail"
+              @click="showSidebarPostedJobs = true"
+            >
+              <i class="ri-file-list-3-line"></i>
+              Detail
+            </button>
+            
+            <button
+              v-if="status.label === 'menunggu pembayaran transportasi' && role === 'client'"
+              class="action-btn btn-accept"
+              @click="$router.push('/payment-tabs')"
+            >
+              <i class="ri-check-line"></i>
+              Lihat tagihan transportasi
+            </button>
+            
+            
+            <button
+              v-if="status.label === 'biaya transportasi sudah dibayar' && role === 'client'"
+              class="action-btn btn-reject"
+              @click="handleCancelJobs"
+              >
+              <i class="ri-close-line"></i>
+              Cancel perbaikan
+            </button>
+
+            <button
+              v-if="status.label === 'biaya transportasi sudah dibayar' && role === 'client'"
+              class="action-btn btn-accept"
+              @click="handleChekedJob(id)"
+            >
+              <i class="ri-check-line"></i>
+              Sudah diperiksa setujui perbaikan
+            </button>
+
+            <button
+              v-if="status.label === 'menunggu pembayaran perbaikan' && role == 'client'"
+              class="action-btn btn-accept"
+              @click="$router.push('/payment-tabs')"
+            >
+              <i class="ri-check-line"></i>
+              lihat tagihan perbaikan
+            </button>
+
+            <button
+              v-if="status.label === 'biaya perbaikan sudah dibayar' && role === 'client'"
+              class="action-btn btn-accept"
+              @click="handleDoneJob"
+            >
+              <i class="ri-check-line"></i>
+              Sudah diperbaiki
+            </button>
+
+            <button
+              v-if="
+                status.label === 'masa garansi' &&
+                isWithinWarranty(selectedJob.jobDoneDate) &&
+                isHaveWarranty == false
+              "
+              class="action-btn btn-accept"
+              @click="handleIsWarranty(selectedJob?._id)"
+            >
+              <i class="ri-shield-check-line"></i>
+              Klaim garansi
+            </button>
+
+            <button
+              v-if="status.label === 'perbaikan selesai' && 
+              isHaveReports == false && 
+              isWithinReportTime(selectedJob.jobDoneDate)"
+              class="action-btn btn-reject"
+              @click="handleReportTechnician"
+            >
+              <i class="ri-alarm-warning-line"></i>
+              Laporkan Teknisi
+            </button>
+            
+            <button
+              v-if="status.label === 'perbaikan selesai' &&  
+              !getReview"
+              class="action-btn btn-accept"
+              @click="showRatingModal = true"
+            >
+              <i class="ri-check-line"></i>
+              Beri Ulasan
+            </button>
+            
+            
+
+          </div>
+        </div>
+  
       </div>
     </div>
+    <!-- Sidebar kanan untuk detail job -->
+   <SlideJobDetail
+    :showSidebar="showSidebarPostedJobs"
+    :selectedJob="selectedJob"
+    @close="showSidebarPostedJobs = false"
+  />
 
-    <div class="card-body">
+  <!-- modal warranty -->
+   <WarrantyModal
+    :visible="modalWarranty"
+    :selected-job="selectedJob"
+    @close="modalWarranty = false"
+  />
+    <!-- :profile="profile"
+    :technician-profile="technicianProfile" -->
+    <!-- Modal Pop-up Rating -->
+  <ReviewModal
+    v-model:show="showRatingModal"
+    :sender-id="userId"
+    :receiver-id="receiverId"
+    :job-id="selectedJob?._id"
+    @review-submitted="handleReviewSubmitted"
+    @close="showRatingModal = false"
+  />
 
-      <!-- Creator row dengan background ungu muda -->
-      <div class="creator-row">
-        <div class="creator-avatar">
-          {{ creatorInitials }}
-        </div>
-        <div class="creator-info">
-          <span class="creator-lbl">Diajukan kepada</span>
-          <span class="creator-nm">{{ technicianName }}</span>
-        </div>
-        <span class="creator-tag">Client</span>
-      </div>
+  <!-- modal report -->
+   <ReportModal
+    :visible="modalReport"
+    :selected-job="selectedJob"
+    @close="modalReport = false"
+   />
 
-      <!-- Meta: deadline + kategori -->
-      <div class="meta-row">
-        <div v-if="deadline" class="pill pill-deadline">
-          <i class="ri-calendar-event-line pill-icon"></i>
-          Jangka waktu: <strong>{{ formatDate(deadline?.start_date) }}</strong> sampai <strong>{{ formatDate(deadline?.end_date) }}</strong>
-        </div>
-        <div class="pill pill-category">
-          <i class="ri-price-tag-3-line pill-icon"></i>
-          {{ category }}
-        </div>
-      </div>
-
-      <!-- Deskripsi dengan aksen garis kiri ungu -->
-      <div class="desc-wrap">
-        <p class="desc-text">
-          {{ displayedText }}
-          <template v-if="hasLongDesc">
-            <span class="see-more" @click.stop="toggleShow">
-              {{ showFull ? ' Sembunyikan' : ' Lihat selengkapnya' }}
-            </span>
-          </template>
-        </p>
-      </div>
-
-      <!-- Footer -->
-      <div class="card-footer">
-        <div class="cat-tag">
-          <i class="ri-price-tag-3-line"></i>
-          {{ category }}
-        </div>
-        <div class="footer-right">
-          <span class="job-id">#{{ shortId }}</span>
-        </div>
-      </div>
-
-    </div>
+  <CancelJobModal
+    :visible="showCancelModal"
+    :selected-job="selectedJob"
+    @close="showCancelModal = false"
+  />
   </div>
 </template>
 
@@ -531,12 +846,57 @@ watch(() => props.status, () => {
   border-radius: 50px;
 }
 
-.footer-right {
+.card-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+.action-btn i {
+  font-size: 16px;
+}
+.btn-detail {
+  background: #f4f0ff;
+  color: #8d58ff;
+  border: 1px solid #dcd1ff;
+}
+
+.btn-detail:hover {
+  background: #ede8ff;
+}
+.btn-accept {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-accept:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+.btn-reject {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+}
+
+.btn-reject:hover {
+  background: #fee2e2;
+}
 .job-id {
   font-size: 11px;
   color: #c4b5fd;
@@ -583,7 +943,12 @@ watch(() => props.status, () => {
 
   .card-footer {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .cat-tag {
+    align-self: flex-start;
   }
 
   .job-id {
@@ -598,6 +963,22 @@ watch(() => props.status, () => {
   .card-header {
     flex-wrap: wrap;
     gap: 10px;
+  }
+  .card-actions {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+  
+  .action-btn i {
+    font-size: 14px;
   }
 }
 </style>

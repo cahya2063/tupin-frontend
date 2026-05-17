@@ -61,6 +61,10 @@ async function createWarranty(){
             showSidebarPostedJobs.value = false
             emit('close')
         }
+        else{
+            sweetAlert.error(response.data.message)
+            emit('close')
+        }
     } catch (error) {
         sweetAlert.error(error.message)
     }

@@ -1,16 +1,7 @@
 <script setup>
-import Payment from '@/components/form/Payment.vue';
 import { apiFetch, getProfile } from '@/utils/api';
-import sweetAlert from '@/utils/sweetAlert';
 import { backendUrl, createChat, getStatusJobNormalize } from '@/utils/tools';
 import { onMounted, ref, watch } from 'vue';
-import ShippingCostModal from './ShippingCostModal.vue';
-import AddPriceModal from './AddPriceModal.vue';
-import WarrantyModal from './WarrantyModal.vue';
-import ReportModal from './ReportModal.vue';
-import ReviewModal from '@/components/form/ReviewModal.vue'
-import CancelJobModal from './CancelJobModal.vue';
-
 
 
 const props = defineProps({
@@ -21,21 +12,11 @@ const props = defineProps({
 // console.log('selected job : ', props.selectedJob);
 
 const profile = ref()
-const userId = localStorage.getItem('userId')
 const role = localStorage.getItem('role')
 const technicianProfile = ref()
-const shippingCost = ref()
-const modalShippingCost = ref(false)
+
+
 const modalAddPrice = ref(false)
-const modalWarranty = ref(false)
-const modalReport = ref(false)
-const lastCalculatedJobId = ref(null)
-const showRatingModal = ref(false)
-const showCancelModal = ref(false)
-const receiverId = computed(() => props.selectedJob?.selectedTechnician)
-const getReview = ref()
-const isHaveWarranty = ref(false)
-const isHaveReports = ref(false)
 
 // ambil nama yang melakukan cancel
 const cancelByName = computed(() => {
@@ -65,47 +46,6 @@ const formatDate = date => {
   return date.split('T')[0]
 }
 
-function handleReviewSubmitted(data) {
-  console.log('Review tersimpan:', data)
-  // bisa tambahkan logika refresh data job, dll.
-}
-
-// validasi garansi 3 hari
-const isWithinWarranty = (jobDoneDate) => {
-  if (!jobDoneDate) return false;
-
-  const doneDate = new Date(jobDoneDate);
-  const now = new Date();
-  
-  // hitung selisi ms
-  const diffTime = now - doneDate;
-  // 1 hari = 1000 ms * 60 detik * 60 menit * 24 jam
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
-  console.log('warranty debug : ', diffDays);
-
-  return diffDays >= 0;
-};
-
-// apakah report sudah 24 jam?
-const isWithinReportTime = (jobDoneDate) => {
-  if (!jobDoneDate) return false
-
-  const doneDate = new Date(jobDoneDate)
-  const now = new Date()
-
-  // selisih waktu dalam milidetik
-  const diffTime = now - doneDate
-
-  // konversi ke jam
-  const diffHours = diffTime / (1000 * 60 * 60)
-
-  console.log('report hours : ', diffHours)
-
-  // hanya tampil selama 24 jam
-  return diffHours >= 0 && diffHours <= 24
-}
-
-
 const openGoogleMaps = () => {
   if (!props.selectedJob?.location) return
 
@@ -116,179 +56,6 @@ const openGoogleMaps = () => {
   window.open(url, '_blank') // buka di tab baru
 }
 
-async function calculateShippingCost(jobId){
-  try {
-    shippingCost.value = null // reset
-    
-    const response = await apiFetch(`/ongkir/${jobId}/calculate-shipping-cost`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-
-    })
-
-    console.log('Shipping cost:', response);
-    const data = response.data.shippingCost.data
-
-    shippingCost.value =
-      (
-        data.calculate_instant?.[0]?.shipping_cost
-        ?? data.calculate_reguler?.[0]?.shipping_cost
-        ?? 0
-      ) * 2
-
-  } catch (error) {
-    console.error('Gagal menghitung biaya pengiriman:', error)
-  }
-}
-
-async function getReviewByJobId(jobId){
-  try {
-    const response = await apiFetch(`/review/${jobId}/get-review-byJobId`)
-    return response.data.review
-    
-  } catch (error) {
-    console.error('error : ', error);
-    
-  }
-}
-
-async function getWarrantyByJobId(jobId){
-  try {
-    const warranty = await apiFetch(`/warranty/${jobId}/get-warranty-by-jobId`)
-    console.log('warranties 1 : ', Boolean(warranty.data.warranty));
-    console.log(
-      'warranties 1 : ',
-      Boolean(warranty.data.warranty)
-    );
-
-    return Boolean(warranty.data.warranty)
-    
-  } catch (error) {
-    sweetAlert.error(error.message)
-  }
-}
-
-async function getTechnicianProfile(technicianId){
-  try {
-    const response = await getProfile(technicianId)
-    technicianProfile.value = response
-    console.log('technician profile : ', technicianProfile.value);
-    
-  } catch (error) {
-    console.error('Gagal ambil profile teknisi:', error)
-  }
-}
-
-async function doneJob(jobId){
-  try {
-    const response = await apiFetch(`/jobs/${jobId}/done-job`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    console.log('done job : ', response);
-    sweetAlert.success('Job telah diselesaikan kami tunggu ulasanmu ya!')
-  } catch (error) {
-    sweetAlert.error('terjadi kesalahan saat menyelesaikan job')
-  }
-}
-
-async function getReportsByJobId(jobId){
-  try {
-    const reports = await apiFetch(`/reports/${jobId}/get-reports-by-jobId`)
-    console.log('reports 1 : ', Boolean(reports.data.reports))
-
-    return Boolean(reports.data.reports)
-    
-  } catch (error) {
-    sweetAlert.error(error.message)
-  }
-}
-
-// =================== handle ==============//
-
-const handleDoneJob = async () => {
-  const jobId = props.selectedJob._id
-  const result = await sweetAlert.confirm({
-    title: 'Apakah teknisi sudah memperbaiki kerusakan?',
-    text: 'Pastikan teknisi sudah melakukan perbaikan dengan benar sebelum mengonfirmasi.',
-    showCancelButton: false,
-    showCancelButton: true,
-    confirmText: 'Ya, Sudah'
-  })
-
-  if (result.isConfirmed) {
-    await doneJob(jobId)
-  }
-}
-
-const handleIsWarranty = async(jobId)=>{
-  modalWarranty.value = true
-  
-}
-
-const handleReportTechnician = () => {
-  if (role !== 'client' || props.selectedJob?.status !== 'completed')
-    return
-
-  modalReport.value = true
-}
-
-const handleCancelJobs = async()=>{
-  showCancelModal.value = true
-}
-
-async function handleShippingCost(){
-  const jobId = props.selectedJob?._id
-
-  // update kalau job beda
-  if (jobId !== lastCalculatedJobId.value) {
-    await calculateShippingCost(jobId)
-    lastCalculatedJobId.value = jobId
-  }
-  await getTechnicianProfile(props.selectedJob?.selectedTechnician)
-
-  modalShippingCost.value = true
-}
-async function checkedJob(jobId){
-  try {
-    const response = await apiFetch(`/jobs/${jobId}/checked-job`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    sweetAlert.success(response.data.message)
-  } catch (error) {
-    sweetAlert.error('Gagal mengonfirmasi pengecekan')
-  }
-
-}
-async function handleChekedJob(){
-  const jobId = props.selectedJob?._id
-
-  const result = await sweetAlert.confirm({
-    title: 'Apakah teknisi sudah melakukan pengecekan kerusakan?',
-    text: 'Pastikan teknisi sudah melakukan pengecekan kerusakan dengan benar sebelum mengonfirmasi.',
-    showCancelButton: false,
-    showCancelButton: true,
-    confirmText: 'Ya, Sudah'
-  })
-
-  if (result.isConfirmed) {
-    await checkedJob(jobId)
-  }
-}
-
-
-async function handlePriceInput(jobId){
-    
-  await getTechnicianProfile(props.selectedJob?.selectedTechnician)
-  modalAddPrice.value = true
-}
 
 const statusConfig = (s) => {
   const st = s?.toLowerCase()
@@ -308,10 +75,9 @@ watch(() => props.selectedJob,
       try {
         profile.value = await getProfile(newVal.idCreator)
         technicianProfile.value = await getProfile(newVal.selectedTechnician)
-        isHaveWarranty.value = await getWarrantyByJobId(props.selectedJob._id)
-        isHaveReports.value = await getReportsByJobId(props.selectedJob._id)
-        console.log('reports 1:', isHaveReports.value)
-        getReview.value = await getReviewByJobId(newVal._id)
+        
+        
+        
                 
       } catch (err) {
         console.error('Gagal ambil profile:', err)
@@ -556,117 +322,6 @@ watch(() => props.selectedJob,
                 <i class="ri-map-pin-line"></i>
                 Lihat Lokasi
               </button>
-
-              <button
-                v-if="selectedJob.status === 'pending transport fee' && role === 'client'"
-                class="btn btn--accept"
-                @click="$router.push('/payment-tabs')"
-              >
-                <i class="ri-check-line"></i>
-                lihat tagihan transportasi
-              </button>
-              <button
-                v-if="selectedJob.status === 'pending repair payment' && role === 'client'"
-                class="btn btn--accept"
-                @click="$router.push('/payment-tabs')"
-              >
-                <i class="ri-check-line"></i>
-                lihat tagihan perbaikan
-              </button>
-
-
-              <!-- aksi client -->
-              <button
-                v-if="selectedJob.status === 'transport fee paid' && role === 'client'"
-                class="btn btn--checked"
-                @click="handleChekedJob"
-              >
-                <i class="ri-check-line"></i>
-                Sudah diperiksa dan setujui perbaikan
-              </button>
-
-              <button
-                v-if="selectedJob.status === 'transport fee paid' && role === 'client'"
-                class="btn btn--reject"
-                @click="handleCancelJobs"
-              >
-                <i class="ri-close-line"></i>
-                Cancel Perbaikan
-              </button>
-
-              <button
-                v-if="selectedJob.status === 'repair paid' && role === 'client'"
-                class="btn btn--checked"
-                @click="handleDoneJob"
-              >
-                <i class="ri-check-line"></i>
-                Sudah diperbaiki
-              </button>
-              <button
-                v-if="
-                  selectedJob.status === 'warranty' &&
-                  role === 'client' &&
-                  isWithinWarranty(selectedJob.jobDoneDate) &&
-                  isHaveWarranty == false
-                "
-                class="btn btn--accept"
-                @click="handleIsWarranty(selectedJob?._id)"
-              >
-                <i class="ri-shield-check-line"></i>
-                Klaim garansi
-              </button>
-              <button
-                v-if="selectedJob.status === 'completed' && 
-                role === 'client' && 
-                !getReview"
-                class="btn btn--checked"
-                @click="showRatingModal = true"
-              >
-                <i class="ri-check-line"></i>
-                Beri Ulasan
-              </button>
-
-              <button
-                v-if="selectedJob.status === 'completed' && 
-                role === 'client' && 
-                isHaveReports == false && 
-                isWithinReportTime(selectedJob.jobDoneDate)"
-                class="btn btn--reject"
-                @click="handleReportTechnician"
-              >
-                <i class="ri-alarm-warning-line"></i>
-                Laporkan Teknisi
-              </button>
-              
-              <!-- aksi teknisi -->
-              <button
-                v-if="selectedJob.status === 'open' && role === 'technician'"
-                class="btn btn--accept"
-                @click="handleShippingCost"
-              >
-                <i class="ri-check-line"></i>
-                Terima Job
-              </button>
- 
-              <button
-                v-if="selectedJob.status === 'open' && role === 'technician'"
-                class="btn btn--reject"
-                @click="handleCancelJobs"
-              >
-                <i class="ri-close-line"></i>
-                Tolak Job
-              </button>
- 
-              <button
-                v-if="selectedJob.status === 'checked' && role === 'technician'"
-                class="btn btn--accept"
-                @click="handlePriceInput(selectedJob?._id)"
-              >
-                <i class="ri-check-double-line"></i>
-                Ajukan biaya perbaikan
-              </button>
- 
-              
             </div>
  
           </div>
@@ -674,58 +329,7 @@ watch(() => props.selectedJob,
       </div>
     </div>
   </transition>
- 
-  <!-- ── Modal ongkir ── -->
-  <ShippingCostModal
-    :visible="modalShippingCost"
-    :selected-job="selectedJob"
-    :profile="profile"
-    :technician-profile="technicianProfile"
-    :shipping-cost="shippingCost"
-    @close="modalShippingCost = false"
-  />
 
-  <!-- Modal add price -->
-  <AddPriceModal
-    :visible="modalAddPrice"
-    :selected-job="selectedJob"
-    :profile="profile"
-    :technician-profile="technicianProfile"
-    @close="modalAddPrice = false"
-  />
-
-  <!-- modal warranty -->
-   <WarrantyModal
-    :visible="modalWarranty"
-    :selected-job="selectedJob"
-    :profile="profile"
-    :technician-profile="technicianProfile"
-    @close="modalWarranty = false"
-   />
-
-   <!-- modal report -->
-   <ReportModal
-    :visible="modalReport"
-    :selected-job="selectedJob"
-    @close="modalReport = false"
-   />
-
-   <!-- Modal Pop-up Rating -->
-     <ReviewModal
-       v-model:show="showRatingModal"
-       :sender-id="userId"
-       :receiver-id="receiverId"
-       :job-id="selectedJob?._id"
-       @review-submitted="handleReviewSubmitted"
-       @close="showRatingModal = false"
-     />
-    
-    <!-- Modal Pop-up Cancel -->
-      <CancelJobModal
-        :visible="showCancelModal"
-        :selected-job="selectedJob"
-        @close="showCancelModal = false"
-      />
 </template>
  
 <style>

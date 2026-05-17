@@ -382,7 +382,7 @@ onMounted(async () => {
           v-for="report in filteredReports"
           :key="report._id"
           class="report-card"
-          @click="openDetail(report)"
+          
         >
           <div class="card-topline"></div>
 
@@ -431,6 +431,7 @@ onMounted(async () => {
             <button
               class="detail-button"
               type="button"
+              @click="openDetail(report)"
             >
               Detail
               <i class="ri-arrow-right-line"></i>

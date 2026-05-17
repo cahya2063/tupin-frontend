@@ -12,10 +12,10 @@ export const routes = [
     path: '/',
     component: () => import('@/layouts/default.vue'),
     children: [
-      {
-        path: 'dashboard',
-        component: () => import('@/pages/transaction/dashboard.vue'),
-      },
+      // {
+      //   path: 'dashboard',
+      //   component: () => import('@/pages/transaction/dashboard.vue'),
+      // },
       {
         path: 'dashboard-client',
         component: () => import('@/pages/transaction/client/dashboardClient.vue')

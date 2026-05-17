@@ -77,7 +77,7 @@ export const getStatusJobNormalize = (statusJob)=>{
   }
   if(normalizedJobStatus == 'checked'){
     return {
-      label: 'Kerusakan sudah diperiksa'
+      label: 'kerusakan sudah diperiksa'
     }
   }
   if(normalizedJobStatus == 'pending repair payment'){
