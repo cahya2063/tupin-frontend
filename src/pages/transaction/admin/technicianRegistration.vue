@@ -1,7 +1,7 @@
 <script setup>
+import AnalyticsUserTable from '@/layouts/components/AnalyticsUserTable.vue';
 import { apiFetch } from '@/utils/api';
 import sweetAlert from '@/utils/sweetAlert';
-import AnalyticsUserTable from '@/views/dashboard/AnalyticsUserTable.vue';
 import { onMounted } from 'vue';
 
 const technicians = ref([])

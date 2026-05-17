@@ -37,30 +37,6 @@ const onlyNumber = event => {
   event.target.value = event.target.value.replace(/[^0-9]/g, '')
 }
 
-// const validateForm = () => {
-//   let isValid = true
-
-//   // reset error
-//   amountError.value = ''
-//   accountError.value = ''
-
-//   if (!amount.value || withdrawAmount.value <= 0) {
-//     amountError.value = 'Nominal penarikan wajib diisi'
-//     isValid = false
-//   }
-
-//   if (!accountNumber.value) {
-//     accountError.value = 'Nomor rekening wajib diisi'
-//     isValid = false
-//   }
-
-//   if (withdrawAmount.value > balance.value) {
-//     amountError.value = 'Saldo tidak mencukupi'
-//     isValid = false
-//   }
-
-//   return isValid
-// }
 
 async function getBalance(subAccountId) {
   const response = await apiFetch(`/payment/check-balance/${subAccountId}`)
@@ -68,6 +44,11 @@ async function getBalance(subAccountId) {
 }
 
 const withdraw = async () => {
+  if (balance.value - withdrawAmount.value < 10000) {
+    sweetAlert.error('Penarikan tidak valid dan harus menyisakan saldo sebanyak 10000 Rp')
+    return
+  }
+
   try {
     console.log(`debug payout : ${accountNumber.value} ${channelName.value}, ${withdrawAmount.value}`)
     const request = {
@@ -561,7 +542,7 @@ onMounted(async () => {
 }
 .info-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   font-size: 12px;
   color: #9ca3af;

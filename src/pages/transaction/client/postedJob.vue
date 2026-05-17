@@ -49,7 +49,9 @@ async function getPostedJobs() {
       }),
     )
   } catch (error) {
-    sweetAlert.error('gagal ambil data jobs')
+    // sweetAlert.error(error.message)
+    console.log('error : ', error.message);
+    
     
   }
 

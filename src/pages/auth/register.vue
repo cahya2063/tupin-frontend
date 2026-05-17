@@ -5,7 +5,7 @@ import { apiFetch } from '@/utils/api'
 
 const name = ref('')
 const email = ref('')
-const password = ref('')
+// const password = ref('')
 const alertMessage = ref('')
 const statusCode = ref(null)
 const isSubmitting = ref(false)
@@ -25,7 +25,7 @@ async function registerUser() {
       body: JSON.stringify({
         nama: name.value,
         email: email.value,
-        password: password.value,
+        // password: password.value,
       }),
     })
 
@@ -91,7 +91,7 @@ async function registerUser() {
         >
       </label>
 
-      <label class="field-group">
+      <!-- <label class="field-group">
         <span>Password</span>
         <input
           v-model="password"
@@ -100,7 +100,7 @@ async function registerUser() {
           required
           placeholder="Buat password yang kuat"
         >
-      </label>
+      </label> -->
 
       <div class="form-footer">
         <button
