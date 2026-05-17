@@ -53,7 +53,13 @@ const createRating = async () => {
       },
       body: JSON.stringify(data),
     })
-    sweetAlert.success(response.data.message)
+    if(response.status == 201){
+
+      sweetAlert.success(response.data.message)
+    }
+    else{
+      sweetAlert.error(response.data.message)
+    }
 
     // beri tahu parent bahwa review berhasil dikirim
     emits('review-submitted', response.data)

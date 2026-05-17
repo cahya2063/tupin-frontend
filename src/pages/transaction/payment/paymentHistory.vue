@@ -13,7 +13,7 @@ const isModalDeleteActive = ref(false)
 const selectedDeleteInvoice = ref(null)
 
 const filteredInvoices = computed(() =>
-  payment.value.invoices.filter(i => i.isClientDelete === false).reverse()
+  payment.value.invoices.reverse()
 )
 async function getInvoices(userId) {
   const response = await apiFetch(`/payment/get-invoice/${userId}`)
@@ -22,21 +22,6 @@ async function getInvoices(userId) {
   
 }
 
-async function deleteInvoices(invoiceId){
-  try {
-    isModalDeleteActive.value = false
-    console.log(`delete ${invoiceId}`);
-    
-    const response = await apiFetch(`/payment/delete-invoice/${invoiceId}`,{
-      method: 'DELETE'
-    })
-    sweetAlert.success(response.data.message)
-  } catch (error) {
-    sweetAlert.error(error.message)
-  }
-
-  
-}
 const openDetailInvoice = invoice => {
   selectedInvoice.value = invoice
   isActive.value = true
@@ -90,10 +75,10 @@ onMounted(async () => {
 <template>
   <div class="container">
     <!-- DATA ADA -->
-    <template v-if="payment.invoices.length > 0">
-      <CCard v-for="item in payment.invoices" :key="item.external_id" class="payment-card">
+    <template v-if="filteredInvoices.length > 0">
+      <CCard v-for="item in filteredInvoices" :key="item.external_id" class="payment-card">
         <div class="card-accent"></div>
-        <CCardBody @click="openDetailInvoice(item)">
+        <CCardBody>
           <div class="header">
             <span class="external-id-pill">{{ item.external_id }}</span>
             <span class="date">{{ formatDate(item.created) }}</span>
@@ -126,38 +111,51 @@ onMounted(async () => {
               </div>
             </div>
           </div>
+          <div class="d-flex flex-column gap-2 mt-4">
+            <VBtn
+              v-if="item.status == 'PENDING'"
+              block
+              color="success"
+              variant="outlined"
+              size="large"
+              target="_blank"
+              :href="item.url"
+              prepend-icon="ri-bank-card-line"
+              class="font-weight-bold text-none"
+            >
+              Bayar Sekarang
+            </VBtn>
+
+            <VBtn
+              v-if="item.status == 'PAID' || item.status == 'SETTLED'"
+              block
+              color="success"
+              variant="outlined"
+              size="large"
+              target="_blank"
+              :href="item.url"
+              prepend-icon="ri-receipt-line"
+              class="font-weight-bold text-none"
+            >
+              Lihat Bukti Pembayaran
+            </VBtn>
+
+            <VBtn
+              block
+              color="primary"
+              variant="outlined"
+              size="large"
+              @click="openDetailInvoice(item)"
+              prepend-icon="ri-file-list-3-line"
+              class="font-weight-bold text-none"
+            >
+              Detail Pembayaran
+            </VBtn>
+          </div>
         </CCardBody>
       </CCard>
 
-      <v-dialog
-        v-model="isModalDeleteActive"
-        max-width="400"
-        persistent
-      >
-        <!-- <template v-slot:activator="{ props: activatorProps }">
-          <v-btn v-bind="activatorProps">
-            Open Dialog
-          </v-btn>
-        </template> -->
-
-        <v-card
-          prepend-icon="ri-delete-bin-line"
-          text="Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running."
-          title="Use Google's location service?"
-        >
-          <template v-slot:actions>
-            <v-spacer></v-spacer>
-
-            <v-btn @click="isModalDeleteActive = false">
-              Batal
-            </v-btn>
-
-            <v-btn class="bg-danger white" color="white" @click="deleteInvoices(selectedDeleteInvoice.external_id)">
-              Hapus
-            </v-btn>
-          </template>
-        </v-card>
-      </v-dialog>
+      
     </template>
 
     <!-- DATA KOSONG -->
@@ -306,30 +304,8 @@ onMounted(async () => {
           >
             Tutup
           </VBtn>
-          <VBtn
-            block
-            v-show="selectedInvoice.status == 'PENDING'"
-            color="primary"
-            variant="elevated"
-            size="large"
-            target="_blank"
-            @click="isActive = false"
-            :href="selectedInvoice.url"
-          >
-            Bayar
-          </VBtn>
-          <VBtn
-            block
-            v-show="selectedInvoice.status == 'PAID' || selectedInvoice.status == 'SETTLED'"
-            color="primary"
-            variant="elevated"
-            size="large"
-            target="_blank"
-            @click="isActive = false"
-            :href="selectedInvoice.url"
-          >
-            Lihat Bukti Pembayaran
-          </VBtn>
+          
+          
         </VCardActions>
       </VCard>
     </VDialog>

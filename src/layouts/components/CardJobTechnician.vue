@@ -1,7 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { apiFetch } from '@/utils/api'
+import { apiFetch, getProfile } from '@/utils/api'
+import ShippingCostModal from './ShippingCostModal.vue'
+import CancelJobModal from './CancelJobModal.vue'
+import SlideJobDetail from './SlideJobDetail.vue'
+import AddPriceModal from './AddPriceModal.vue'
 
+const role = localStorage.getItem('role')
+const technicianId = localStorage.getItem('userId')
 const props = defineProps({
   id: String,
   title: String,
@@ -11,7 +17,18 @@ const props = defineProps({
   status: Object,
   creator: String,
   avatarPlaceholder: String,
+  selectedJob: Object
 })
+
+const lastCalculatedJobId = ref(null)
+const modalShippingCost = ref(false)
+const profile = ref()
+const technicianProfile = ref()
+const shippingCost = ref()
+const showCancelModal = ref(false)
+const showDetailJob = ref(false)
+const modalAddPrice = ref(false)
+
 
 const showFull = ref(false)
 
@@ -82,9 +99,76 @@ const fetchPaymentStatus = async () => {
   }
 }
 
+
+
+async function getTechnicianProfile(technicianId){
+  try {
+    const response = await getProfile(technicianId)
+    technicianProfile.value = response
+    console.log('technician profile : ', technicianProfile.value);
+    
+  } catch (error) {
+    console.error('Gagal ambil profile teknisi:', error)
+  }
+}
+
+async function calculateShippingCost(jobId){
+  try {
+
+    shippingCost.value = null // reset
+    
+    const response = await apiFetch(`/ongkir/${jobId}/calculate-shipping-cost`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+
+    })
+
+    console.log('Shipping cost:', response);
+    const data = response.data.shippingCost.data
+
+    shippingCost.value =
+      (
+        data.calculate_instant?.[0]?.shipping_cost
+        ?? data.calculate_reguler?.[0]?.shipping_cost
+        ?? 0
+      ) * 2
+
+  } catch (error) {
+    console.error('Gagal menghitung biaya pengiriman:', error)
+  }
+}
+async function handleShippingCost(jobId){
+  // const jobId = props.selectedJob?._id
+
+  profile.value = await getProfile(props.selectedJob.idCreator)
+  
+  // update kalau job beda
+  if (jobId !== lastCalculatedJobId.value) {
+    await calculateShippingCost(jobId)
+    lastCalculatedJobId.value = jobId
+  }
+  await getTechnicianProfile(technicianId)
+
+  modalShippingCost.value = true
+}
+
+const handleCancelJobs = async()=>{
+  showCancelModal.value = true
+}
+async function handlePriceInput(jobId){
+  
+  profile.value = await getProfile(props.selectedJob.idCreator)
+  await getTechnicianProfile(props.selectedJob?.selectedTechnician)
+  modalAddPrice.value = true
+}
 onMounted(() => {
   fetchPaymentStatus()
+  
 })
+
+
 
 watch(() => props.status, () => {
   fetchPaymentStatus()
@@ -92,95 +176,165 @@ watch(() => props.status, () => {
 </script>
 
 <template>
-  <div class="card">
+  <div class="wrapper">
 
-    <!-- Accent bar warna ikut status -->
-    <div class="card-accent" :style="{ background: statusConfig.accent }"></div>
-
-    <div class="card-body">
-
-      <!-- Baris atas: creator + status badge -->
-      <div class="row-top">
-        <div class="creator-wrap">
-          <div class="creator-avatar" :style="{ background: statusConfig.avatarBg }">
-            {{ creatorInitials }}
+    <div class="card">
+  
+      <!-- Accent bar warna ikut status -->
+      <div class="card-accent" :style="{ background: statusConfig.accent }"></div>
+  
+      <div class="card-body">
+  
+        <!-- Baris atas: creator + status badge -->
+        <div class="row-top">
+          <div class="creator-wrap">
+            <div class="creator-avatar" :style="{ background: statusConfig.avatarBg }">
+              {{ creatorInitials }}
+            </div>
+            <div class="creator-info">
+              <span class="creator-lbl">Dibuat oleh</span>
+              <span class="creator-nm">{{ creator }}</span>
+            </div>
           </div>
-          <div class="creator-info">
-            <span class="creator-lbl">Dibuat oleh</span>
-            <span class="creator-nm">{{ creator }}</span>
-          </div>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
-          <div
-            class="status-badge"
-            :style="{
-              background: statusConfig.bg,
-              color: statusConfig.text,
-              borderColor: statusConfig.border,
-            }"
-          >
-            <span class="status-dot" :style="{ background: statusConfig.text }"></span>
-            {{ status.label }}
-          </div>
-          <div 
-            class="status-badge payment-status-badge"
-            :style="{
+  
+          <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+            <div
+              class="status-badge"
+              :style="{
                 background: statusConfig.bg,
                 color: statusConfig.text,
                 borderColor: statusConfig.border,
               }"
-            v-if="isPaymentStatusVisible"
             >
               <span class="status-dot" :style="{ background: statusConfig.text }"></span>
-              {{ paymentStatus === 'PAID' || paymentStatus === 'SETTLED' ? 'Sudah bayar' : 'Belum bayar' }}
+              {{ status.label }}
+            </div>
+            <div 
+              class="status-badge payment-status-badge"
+              :style="{
+                  background: statusConfig.bg,
+                  color: statusConfig.text,
+                  borderColor: statusConfig.border,
+                }"
+              v-if="isPaymentStatusVisible"
+              >
+                <span class="status-dot" :style="{ background: statusConfig.text }"></span>
+                {{ paymentStatus === 'PAID' || paymentStatus === 'SETTLED' ? 'Sudah bayar' : 'Belum bayar' }}
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="separator"></div>
-
-      <!-- Judul -->
-      <h3 class="card-title">{{ title }}</h3>
-
-      <!-- Meta: deadline + kategori -->
-      <div class="meta-row">
-        <div v-if="deadline?.start_date" class="pill pill-deadline">
-          <i class="ri-calendar-event-line pill-icon"></i>
-          Jangka waktu : <strong>{{ formatDate(deadline?.start_date) }} sampai {{ formatDate(deadline?.end_date) }}</strong>
+  
+        <div class="separator"></div>
+  
+        <!-- Judul -->
+        <h3 class="card-title">{{ title }}</h3>
+  
+        <!-- Meta: deadline + kategori -->
+        <div class="meta-row">
+          <div v-if="deadline?.start_date" class="pill pill-deadline">
+            <i class="ri-calendar-event-line pill-icon"></i>
+            Jangka waktu : <strong>{{ formatDate(deadline?.start_date) }} sampai {{ formatDate(deadline?.end_date) }}</strong>
+          </div>
+          <div v-else-if="deadline?.start_date == null" class="pill pill-deadline">
+            <i class="ri-calendar-event-line pill-icon"></i>
+            Jangka waktu : tidak ada deadline
+          </div>
+          <div class="pill pill-category">
+            <i class="ri-price-tag-3-line pill-icon"></i>
+            {{ category }}
+          </div>
         </div>
-        <div v-else-if="deadline?.start_date == null" class="pill pill-deadline">
-          <i class="ri-calendar-event-line pill-icon"></i>
-          Jangka waktu : tidak ada deadline
+  
+        <!-- Deskripsi -->
+        <div class="desc-wrap">
+          <p class="desc-text">
+            {{ displayedText }}
+            <template v-if="hasLongDesc">
+              <span class="see-more" @click.stop="toggleShow">
+                {{ showFull ? ' Sembunyikan' : ' Lihat selengkapnya' }}
+              </span>
+            </template>
+          </p>
         </div>
-        <div class="pill pill-category">
-          <i class="ri-price-tag-3-line pill-icon"></i>
-          {{ category }}
+  
+        <!-- Footer: tag kategori + job ID -->
+        <div class="card-footer">
+          <div class="cat-tag" :style="{ background: statusConfig.accent }">
+            <i class="ri-price-tag-3-line pill-icon"></i>
+            {{ category }}
+          </div>
+          
+          <div class="card-actions">
+            <button
+              v-if="role === 'technician'"
+              class="action-btn btn-detail"
+              @click="showDetailJob = true"
+            >
+              <i class="ri-file-list-3-line"></i>
+              Detail
+            </button>
+            <template v-if="status.label === 'pengajuan perbaikan' && role === 'technician'">
+              <button
+                class="action-btn btn-reject"
+                @click="handleCancelJobs"
+              >
+                <i class="ri-close-line"></i>
+                Tolak
+              </button>
+              <button
+                class="action-btn btn-accept"
+                @click="handleShippingCost(id)"
+              >
+                <i class="ri-check-line"></i>
+                Terima
+              </button>
+            </template>
+            <template v-if="status.label === 'kerusakan sudah diperiksa' && role === 'technician'">
+
+              <button
+                class="action-btn btn-accept"
+                @click="handlePriceInput(selectedJob?._id)"
+              >
+                <i class="ri-check-double-line"></i>
+                Ajukan biaya perbaikan
+              </button>
+            </template>
+            
+            
+          </div>
         </div>
+  
       </div>
-
-      <!-- Deskripsi -->
-      <div class="desc-wrap">
-        <p class="desc-text">
-          {{ displayedText }}
-          <template v-if="hasLongDesc">
-            <span class="see-more" @click.stop="toggleShow">
-              {{ showFull ? ' Sembunyikan' : ' Lihat selengkapnya' }}
-            </span>
-          </template>
-        </p>
-      </div>
-
-      <!-- Footer: tag kategori + job ID -->
-      <div class="card-footer">
-        <div class="cat-tag" :style="{ background: statusConfig.accent }">
-          <i class="ri-price-tag-3-line pill-icon"></i>
-          {{ category }}
-        </div>
-        <span class="job-id">#{{ shortId }}</span>
-      </div>
-
     </div>
+    <!-- ── Sidebar detail job ── -->
+    <SlideJobDetail
+      :showSidebar="showDetailJob"
+      :selectedJob="selectedJob"
+      @close="showDetailJob = false"
+    />
+    <!-- ── Modal ongkir ── -->
+      <ShippingCostModal
+        :visible="modalShippingCost"
+        :selected-job="selectedJob"
+        :profile="profile"
+        :technician-profile="technicianProfile"
+        :shipping-cost="shippingCost"
+        @close="modalShippingCost = false"
+      />
+      <!-- Modal add price -->
+      <AddPriceModal
+        :visible="modalAddPrice"
+        :selected-job="selectedJob"
+        :profile="profile"
+        :technician-profile="technicianProfile"
+        @close="modalAddPrice = false"
+      />
+      <!-- Modal Pop-up Cancel -->
+      <CancelJobModal
+        :visible="showCancelModal"
+        :selected-job="selectedJob"
+        @close="showCancelModal = false"
+      />
   </div>
 </template>
 
@@ -364,7 +518,64 @@ watch(() => props.status, () => {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.action-btn i {
+  font-size: 16px;
+}
+
+.btn-detail {
+  background: #f4f0ff;
+  color: #8d58ff;
+  border: 1px solid #dcd1ff;
+}
+
+.btn-detail:hover {
+  background: #ede8ff;
+}
+
+.btn-reject {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+}
+
+.btn-reject:hover {
+  background: #fee2e2;
+}
+
+.btn-accept {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-accept:hover {
+  background: #059669;
+  transform: translateY(-1px);
 }
 
 .cat-tag {
@@ -417,7 +628,29 @@ watch(() => props.status, () => {
 
   .card-footer {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .cat-tag {
+    align-self: flex-start;
+  }
+
+  .card-actions {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 6px;
+  }
+
+  .action-btn {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+  
+  .action-btn i {
+    font-size: 14px;
   }
 
   .job-id {

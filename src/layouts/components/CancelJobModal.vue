@@ -6,6 +6,9 @@ import { Ckeditor } from '@ckeditor/ckeditor5-vue'
 
 import { ref } from 'vue';
 
+const emit = defineEmits(['close'])
+
+
 const role = localStorage.getItem('role')
 const props = defineProps({
   visible: Boolean,
@@ -30,13 +33,13 @@ async function cancelJobs(){
       
     })
     console.log('cancel : ', response);
+    emit('close')
     sweetAlert.success('Berhasil menolak job')
   } catch (error) {
     sweetAlert.error(error)
   }
 }
 
-const emit = defineEmits(['close'])
 
 
 </script>

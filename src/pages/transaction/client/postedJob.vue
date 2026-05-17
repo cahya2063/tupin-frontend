@@ -3,13 +3,10 @@ import { apiFetch, getProfile } from '@/utils/api'
 import { onMounted, ref, computed, onUnmounted } from 'vue'
 import avatar1 from '@images/avatars/avatar-1.png'
 // import CardJob from '@/layouts/components/CardJob.vue'
-import sweetAlert from '@/utils/sweetAlert'
-import { CForm } from '@coreui/vue-pro'
-import ReviewModal from '@/components/form/ReviewModal.vue'
-import Payment from '@/components/form/Payment.vue'
-import SlideJobDetail from '@/layouts/components/SlideJobDetail.vue'
+
 import CardJobClient from '@/layouts/components/CardJobClient.vue'
 import { getStatusJobNormalize, showSidebarPostedJobs, socket, useJobUpdater } from '@/utils/tools'
+import sweetAlert from '@/utils/sweetAlert'
 
 
 const selectedJob = ref(null)
@@ -30,9 +27,7 @@ function handleReviewSubmitted(data) {
 // avatars creator
 const avatars = ref({})
 
-const invitesAvatars = ref({})
 
-const isCancelable = computed(() => ['pending', 'request'].includes(selectedJob.value?.status))
 async function getPostedJobs() {
   try {
     
@@ -54,130 +49,11 @@ async function getPostedJobs() {
       }),
     )
   } catch (error) {
-    console.error(error);
+    sweetAlert.error('gagal ambil data jobs')
     
   }
 
 }
-
-
-// fungsi untuk ambil avatar profile
-// const getProfile = async (id, type = 'creator', jobId = null) => {
-//   if (!id) return
-
-//   if (type === 'creator') {
-//     if (avatars.value[id]) return
-//     const response = await apiFetch(`/profile/${id}`)
-//     avatars.value[id] = response.data.user.avatar
-//   }
-
-//   if (type === 'invite' && jobId) {
-//     if (!invitesAvatars.value[jobId]) {
-//       invitesAvatars.value[jobId] = []
-//     }
-
-//     const alreadyFetched = invitesAvatars.value[jobId].find(a => a.userId === id)
-//     if (alreadyFetched) return
-
-//     const response = await apiFetch(`/profile/${id}`)
-//     invitesAvatars.value[jobId].push({
-//       userId: id,
-//       avatar: response.data.user.avatar,
-//     })
-//   }
-// }
-
-async function getSubAccountId(teknisiId) {
-  try {
-    const response = await apiFetch(`/profile/${teknisiId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-
-    return response.data.user.subAccountId
-  } catch (error) {
-    sweetAlert.error(error.message)
-  }
-}
-
-// async function approveJobRequest(jobId) {
-//   try {
-//     const response = await apiFetch(`/jobs/${jobId}/approve-job-request`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//       },
-//     })
-//     // console.log('response approve : ', response.data);
-//     return response.data
-//   } catch (error) {
-//     sweetAlert.error()
-//   }
-// }
-
-// async function completeJob(jobId, status) {
-//   try {
-//     const response = await apiFetch(`/jobs/${jobId}/is-job-completed`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//       },
-//       body: JSON.stringify({ status }),
-//     })
-//     // console.log('response complete : ', response.data);
-//     return response.data
-//   } catch (error) {
-//     sweetAlert.error(error.message)
-//   }
-// }
-async function cancelJob(jobId) {
-  
-  try {
-    const response = await apiFetch(`/jobs/${jobId}/cancel-jobs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    console.log('response cancel : ', response.data)
-    return response.data
-  } catch (error) {
-    console.error('gagal melakukan cancel job')
-  }
-}
-
-
-
-async function handleCancel(jobId) {
-  showSidebarPostedJobs.value = false
-  const result = await sweetAlert.confirm({
-    title: 'Cancel Jobs?',
-    text: 'Apakah anda yakin ingin cancel Job?',
-    confirmText: 'Ya, cancel!',
-    cancelText: 'Batal',
-  })
-
-  if (result.isConfirmed) {
-    const cancelJobData = await cancelJob(jobId)
-    console.log(cancelJobData)
-    sweetAlert.success(cancelJobData.message)
-  }
-}
-
-const openDetail = async job => {
-  selectedJob.value = job
-  const profile = await apiFetch(`/profile/${job.idCreator}`)  
-  if (selectedJob.value.selectedTechnician) {
-    const subAccountId = await getSubAccountId(selectedJob.value.selectedTechnician)
-    selectedJob.value.subAccountId = subAccountId
-  }
-  selectedJob.value.creatorName = profile.data.user.nama
-  selectedJob.value.creatorEmail = profile.data.user.email
-  showSidebarPostedJobs.value = true
-}
-
 
 
 
@@ -261,9 +137,9 @@ onUnmounted(() => {
             :status="getStatusJobNormalize(item.status)"
             :creator="item.creatorName"
             :technician-name="item.technicianName"
+            :selectedJob="item"
             :avatarPlaceholder="avatar1"
             class="job-card-item"
-            @click="openDetail(item)"
           />
         </div>
       </template>
@@ -288,14 +164,7 @@ onUnmounted(() => {
     </div>
   </div>
 
-  <!-- Sidebar kanan untuk detail job -->
-   <SlideJobDetail
-    :showSidebar="showSidebarPostedJobs"
-    :selectedJob="selectedJob"
-    :isCancelable="true"
-    @close="showSidebarPostedJobs = false"
-    @cancel="handleCancel"
-  />
+  
   
 
 

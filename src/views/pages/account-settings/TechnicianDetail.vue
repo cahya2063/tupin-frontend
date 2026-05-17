@@ -119,7 +119,15 @@ onMounted(async () => {
             <div class="name">
               {{ accountDataLocal.name }}
             </div>
-            <CRating readOnly :precision="0.25" v-model="rating" class="card-rating" />
+            <div class="rating-wrapper">
+              <CRating
+                readOnly
+                :precision="0.25"
+                v-model="rating"
+                class="card-rating"
+              />
+              <span class="rating-text">({{ rating }})</span>
+            </div>
             
 
             <div class="completed-job">
@@ -275,6 +283,17 @@ onMounted(async () => {
   padding: 20px;
   border-radius: 10px;  
   background-color: #e7eaee;
+}
+
+.rating-wrapper{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rating-text{
+  font-size: 14px;
+  color: #666;
 }
 .description-content ul {
   list-style: disc;

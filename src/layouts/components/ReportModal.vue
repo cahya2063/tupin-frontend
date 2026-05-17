@@ -100,6 +100,7 @@ async function createReport() {
       return
     }
 
+    emit('close')
     sweetAlert.error(response.data.message || 'Gagal mengajukan laporan')
   } catch (error) {
     sweetAlert.error(error.message || 'Gagal mengajukan laporan')
