@@ -5,6 +5,8 @@ import ShippingCostModal from './ShippingCostModal.vue'
 import CancelJobModal from './CancelJobModal.vue'
 import SlideJobDetail from './SlideJobDetail.vue'
 import AddPriceModal from './AddPriceModal.vue'
+import reportJobModal from './reportJobModal.vue'
+import { backendUrl } from '@/utils/tools'
 
 const role = localStorage.getItem('role')
 const technicianId = localStorage.getItem('userId')
@@ -16,7 +18,7 @@ const props = defineProps({
   category: String,
   status: Object,
   creator: String,
-  avatarPlaceholder: String,
+  avatarPlaceholder: Object,
   selectedJob: Object
 })
 
@@ -28,6 +30,11 @@ const shippingCost = ref()
 const showCancelModal = ref(false)
 const showDetailJob = ref(false)
 const modalAddPrice = ref(false)
+const showReportModal = ref(false)
+
+const openReportModal = () => {
+  showReportModal.value = true
+}
 
 
 const showFull = ref(false)
@@ -189,25 +196,35 @@ watch(() => props.status, () => {
         <div class="row-top">
           <div class="creator-wrap">
             <div class="creator-avatar" :style="{ background: statusConfig.avatarBg }">
-              {{ creatorInitials }}
+              <img class="avatar-img" :src="`${backendUrl}${avatarPlaceholder.image}`" alt="">
             </div>
             <div class="creator-info">
               <span class="creator-lbl">Dibuat oleh</span>
-              <span class="creator-nm">{{ creator }}</span>
+              <span class="creator-nm">{{ creator }} </span>
             </div>
           </div>
   
           <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
-            <div
-              class="status-badge"
-              :style="{
-                background: statusConfig.bg,
-                color: statusConfig.text,
-                borderColor: statusConfig.border,
-              }"
-            >
-              <span class="status-dot" :style="{ background: statusConfig.text }"></span>
-              {{ status.label }}
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button 
+                v-if="status.label === 'pengajuan perbaikan' && !selectedJob?.moderation?.deletedReason" 
+                class="btn-report-icon" 
+                @click.stop="openReportModal"
+                title="Laporkan Pekerjaan"
+              >
+                <i class="ri-error-warning-line"></i>
+              </button>
+              <div
+                class="status-badge"
+                :style="{
+                  background: statusConfig.bg,
+                  color: statusConfig.text,
+                  borderColor: statusConfig.border,
+                }"
+              >
+                <span class="status-dot" :style="{ background: statusConfig.text }"></span>
+                {{ status.label }}
+              </div>
             </div>
             <div 
               class="status-badge payment-status-badge"
@@ -273,7 +290,7 @@ watch(() => props.status, () => {
               <i class="ri-file-list-3-line"></i>
               Detail
             </button>
-            <template v-if="status.label === 'pengajuan perbaikan' && role === 'technician'">
+            <template v-if="status.label === 'pengajuan perbaikan' && !selectedJob?.moderation?.deletedReason">
               <button
                 class="action-btn btn-reject"
                 @click="handleCancelJobs"
@@ -335,10 +352,37 @@ watch(() => props.status, () => {
         :selected-job="selectedJob"
         @close="showCancelModal = false"
       />
+    <reportJobModal 
+      :visible="showReportModal" 
+      :selectedJob="selectedJob" 
+      @close="showReportModal = false"
+    />
   </div>
 </template>
 
 <style scoped>
+.avatar-img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.btn-report-icon {
+  padding: 4px 6px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1.5px solid #fca5a5;
+  color: #ef4444;
+  background: #fef2f2;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.btn-report-icon:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
 .card {
   width: 100%;
   background: #ffffff;
@@ -394,6 +438,9 @@ watch(() => props.status, () => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  
+  border-radius: 50%;
+  overflow: hidden;
 }
 
 .creator-info {

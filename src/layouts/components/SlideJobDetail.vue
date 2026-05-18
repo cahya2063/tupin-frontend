@@ -71,6 +71,7 @@ const statusConfig = (s) => {
 
 watch(() => props.selectedJob,
   async (newVal) => {
+    
     if (newVal?.idCreator) {
       try {
         profile.value = await getProfile(newVal.idCreator)
@@ -86,6 +87,11 @@ watch(() => props.selectedJob,
   },
   { immediate: true }
 )
+
+// onMounted(()=>{
+//     // console.log('selected job : ', props.selectedJob);
+
+// })
 
 </script>
 <template>

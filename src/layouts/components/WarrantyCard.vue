@@ -48,7 +48,7 @@ const formatDate = (dateStr) => {
 </script>
 
 <template>
-  <div class="warranty-card" @click="emit('click', { warranty, job })">
+  <div class="warranty-card" >
     <!-- Accent bar -->
     <div class="card-accent"></div>
 
@@ -80,7 +80,7 @@ const formatDate = (dateStr) => {
         <span class="footer-icon">📅</span>
         <span class="footer-text">{{ formatDate(job.jobDoneDate) }}</span>
       </div>
-      <div class="detail-btn">
+      <div class="detail-btn" @click="emit('click', { warranty, job })">
         <span>Detail</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M5 12h14M12 5l7 7-7 7"/>

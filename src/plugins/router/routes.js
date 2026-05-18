@@ -109,6 +109,10 @@ export const routes = [
         path: 'penalty-point',
         component: ()=>import('@/pages/transaction/admin/penaltyPoint.vue')
       },
+      {
+        path: 'report-job',
+        component: ()=> import('@/pages/transaction/admin/reportedJobs.vue')
+      },
       // bawaan template
       {
         path: 'typography',

@@ -30,6 +30,10 @@ async function getAcceptedJobs(technicianId) {
     const response = await apiFetch(`/jobs/${technicianId}/accepted-jobs`)
     acceptedJobs.value = response.data.jobs
  
+    acceptedJobs.value = response.data.jobs.filter(
+      job => job.moderation?.isDeleted === false
+    )
+    //ambil nama pelanggan
     await Promise.all(
       acceptedJobs.value.map(async job => {
         const profile = await getProfile(job.idCreator)
@@ -37,11 +41,13 @@ async function getAcceptedJobs(technicianId) {
       })
     )
  
+
+    // ambil avatar pelanggan
     await Promise.all(
       acceptedJobs.value.map(async job => {
         if (job.idCreator && !avatars.value[job.idCreator]) {
           const profile = await getProfile(job.idCreator)
-          avatars.value[job.idCreator] = profile.avatar
+          avatars.value['image'] = profile.avatar
         }
       }),
     )
@@ -50,17 +56,17 @@ async function getAcceptedJobs(technicianId) {
   }
 }
  
-async function getDetailJobs(id) {
-  try {
-    const response = await apiFetch(`/jobs/${id}`)
-    selectedJob.value = response.data.job
-    const profile = await getProfile(selectedJob.value.idCreator)
-    userName.value = profile.nama
-    showSidebar.value = true
-  } catch (error) {
-    console.error(error)
-  }
-}
+// async function getDetailJobs(id) {
+//   try {
+//     const response = await apiFetch(`/jobs/${id}`)
+//     selectedJob.value = response.data.job
+//     const profile = await getProfile(selectedJob.value.idCreator)
+//     userName.value = profile.nama
+//     showSidebar.value = true
+//   } catch (error) {
+//     console.error(error)
+//   }
+// }
  
 
  
@@ -137,7 +143,7 @@ onUnmounted(() => {
         <div class="container-job">
           <CardJobTechnician
             v-for="(item, i) in acceptedJobs"
-            :key="i"
+            :key="item._id"
             :id="item._id"
             :title="item.title"
             :deadline="item.deadline"
@@ -145,7 +151,7 @@ onUnmounted(() => {
             :category="item.category"
             :status="getStatusJobNormalize(item.status)"
             :creator="item.creatorName"
-            :avatarPlaceholder="avatar1"
+            :avatarPlaceholder="avatars"
             :selectedJob="item"
             class="job-card-item"
             />

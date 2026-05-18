@@ -39,6 +39,10 @@ async function getPostedJobs() {
       job.creatorName = profile.nama
       job.technicianName = technicianProfile.nama
     }
+
+    jobs.value = response.data.jobs.filter(
+      job => job.moderation?.isDeleted === false
+    )
  
     await Promise.all(
       jobs.value.map(async job => {
@@ -130,7 +134,7 @@ onUnmounted(() => {
         <div class="container-job">
           <CardJobClient
             v-for="(item, i) in jobs"
-            :key="i"
+            :key="item._id"
             :id="item._id"
             :title="item.title"
             :deadline="item.deadline"

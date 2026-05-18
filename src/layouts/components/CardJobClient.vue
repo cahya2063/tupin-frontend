@@ -270,6 +270,8 @@ async function getReportsByJobId(jobId){
 
 onMounted(async () => {
   isHaveWarranty.value = await getWarrantyByJobId(props.selectedJob._id)
+  console.log(`ishavewarraty : ${props.selectedJob.title}`, isHaveWarranty.value);
+  
   getReview.value = await getReviewByJobId(props.selectedJob._id)
   isHaveReports.value = await getReportsByJobId(props.selectedJob._id)
   console.log('reports 1:', isHaveReports.value)
@@ -435,7 +437,7 @@ watch(() => props.status, () => {
               v-if="
                 status.label === 'masa garansi' &&
                 isWithinWarranty(selectedJob.jobDoneDate) &&
-                isHaveWarranty == false
+                !isHaveWarranty
               "
               class="action-btn btn-accept"
               @click="handleIsWarranty(selectedJob?._id)"

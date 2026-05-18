@@ -15,7 +15,7 @@ const props = defineProps({
 const reason = ref('')
 const uploadedFiles = ref([])
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'success'])
 
 
 function onFileChange(newFiles) {
@@ -59,6 +59,7 @@ async function createWarranty(){
             reason.value = ''
             uploadedFiles.value = []
             showSidebarPostedJobs.value = false
+            emit('success')
             emit('close')
         }
         else{
