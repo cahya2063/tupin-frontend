@@ -1,6 +1,8 @@
 import { router } from "@/plugins/router"
 import sweetAlert from "./sweetAlert"
 const baseUrl = import.meta.env.VITE_API_URL
+
+const role = localStorage.getItem('role')
 export async function apiFetch(url, options = {}) {
   const token = localStorage.getItem('token')
 
@@ -17,7 +19,7 @@ export async function apiFetch(url, options = {}) {
   // const statusCode = response.status
   console.log('status code :', response.status);
   if (response.status === 401) {
-    router.push('/dashboard') // ✅ gunakan instance router
+    router.push(`/dashboard-${role}`) // ✅ gunakan instance router
     sweetAlert.error('Unauthorized access')
   }
 

@@ -35,6 +35,11 @@ const menuItems = computed(() => {
         icon: 'ri-tools-line',
         to: '/penalty-point',
       },
+      {
+        title: 'Laporan pekerjaan',
+        icon: 'ri-tools-line',
+        to: '/report-job',
+      },
 
     ]
   }
