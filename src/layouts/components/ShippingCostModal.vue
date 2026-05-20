@@ -1,6 +1,7 @@
 <script setup>
 import Payment from '@/components/form/Payment.vue'
 
+const shippingCostTesting = 1000
 const props = defineProps({
   visible: Boolean,
   selectedJob: Object,

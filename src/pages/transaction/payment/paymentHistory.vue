@@ -8,6 +8,8 @@ const payment = ref({
 })
 const selectedInvoice = ref(null)
 const isActive = ref(false)
+const repairPrice = ref(0)
+const adminFee = ref(3000)
 const isModalDeleteActive = ref(false)
 
 const selectedDeleteInvoice = ref(null)
@@ -24,11 +26,19 @@ async function getInvoices(userId) {
 
 const openDetailInvoice = invoice => {
   selectedInvoice.value = invoice
+  if (invoice.type === 'repair') {
+    adminFee.value = 3000
+    repairPrice.value = selectedInvoice.value.amount - adminFee.value
+  } else {
+    adminFee.value = 0
+    repairPrice.value = selectedInvoice.value.amount
+  }
+
+  console.log('selected invoice : ', selectedInvoice.value)
+
   isActive.value = true
 }
-// const paymentUrl = url => {
-//   window.location.href = url
-// }
+
 function formatDate(dateString) {
   const date = new Date(dateString)
 
@@ -259,6 +269,35 @@ onMounted(async () => {
                 {{ selectedInvoice.payment_method }}
               </VListItemSubtitle>
             </VListItem>
+            <VDivider class="my-1"></VDivider>
+
+            <VListItem class="px-0">
+              <template v-slot:prepend>
+                <VIcon color="primary">
+                  {{ selectedInvoice.type === 'repair' ? 'mdi-wrench-outline' : 'mdi-car-outline' }}
+                </VIcon>
+              </template>
+              <VListItemTitle class="text-caption text-grey">
+                {{ selectedInvoice.type === 'repair' ? 'Biaya Perbaikan' : 'Biaya Transportasi' }}
+              </VListItemTitle>
+              <VListItemSubtitle class="text-body-1 font-weight-medium text-black">
+                Rp {{ repairPrice.toLocaleString('id-ID') }}
+              </VListItemSubtitle>
+            </VListItem>
+
+            <template v-if="selectedInvoice.type === 'repair'">
+              <VDivider class="my-1"></VDivider>
+
+              <VListItem class="px-0">
+                <template v-slot:prepend>
+                  <VIcon color="primary">mdi-cash-cog</VIcon>
+                </template>
+                <VListItemTitle class="text-caption text-grey">Biaya Admin</VListItemTitle>
+                <VListItemSubtitle class="text-body-1 font-weight-medium text-black">
+                  Rp {{ adminFee.toLocaleString('id-ID') }}
+                </VListItemSubtitle>
+              </VListItem>
+            </template>
 
             <VDivider class="my-1"></VDivider>
 
@@ -268,7 +307,7 @@ onMounted(async () => {
               </template>
               <VListItemTitle class="text-caption text-grey">Total Pembayaran</VListItemTitle>
               <VListItemSubtitle class="text-h6 font-weight-bold text-primary">
-                Rp {{ selectedInvoice.amount.toLocaleString('id-ID') }}
+                Rp {{ (repairPrice + adminFee).toLocaleString('id-ID') }}
               </VListItemSubtitle>
             </VListItem>
 

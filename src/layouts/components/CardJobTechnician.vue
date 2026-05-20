@@ -129,25 +129,41 @@ async function calculateShippingCost(jobId){
       headers: {
         'Content-Type': 'application/json'
       },
-
     })
 
-    console.log('Shipping cost:', response);
+    console.log('Shipping cost:', response)
+
     const data = response.data.shippingCost.data
 
-    shippingCost.value =
-      (
-        data.calculate_instant?.[0]?.shipping_cost
-        ?? data.calculate_reguler?.[0]?.shipping_cost
-        ?? 0
-      ) * 2
+    // cek instant terlebih dahulu
+    const instantCost = data.calculate_instant?.[0]?.shipping_cost
+
+    if (instantCost) {
+      // jika ada instant -> dikali 2
+      shippingCost.value = instantCost * 2
+    } else {
+      const cargoList = data.calculate_cargo || []
+      
+      if (cargoList.length > 0) {
+        // jika instant kosong -> ambil cargo termurah
+        const cheapestCargo = cargoList.reduce((prev, current) => {
+          return current.shipping_cost < prev.shipping_cost
+            ? current
+            : prev
+        })
+
+        // cargo tidak dikali 2
+        shippingCost.value = cheapestCargo.shipping_cost
+      } else {
+        shippingCost.value = 0
+      }
+    }
 
   } catch (error) {
     console.error('Gagal menghitung biaya pengiriman:', error)
   }
 }
 async function handleShippingCost(jobId){
-  // const jobId = props.selectedJob?._id
 
   profile.value = await getProfile(props.selectedJob.idCreator)
   
