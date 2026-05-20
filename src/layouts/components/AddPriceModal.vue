@@ -2,6 +2,7 @@
 import Payment from '@/components/form/Payment.vue'
 import { ref } from 'vue'
 
+const adminFee = 3000
 const props = defineProps({
   visible: Boolean,
   selectedJob: Object,
@@ -62,9 +63,13 @@ const onPriceInput = (e) => {
             <span class="cost-label">Harga perbaikan</span>
             <span class="cost-value">{{ formatRupiah(repairPrice) }}</span>
           </div>
+          <div class="cost-row">
+            <span class="cost-label">Biaya Admin</span>
+            <span class="cost-value">{{ formatRupiah(adminFee) }}</span>
+          </div>
           <div class="cost-row cost-row--total">
             <span class="cost-label">Total</span>
-            <span class="cost-value cost-value--total">{{ formatRupiah(repairPrice) }}</span>
+            <span class="cost-value cost-value--total">{{ formatRupiah(repairPrice + adminFee) }}</span>
           </div>
         </div>
       </div>
@@ -88,7 +93,7 @@ const onPriceInput = (e) => {
           v-show="selectedJob?.status === 'checked'"
           :name="profile?.nama"
           :email="profile?.email"
-          :amount="repairPrice"
+          :amount="repairPrice+adminFee"
           :sub-account-id="technicianProfile?.subAccountId"
           :job-id="selectedJob?._id"
           :payer-id="profile?._id"

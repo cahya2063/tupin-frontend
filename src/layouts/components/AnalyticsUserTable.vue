@@ -199,26 +199,7 @@ function formatSkills(skills) {
                   <VIcon start size="14">ri-eye-line</VIcon>
                   Detail
                 </VBtn>
-                <VBtn
-                  size="small"
-                  variant="tonal"
-                  color="success"
-                  class="action-btn accept-btn"
-                  @click="handleAccept(item)"
-                >
-                  <VIcon start size="14">ri-check-line</VIcon>
-                  Terima
-                </VBtn>
-                <VBtn
-                  size="small"
-                  variant="tonal"
-                  color="error"
-                  class="action-btn reject-btn"
-                  @click="handleReject(item)"
-                >
-                  <VIcon start size="14">ri-close-line</VIcon>
-                  Tolak
-                </VBtn>
+                
               </div>
             </td>
           </tr>
