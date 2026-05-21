@@ -12,6 +12,8 @@ const form = reactive({
   phone_number: '',
   city: '',
   skills: [],
+  ktp: null,
+  selfie: null,
   description: '',
 })
 
@@ -47,6 +49,14 @@ function clearErrors() {
   })
 }
 
+function getSingleFile(fileInput) {
+  if (Array.isArray(fileInput)) {
+    return fileInput[0] || null
+  }
+
+  return fileInput || null
+}
+
 function validateForm() {
   clearErrors()
 
@@ -68,6 +78,14 @@ function validateForm() {
 
   if (form.skills.length === 0) {
     setFieldError('skills', 'Pilih minimal satu keahlian')
+  }
+
+  if (!getSingleFile(form.ktp)) {
+    setFieldError('ktp', 'Foto KTP wajib diunggah')
+  }
+
+  if (!getSingleFile(form.selfie)) {
+    setFieldError('selfie', 'Selfie dengan KTP wajib diunggah')
   }
 
   if (form.description.length < 20) {
@@ -99,6 +117,8 @@ function resetForm() {
   form.phone_number = ''
   form.city = ''
   form.skills = []
+  form.ktp = null
+  form.selfie = null
   form.description = ''
 }
 
@@ -132,19 +152,22 @@ async function registerTechnician() {
   try {
     isSubmitting.value = true
 
+    const formData = new FormData()
+
+    formData.append('nama', form.nama)
+    formData.append('email', form.email)
+    formData.append('phone_number', form.phone_number)
+    formData.append('city', form.city)
+    form.skills.forEach(skillId => {
+      formData.append('skills[]', skillId)
+    })
+    formData.append('description', form.description)
+    formData.append('ktp', getSingleFile(form.ktp))
+    formData.append('selfie', getSingleFile(form.selfie))
+
     const response = await apiFetch('/signup-tech', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        nama: form.nama,
-        email: form.email,
-        phone_number: form.phone_number,
-        city: form.city,
-        skills: form.skills,
-        description: form.description,
-      }),
+      body: formData,
     })
 
     alertMessage.value = response.data?.message || 'Pendaftaran berhasil dikirim'
@@ -341,6 +364,28 @@ onMounted(getAllSkills)
               {{ errors.skills }}
             </small>
           </div>
+          <v-file-input
+            v-model="form.ktp"
+            prepend-icon=""
+            clearable
+            label="Foto KTP"
+            name="ktp"
+            accept="image/*"
+            show-size
+            variant="outlined"
+            :error-messages="errors.ktp ? [errors.ktp] : []"
+          ></v-file-input>
+          <v-file-input
+            v-model="form.selfie"
+            prepend-icon=""
+            clearable
+            label="Selfie dengan KTP"
+            name="selfie"
+            accept="image/*"
+            show-size
+            variant="outlined"
+            :error-messages="errors.selfie ? [errors.selfie] : []"
+          ></v-file-input>
 
           <label class="field-group">
             <div class="field-title">
