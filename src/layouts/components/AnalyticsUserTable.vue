@@ -1,6 +1,7 @@
 <script setup>
 import { apiFetch } from '@/utils/api'
 import sweetAlert from '@/utils/sweetAlert'
+import { backendUrl } from '@/utils/tools'
 import { ref } from 'vue'
 
 const props = defineProps({
@@ -77,7 +78,7 @@ function getStatusLabel(status) {
   if (s === 'active' || s === 'aktif') return 'Aktif'
   if (s === 'pending') return 'Menunggu'
   if (s === 'inactive') return 'Tidak Aktif'
-  if (s === 'approved' || s === 'approve') return 'Disetujui'
+  if (s === 'approve' || s === 'approve') return 'Disetujui'
   if (s === 'rejected' || s === 'ditolak') return 'Ditolak'
   return status
 }
@@ -93,18 +94,7 @@ function getAvatarColor(name) {
   return colors[name.charCodeAt(0) % colors.length]
 }
 
-function formatSkills(skills) {
-  if (!skills || skills.length === 0) return '-'
-  if (typeof skills === 'string') return skills
 
-  return skills
-    .map(skill => {
-      if (typeof skill === 'string') return skill
-      return skill.label || skill.nama || skill.name || skill.title || skill._id || skill.id
-    })
-    .filter(Boolean)
-    .join(', ')
-}
 </script>
 
 <template>
@@ -361,6 +351,40 @@ function formatSkills(skills) {
             {{ selectedTechnician.description || 'Belum ada deskripsi pengalaman.' }}
           </p>
         </div>
+        <div class="detail-section">
+          <div class="section-title">
+            <VIcon size="18" color="#8d85ff">ri-file-text-line</VIcon>
+            <span>Dokumen Teknisi</span>
+          </div>
+          <span>KTP Teknisi</span>
+          <p class="detail-paragraph">
+            <a 
+              :href="`${backendUrl}/${selectedTechnician.identityCard}`" 
+              target="_blank"
+            >
+              <img 
+              class="document-image"
+                :src="`${backendUrl}/${selectedTechnician.identityCard}`" 
+                alt="Dokumen Teknisi" 
+              >
+            </a>
+          </p>
+
+          <span>Selfie dengan KTP</span>
+          <p class="detail-paragraph">
+            <a 
+              :href="`${backendUrl}/${selectedTechnician.selfieWithIdentityCard}`" 
+              target="_blank"
+            >
+              <img 
+              class="document-image"
+                :src="`${backendUrl}/${selectedTechnician.selfieWithIdentityCard}`" 
+                alt="Dokumen Teknisi" 
+              >
+            </a>
+          </p>
+        </div>
+        
       </div>
 
       <!-- Dialog Actions -->
@@ -391,6 +415,12 @@ function formatSkills(skills) {
 <style scoped>
 *{
   font-family: 'Quicksand';
+}
+.document-image {
+  max-width: 50%;
+  height: auto;
+  border-radius: 8px;
+  border: 1.5px solid #ede9ff;
 }
 /* ── Card ── */
 .analytics-table-card {
