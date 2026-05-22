@@ -19,6 +19,65 @@ const status = ref('idle')
 const showPassword = ref(false)
 const showPasswordConfirmation = ref(false)
 
+const passwordRules = computed(() => [
+  {
+    label: 'Minimal 8 karakter',
+    passed: form.password.length >= 8,
+  },
+  {
+    label: 'Huruf besar dan kecil',
+    passed: /[a-z]/.test(form.password) && /[A-Z]/.test(form.password),
+  },
+  {
+    label: 'Mengandung angka',
+    passed: /\d/.test(form.password),
+  },
+  {
+    label: 'Mengandung simbol',
+    passed: /[^A-Za-z0-9]/.test(form.password),
+  },
+])
+
+const passwordStrength = computed(() => {
+  const passedRules = passwordRules.value.filter(rule => rule.passed).length
+
+  if (!form.password) {
+    return {
+      label: 'Belum diisi',
+      level: 'empty',
+      score: 0,
+      width: '0%',
+    }
+  }
+
+  if (passedRules <= 1) {
+    return {
+      label: 'Lemah',
+      level: 'weak',
+      score: 1,
+      width: '33%',
+    }
+  }
+
+  if (passedRules <= 3) {
+    return {
+      label: 'Sedang',
+      level: 'medium',
+      score: 2,
+      width: '66%',
+    }
+  }
+
+  return {
+    label: 'Kuat',
+    level: 'strong',
+    score: 3,
+    width: '100%',
+  }
+})
+
+const isPasswordWeak = computed(() => Boolean(form.password) && passwordStrength.value.level === 'weak')
+
 const activationToken = computed(() => {
   const token = route.query.token
 
@@ -44,7 +103,7 @@ const activationEndpoint = computed(() => {
   return '/technician/activate'
 })
 
-const canSubmit = computed(() => Boolean(activationToken.value) && !isSubmitting.value)
+const canSubmit = computed(() => Boolean(activationToken.value) && !isSubmitting.value && !isPasswordWeak.value)
 
 function clearErrors() {
   Object.keys(fieldErrors).forEach(key => {
@@ -66,6 +125,9 @@ function validateForm() {
 
   if (!form.password) {
     setFieldError('password', 'Password baru wajib diisi')
+  }
+  else if (passwordStrength.value.level === 'weak') {
+    setFieldError('password', 'Password masih lemah. Gunakan minimal level sedang.')
   }
   
 
@@ -135,9 +197,6 @@ function goHome() {
   router.push('/')
 }
 
-function goLogin() {
-  router.push('/login')
-}
 </script>
 
 <template>
@@ -252,6 +311,39 @@ function goLogin() {
             >
               {{ fieldErrors.password }}
             </small>
+
+            <div
+              v-if="form.password"
+              class="strength-box"
+              :class="`strength-${passwordStrength.level}`"
+              aria-live="polite"
+            >
+              <div class="strength-top">
+                <span>Kekuatan password</span>
+                <strong>{{ passwordStrength.label }}</strong>
+              </div>
+
+              <div
+                class="strength-meter"
+                aria-hidden="true"
+              >
+                <span
+                  :class="`score-${passwordStrength.score}`"
+                  :style="{ width: passwordStrength.width }"
+                ></span>
+              </div>
+
+              <ul class="rule-list">
+                <li
+                  v-for="rule in passwordRules"
+                  :key="rule.label"
+                  :class="{ valid: rule.passed }"
+                >
+                  <i :class="rule.passed ? 'ri-checkbox-circle-line' : 'ri-close-circle-line'"></i>
+                  <span>{{ rule.label }}</span>
+                </li>
+              </ul>
+            </div>
           </label>
 
         
@@ -612,6 +704,21 @@ function goLogin() {
   padding: 15px;
 }
 
+.strength-box.strength-weak {
+  border-color: #ffd3d9;
+  background-color: #fff7f8;
+}
+
+.strength-box.strength-medium {
+  border-color: #f5d48c;
+  background-color: #fffaf0;
+}
+
+.strength-box.strength-strong {
+  border-color: #bbe8d0;
+  background-color: #f0fbf5;
+}
+
 .strength-top {
   display: flex;
   align-items: center;
@@ -625,6 +732,18 @@ function goLogin() {
 
 .strength-top strong {
   color: #6c32e7;
+}
+
+.strength-box.strength-weak .strength-top strong {
+  color: #c72f43;
+}
+
+.strength-box.strength-medium .strength-top strong {
+  color: #a16400;
+}
+
+.strength-box.strength-strong .strength-top strong {
+  color: #176b42;
 }
 
 .strength-meter {
@@ -652,7 +771,7 @@ function goLogin() {
 
 .rule-list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   list-style: none;
   margin: 14px 0 0;
