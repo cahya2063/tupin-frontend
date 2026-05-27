@@ -2,12 +2,14 @@
 import { apiFetch, getProfile } from '@/utils/api';
 import { backendUrl, getCurrentLocation } from '@/utils/tools';
 import avatar1 from '@images/avatars/avatar-1.png'
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const nearestTechnicianProfile = ref([])
 const skillsList = ref([])
 const selectedSkills = ref([])
 const isLoading = ref(false)
+const showAllTechnicians = ref(false)
+const MAX_INITIAL_DISTANCE_KM = 7
 
 const formatDistance = (distance)=>{
   console.log('distance : ', distance);
@@ -30,6 +32,24 @@ const filteredTechnicians = computed(()=>{
     selectedSkills.value.some(skill => technician.skills.includes(skill))
   )
 })
+
+const visibleTechnicians = computed(() => {
+  if(showAllTechnicians.value){
+    return filteredTechnicians.value
+  }
+
+  return filteredTechnicians.value.filter(technician =>
+    Number(technician.distance) <= MAX_INITIAL_DISTANCE_KM
+  )
+})
+
+const hasMoreTechnicians = computed(() =>
+  filteredTechnicians.value.length > visibleTechnicians.value.length
+)
+
+watch(selectedSkills, () => {
+  showAllTechnicians.value = false
+}, { deep: true })
 
 
 async function getNearestTechnician(location){  
@@ -95,6 +115,7 @@ const searchNearestTechnician = async()=>{
     console.log('teknisi terdekat : ', technicians);
         
     nearestTechnicianProfile.value = await buildTechnicianProfiles(technicians)
+    showAllTechnicians.value = false
     sessionStorage.setItem('nearestTechnicianProfile', JSON.stringify(nearestTechnicianProfile.value))
   } catch (error) {
     console.error(error);
@@ -168,8 +189,16 @@ onMounted( async () => {
       <div v-else>
         <template v-if="filteredTechnicians.length > 0">
           <div
+            v-if="visibleTechnicians.length === 0 && hasMoreTechnicians"
+            class="nearby-empty"
+          >
+            <i class="ri-map-pin-range-line"></i>
+            <span>Belum ada teknisi dalam radius 7 km.</span>
+          </div>
+
+          <div
             class="technician-card"
-            v-for="(item, i) in filteredTechnicians"
+            v-for="(item, i) in visibleTechnicians"
             :key="i"
           >
             <!-- Part 1 – Avatar + Nama + Rating -->
@@ -235,6 +264,19 @@ onMounted( async () => {
                 {{ formatDistance(item.distance) }}
               </div>
             </div>
+          </div>
+
+          <div v-if="hasMoreTechnicians" class="load-more-wrapper">
+            <VBtn
+              color="#8d58ff"
+              variant="outlined"
+              class="btn-load-more"
+              rounded="pill"
+              @click="showAllTechnicians = true"
+            >
+              <i class="ri-arrow-down-s-line me-1"></i>
+              Lihat Lebih Banyak
+            </VBtn>
           </div>
         </template>
  
@@ -536,6 +578,37 @@ onMounted( async () => {
  
 .mobile-distance {
   display: none;
+}
+
+.nearby-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 18px;
+  background-color: #faf8ff;
+  border: 1px dashed rgba(141, 88, 255, 0.35);
+  border-radius: 16px;
+  color: #8d58ff;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.nearby-empty i {
+  font-size: 20px;
+}
+
+.load-more-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 20px;
+}
+
+.btn-load-more {
+  font-weight: 700 !important;
+  letter-spacing: 0.2px;
+  padding-inline: 24px !important;
 }
  
 /* ─── Empty State ─────────────────────────────────────────── */

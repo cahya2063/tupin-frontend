@@ -95,6 +95,11 @@ onMounted(async () => {
           </div>
           <div class="content">
             <div class="row">
+                
+                <span class=" fs-5 w-100">
+  
+                  {{ item.description || '-' }}
+                </span>
               <span class="label">Status</span>
               <VChip :color="getStatusColor(item.status)" size="small" class="job-status-chip ms-2" variant="outlined">
                 {{ item.status }}
@@ -455,12 +460,12 @@ onMounted(async () => {
   margin: 10px 0;
 }
 
-.content .row {
+/* .content .row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
-}
+} */
 
 .label {
   font-size: 12px;

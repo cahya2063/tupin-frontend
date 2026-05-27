@@ -10,7 +10,6 @@ const form = reactive({
   nama: '',
   email: '',
   phone_number: '',
-  city: '',
   skills: [],
   ktp: null,
   selfie: null,
@@ -72,9 +71,7 @@ function validateForm() {
     setFieldError('phone_number', 'Nomor telepon minimal 9 digit')
   }
 
-  if (!form.city) {
-    setFieldError('city', 'Kota domisili wajib diisi')
-  }
+ 
 
   if (form.skills.length === 0) {
     setFieldError('skills', 'Pilih minimal satu keahlian')
@@ -115,7 +112,6 @@ function resetForm() {
   form.nama = ''
   form.email = ''
   form.phone_number = ''
-  form.city = ''
   form.skills = []
   form.ktp = null
   form.selfie = null
@@ -157,7 +153,6 @@ async function registerTechnician() {
     formData.append('nama', form.nama)
     formData.append('email', form.email)
     formData.append('phone_number', form.phone_number)
-    formData.append('city', form.city)
     form.skills.forEach(skillId => {
       formData.append('skills[]', skillId)
     })
@@ -313,24 +308,6 @@ onMounted(getAllSkills)
                 class="error-text"
               >
                 {{ errors.phone_number }}
-              </small>
-            </label>
-
-            <label class="field-group">
-              <span>Kota Domisili</span>
-              <input
-                v-model="form.city"
-                type="text"
-                name="city"
-                autocomplete="address-level2"
-                placeholder="cth: Banyuwangi"
-                :class="{ invalid: errors.city }"
-              >
-              <small
-                v-if="errors.city"
-                class="error-text"
-              >
-                {{ errors.city }}
               </small>
             </label>
           </div>

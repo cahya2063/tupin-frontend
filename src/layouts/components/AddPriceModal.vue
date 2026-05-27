@@ -13,10 +13,16 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const repairPrice = ref(0)
+const isRepairPriceValid = computed(() => Number(repairPrice.value) > 0)
+const totalAmount = computed(() => Number(repairPrice.value || 0) + adminFee)
 
 const formatRupiah = (val) => 'Rp ' + (val || 0).toLocaleString('id-ID')
 
 const onPriceInput = (e) => {
+  // console.log('isrepairvalid : ', isRepairPriceValid.value);
+  // console.log('repair price : ', repairPrice.value);
+  // console.log('total amount : ', totalAmount.value);
+
   const raw = e.target.value.replace(/\D/g, '')
   repairPrice.value = parseInt(raw) || 0
 }
@@ -93,12 +99,14 @@ const onPriceInput = (e) => {
           v-show="selectedJob?.status === 'checked'"
           :name="profile?.nama"
           :email="profile?.email"
-          :amount="repairPrice+adminFee"
+          :amount="totalAmount"
           :sub-account-id="technicianProfile?.subAccountId"
           :job-id="selectedJob?._id"
           :payer-id="profile?._id"
           :status="selectedJob?.status"
           :receiver-id="selectedJob?.selectedTechnician"
+          :can-submit="isRepairPriceValid"
+          invalid-message="Harga perbaikan wajib diisi"
           @close="emit('close')"
         />
       </CModalFooter>

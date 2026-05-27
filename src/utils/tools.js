@@ -4,6 +4,8 @@ import { onUnmounted, ref, watch } from "vue"
 import { apiFetch } from "./api"
 import InlineEditor from '@ckeditor/ckeditor5-build-inline'
 import { io } from 'socket.io-client'
+import sweetAlert from './sweetAlert'
+const regionBaseUrl = `https://www.emsifa.com/api-wilayah-indonesia/api`
 
 export const backendUrl = import.meta.env.VITE_API_URL
 // ===========CKEDITOR============//
@@ -36,6 +38,12 @@ export const getCurrentLocation = () => {
         })
       },
       (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          sweetAlert.error('Silakan aktifkan akses lokasi terlebih dahulu')
+        }
+        else {
+          sweetAlert.error('Terjadi kesalahan saat mengambil lokasi')
+        }
         reject(error)
       }
     )
@@ -58,6 +66,67 @@ export async function createChat(clientId, technicianId) {
     console.error('Gagal membuat chat:', error)
   }
 }
+
+// provinsi
+export async function getProvinces(){
+  try {
+    const provinces = await fetch(`${regionBaseUrl}/provinces.json`)
+    const data = await provinces.json()
+    return data.map(province => ({
+      value: province.id,
+      label: province.name
+    }))
+  } catch (error) {
+    console.error('gagal ambil data provinsi', error);
+    
+  }
+}
+
+// kabupaten
+export async function getRegencies(provinceId){
+  if (!provinceId) return []
+  try {
+    const regencies = await fetch(`${regionBaseUrl}/regencies/${provinceId}.json`)
+    const data = await regencies.json()
+    return data.map(regency => ({
+      value: regency.id,
+      label: regency.name
+    }))
+  } catch (error) {
+    console.error('gagal ambil data kabupaten');
+  }
+}
+
+// kecamatan
+export async function getDistricts(regencyId){
+  if (!regencyId) return []
+  try {
+    const districts = await fetch(`${regionBaseUrl}/districts/${regencyId}.json`)
+    const data = await districts.json()
+    return data.map(district => ({
+      value: district.id,
+      label: district.name
+    }))
+  } catch (error) {
+    console.error('gagal ambil data kecamatan');
+  }
+}
+
+// desa 
+export async function getVillages(districtId){
+  if (!districtId) return []
+  try {
+    const villages = await fetch(`${regionBaseUrl}/villages/${districtId}.json`)
+    const data = await villages.json()
+    return data.map(village => ({
+      value: village.id,
+      label: village.name
+    }))
+  } catch (error) {
+    console.error('gagal ambil data desa');
+  }
+}
+
 export const getStatusJobNormalize = (statusJob)=>{
   const normalizedJobStatus = statusJob?.toLowerCase()
   if(normalizedJobStatus == 'open'){

@@ -3,7 +3,7 @@ import { apiFetch } from '@/utils/api'
 import sweetAlert from '@/utils/sweetAlert'
 import { config, editor } from '@/utils/tools'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue'
-import { ref, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 
 const props = defineProps({
   visible: Boolean,
@@ -24,6 +24,7 @@ const category = ref('Penipuan')
 const description = ref('')
 const uploadedFiles = ref([])
 const isSubmitting = ref(false)
+const errors = reactive({})
 
 function onFileChange(newFiles) {
   const files = newFiles || []
@@ -42,19 +43,48 @@ function onFileChange(newFiles) {
       f.lastModified === file.lastModified
     )
   )
+
+  if (uploadedFiles.value.length > 0) {
+    delete errors.photos
+  }
 }
 
 function resetForm() {
   category.value = 'Penipuan'
   description.value = ''
   uploadedFiles.value = []
+  clearErrors()
 }
 
-function hasDescriptionValue() {
+function setFieldError(field, message) {
+  errors[field] = message
+}
+
+function clearErrors() {
+  Object.keys(errors).forEach(key => {
+    delete errors[key]
+  })
+}
+
+function getDescriptionText() {
   const element = document.createElement('div')
   element.innerHTML = description.value || ''
 
-  return Boolean(element.textContent?.replace(/\u00a0/g, ' ').trim())
+  return (element.textContent || '').replace(/\u00a0/g, ' ').trim()
+}
+
+function validateForm() {
+  clearErrors()
+
+  if (!getDescriptionText()) {
+    setFieldError('description', 'Deskripsi laporan wajib diisi')
+  }
+
+  if (!uploadedFiles.value.length) {
+    setFieldError('photos', 'Bukti pelanggaran wajib diunggah')
+  }
+
+  return Object.keys(errors).length === 0
 }
 
 async function createReport() {
@@ -66,13 +96,7 @@ async function createReport() {
     return
   }
 
-  if (!hasDescriptionValue()) {
-    sweetAlert.error('Deskripsi laporan wajib diisi')
-    return
-  }
-
-  if (!uploadedFiles.value.length) {
-    sweetAlert.error('Bukti pelanggaran wajib diunggah')
+  if (!validateForm()) {
     return
   }
 
@@ -116,6 +140,12 @@ watch(
       resetForm()
   }
 )
+
+watch(description, () => {
+  if (getDescriptionText()) {
+    delete errors.description
+  }
+})
 </script>
 
 <template>
@@ -148,7 +178,7 @@ watch(
 
         <div class="modal-section">
           <small class="modal-section-label">Deskripsi pelanggaran</small>
-          <div class="ckeditor-wrapper">
+          <div class="ckeditor-wrapper" :class="{ invalid: errors.description }">
             <ckeditor
               v-if="editor && config"
               v-model="description"
@@ -156,17 +186,31 @@ watch(
               :config="config"
             />
           </div>
+          <small
+            v-if="errors.description"
+            class="error-text"
+          >
+            {{ errors.description }}
+          </small>
         </div>
 
         <div class="modal-section">
           <small class="modal-section-label">Bukti pelanggaran</small>
-          <v-file-upload
-            :model-value="uploadedFiles"
-            @update:modelValue="onFileChange"
-            multiple
-            clearable
-            accept="image/*"
-          />
+          <div class="file-upload-area" :class="{ invalid: errors.photos }">
+            <v-file-upload
+              :model-value="uploadedFiles"
+              @update:modelValue="onFileChange"
+              multiple
+              clearable
+              accept="image/*"
+            />
+          </div>
+          <small
+            v-if="errors.photos"
+            class="error-text"
+          >
+            {{ errors.photos }}
+          </small>
         </div>
 
         <div class="button-report-wrapper">
@@ -239,6 +283,32 @@ watch(
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 5px;
+}
+
+.ckeditor-wrapper.invalid {
+  border-color: #e45264 !important;
+}
+
+.file-upload-area.invalid :deep(.v-file-upload) {
+  border-color: #e45264 !important;
+}
+
+.file-upload-area.invalid {
+  outline: 1.5px solid #e45264;
+  border-radius: 8px;
+}
+
+.file-upload-area {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.error-text {
+  display: block;
+  color: #c72f43;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 0.15rem;
 }
 
 .button-report-wrapper {

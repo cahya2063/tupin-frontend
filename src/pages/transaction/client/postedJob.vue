@@ -5,7 +5,7 @@ import avatar1 from '@images/avatars/avatar-1.png'
 // import CardJob from '@/layouts/components/CardJob.vue'
 
 import CardJobClient from '@/layouts/components/CardJobClient.vue'
-import { getStatusJobNormalize, showSidebarPostedJobs, socket, useJobUpdater } from '@/utils/tools'
+import { getStatusJobNormalize, socket, useJobUpdater } from '@/utils/tools'
 import sweetAlert from '@/utils/sweetAlert'
 
 
