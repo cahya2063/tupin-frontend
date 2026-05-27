@@ -12,6 +12,14 @@ const props = defineProps({
   status: String,
   payerId: String,
   receiverId: String,
+  canSubmit: {
+    type: Boolean,
+    default: true,
+  },
+  invalidMessage: {
+    type: String,
+    default: 'Nominal pembayaran tidak valid',
+  },
 })
 
 const emit = defineEmits(['close'])
@@ -61,6 +69,12 @@ const emit = defineEmits(['close'])
 
 async function payXendit() {
   try {
+      if (!props.canSubmit) {
+      sweetAlert.error(props.invalidMessage)
+      emit('close')
+      return
+    }
+    
     const data = {
       amount: props.amount,
       payer_email: props.email,

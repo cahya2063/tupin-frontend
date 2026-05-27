@@ -1,10 +1,10 @@
 <script setup>
-import Payment from '@/components/form/Payment.vue'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue'
 import { config, editor, showSidebarPostedJobs } from '../../utils/tools'
-import { ref } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import sweetAlert from '@/utils/sweetAlert'
 import { apiFetch } from '@/utils/api'
+
 
 const props = defineProps({
   visible: Boolean,
@@ -17,16 +17,19 @@ const uploadedFiles = ref([])
 
 const emit = defineEmits(['close', 'success'])
 
+const errors = reactive({})
 
 function onFileChange(newFiles) {
+  const files = newFiles || []
+
   // kalau jumlah berkurang → berarti hapus
-  if (newFiles.length < uploadedFiles.value.length) {
-    uploadedFiles.value = newFiles
+  if (files.length < uploadedFiles.value.length) {
+    uploadedFiles.value = files
     return
   }
 
   // kalau bertambah → merge
-  const merged = [...uploadedFiles.value, ...newFiles]
+  const merged = [...uploadedFiles.value, ...files]
 
   uploadedFiles.value = merged.filter((file, index, self) =>
     index === self.findIndex(f =>
@@ -35,10 +38,52 @@ function onFileChange(newFiles) {
       f.lastModified === file.lastModified
     )
   )
+
+  if (uploadedFiles.value.length > 0) {
+    delete errors.photos
+  }
 }
+function setFieldError(field, message) {
+  errors[field] = message
+}
+function clearErrors() {
+  Object.keys(errors).forEach(key => {
+    delete errors[key]
+  })
+}
+
+function getReasonText() {
+  const wrapper = document.createElement('div')
+  wrapper.innerHTML = reason.value || ''
+
+  return (wrapper.textContent || '').replace(/\u00a0/g, ' ').trim()
+}
+
+function validateForm(){
+    clearErrors()
+
+    if (!getReasonText()) {
+        setFieldError('reason', 'Alasan garansi harus diisi')
+    }
+
+    if (!uploadedFiles.value.length) {
+        setFieldError('photos', 'Foto barang wajib diunggah')
+    }
+
+    return Object.keys(errors).length === 0
+}
+
+watch(reason, () => {
+    if (getReasonText()) {
+        delete errors.reason
+    }
+})
 
 async function createWarranty(){
     try {
+        if (!validateForm()) {
+            return
+        }
         const formData = new FormData()
         formData.append('jobId', props.selectedJob?._id)
         formData.append('reason', reason.value)
@@ -89,7 +134,7 @@ async function createWarranty(){
         <form class="job-form" novalidate @submit.prevent="createWarranty">
             <div class="modal-section">
                 <small class="modal-section-label">Keluhan yang dialami</small>
-                <div class="ckeditor-wrapper">
+                <div class="ckeditor-wrapper" :class="{ invalid: errors.reason }">
                 <ckeditor
                     v-if="editor && config"
                     v-model="reason"
@@ -97,17 +142,31 @@ async function createWarranty(){
                     :config="config"
                     />
                 </div>
+                <small
+                    v-if="errors.reason"
+                    class="error-text"
+                >
+                    {{ errors.reason }}
+                </small>
             </div>
 
             <div class="modal-section">
                 <small class="modal-section-label">Unggah foto barang</small>
-                <v-file-upload
-                    :model-value="uploadedFiles"
-                    @update:modelValue="onFileChange"
-                    multiple
-                    clearable
-                    accept="image/*"
-                />
+                <div class="file-upload-area" :class="{ invalid: errors.photos }">
+                    <v-file-upload
+                        :model-value="uploadedFiles"
+                        @update:modelValue="onFileChange"
+                        multiple
+                        clearable
+                        accept="image/*"
+                    />
+                </div>
+                <small
+                    v-if="errors.photos"
+                    class="error-text"
+                >
+                    {{ errors.photos }}
+                </small>
             </div>
             <div class="button-warranty-wrapper">
 
@@ -127,7 +186,30 @@ async function createWarranty(){
 .modal-header-custom {
   position: relative;
 }
+.ckeditor-wrapper.invalid {
+  border-color: #e45264 !important;
+}
+.file-upload-area.invalid :deep(.v-file-upload) {
+  border-color: #e45264 !important;
+}
 
+.file-upload-area.invalid {
+  outline: 1.5px solid #e45264;
+  border-radius: 8px;
+}
+
+.file-upload-area {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.error-text {
+  display: block;
+  color: #c72f43;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 0.15rem;
+}
 .modal-header-custom .btn-close {
   margin-left: auto;
   background: #f4f0ff;

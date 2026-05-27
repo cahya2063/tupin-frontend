@@ -4,7 +4,8 @@ import { apiFetch } from '@/utils/api'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue'
 import avatar1 from '@images/avatars/avatar-1.png'
 import { computed, nextTick, onMounted, ref } from 'vue'
-import { backendUrl, config, editor, useLocationPicker } from '@/utils/tools'
+import { backendUrl, config, editor, useLocationPicker, getProvinces, getRegencies, getDistricts, getVillages } from '@/utils/tools'
+
 import sweetAlert from '@/utils/sweetAlert'
 
 const userId = localStorage.getItem('userId')
@@ -25,6 +26,48 @@ const accountDataLocal = ref({
   receiverLocation: null,
   location: null,
 })
+
+const provinceList = ref([])
+const regencyList = ref([])
+const districtList = ref([])
+const villageList = ref([])
+
+const selectedProvince = ref(null)
+const selectedRegency = ref(null)
+const selectedDistrict = ref(null)
+const selectedVillage = ref(null)
+
+
+// provinsi
+async function handleProvinceChange(provinceId) {
+  selectedRegency.value = null
+  selectedDistrict.value = null
+  selectedVillage.value = null
+
+  districtList.value = []
+  villageList.value = []
+
+  regencyList.value = await getRegencies(provinceId)
+  console.log('regencies : ', regencyList.value);
+  
+}
+
+// Kabupaten
+async function handleRegencyChange(regencyId) {
+  selectedDistrict.value = null
+  selectedVillage.value = null
+
+  villageList.value = []
+
+  districtList.value = await getDistricts(regencyId)
+}
+
+// Kecamatan
+async function handleDistrictChange(districtId) {
+  selectedVillage.value = null
+
+  villageList.value = await getVillages(districtId)
+}
 
 function syncDestinationToProfile(selected) {
   if (!selected) {
@@ -68,12 +111,19 @@ const refInputEl = ref()
 
 onMounted(async () => {
   await getProfile()
+  provinceList.value = await getProvinces()
+  console.log('provinces : ', provinceList.value);
+  
   if(role == 'technician'){
 
     await nextTick()
     initLocationMap('profile-map')
   }
 })
+
+function getSelectedName(list, id) {
+  return list.find(item => item.value === id)?.label || ''
+}
 
 // ================== API ==================
 
@@ -87,10 +137,29 @@ async function updateProfile() {
       nama: accountDataLocal.value.name,
       phone_number: accountDataLocal.value.phone_number,
       address: accountDataLocal.value.address,
-      village: accountDataLocal.value.village,
-      subdistrict: accountDataLocal.value.subdistrict,
-      city: accountDataLocal.value.city,
+
+      province: getSelectedName(
+        provinceList.value,
+        selectedProvince.value,
+      ),
+
+      city: getSelectedName(
+        regencyList.value,
+        selectedRegency.value,
+      ),
+
+      subdistrict: getSelectedName(
+        districtList.value,
+        selectedDistrict.value,
+      ),
+
+      village: getSelectedName(
+        villageList.value,
+        selectedVillage.value,
+      ),
+
       zip_code: dest.zipCode || postCode.value || accountDataLocal.value.zip_code,
+
       description: accountDataLocal.value.description,
     }
 
@@ -358,44 +427,56 @@ const phoneModel = computed({
                 />
               </VCol>
 
-              <!-- 👉 village -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <VTextField
-                  v-model="accountDataLocal.village"
-                  label="Desa/Kelurahan"
-                  variant="outlined"
-                />
-              </VCol>
+              <!-- PROVINSI -->
+                <VCol cols="12" md="6">
+                  <VSelect
+                    v-model="selectedProvince"
+                    label="Provinsi"
+                    :items="provinceList"
+                    item-title="label"
+                    item-value="value"
+                    variant="outlined"
+                    @update:model-value="handleProvinceChange"
+                  />
+                </VCol>
 
-              <!-- 👉 subdistrict -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <VTextField
-                  v-model="accountDataLocal.subdistrict"
-                  label="Kecamatan"
-                  variant="outlined"
-                />
-              </VCol>
+                <!-- KABUPATEN -->
+                <VCol cols="12" md="6">
+                  <VSelect
+                    v-model="selectedRegency"
+                    label="Kabupaten / Kota"
+                    :items="regencyList"
+                    item-title="label"
+                    item-value="value"
+                    variant="outlined"
+                    @update:model-value="handleRegencyChange"
+                  />
+                </VCol>
 
-              <!-- 👉 city -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <VSelect
-                  v-model="accountDataLocal.city"
-                  label="Kabupaten"
-                  :items="['Banyuwangi']"
-                  placeholder="Select city"
-                  variant="outlined"
-                />
-              </VCol>
+                <!-- KECAMATAN -->
+                <VCol cols="12" md="6">
+                  <VSelect
+                    v-model="selectedDistrict"
+                    label="Kecamatan"
+                    :items="districtList"
+                    item-title="label"
+                    item-value="value"
+                    variant="outlined"
+                    @update:model-value="handleDistrictChange"
+                  />
+                </VCol>
 
+                <!-- DESA -->
+                <VCol cols="12" md="6">
+                  <VSelect
+                    v-model="selectedVillage"
+                    label="Desa / Kelurahan"
+                    :items="villageList"
+                    item-title="label"
+                    item-value="value"
+                    variant="outlined"
+                  />
+                </VCol>
               <!-- 👉 Zip Code -->
               <VCol
                 cols="12"

@@ -53,7 +53,7 @@ const menuItems = computed(() => {
         to: '/dashboard-technician',
       },
       {
-        title: 'Pengajuan perbaikan',
+        title: 'Pesanan masuk',
         icon: 'ri-tools-line',
         to: '/accepted-jobs',
       },

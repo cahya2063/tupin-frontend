@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { apiFetch } from '@/utils/api'
 import SlideJobDetail from './SlideJobDetail.vue'
-import { showSidebarPostedJobs } from '@/utils/tools'
 import sweetAlert from '@/utils/sweetAlert'
 import CancelJobModal from './CancelJobModal.vue'
 import WarrantyModal from './WarrantyModal.vue'
@@ -26,6 +25,7 @@ const props = defineProps({
 
 
 const showFull = ref(false)
+const showDetailJob = ref(false)
 const showCancelModal = ref(false)
 const isHaveWarranty = ref(false)
 const modalWarranty = ref(false)
@@ -381,7 +381,7 @@ watch(() => props.status, () => {
             <button
               v-if="role === 'client'"
               class="action-btn btn-detail"
-              @click="showSidebarPostedJobs = true"
+              @click="showDetailJob = true"
             >
               <i class="ri-file-list-3-line"></i>
               Detail
@@ -476,9 +476,9 @@ watch(() => props.status, () => {
     </div>
     <!-- Sidebar kanan untuk detail job -->
    <SlideJobDetail
-    :showSidebar="showSidebarPostedJobs"
+    :showSidebar="showDetailJob"
     :selectedJob="selectedJob"
-    @close="showSidebarPostedJobs = false"
+    @close="showDetailJob = false"
   />
 
   <!-- modal warranty -->

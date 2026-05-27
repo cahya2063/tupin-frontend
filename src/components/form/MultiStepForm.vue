@@ -51,14 +51,15 @@ function toLocalISODate(date) {
 }
 
 function onFileChange(newFiles) {
+  const files = newFiles || []
   // kalau jumlah berkurang → berarti hapus
-  if (newFiles.length < uploadedFiles.value.length) {
-    uploadedFiles.value = newFiles
+  if (files.length < uploadedFiles.value.length) {
+    uploadedFiles.value = files
     return
   }
 
   // kalau bertambah → merge
-  const merged = [...uploadedFiles.value, ...newFiles]
+  const merged = [...uploadedFiles.value, ...files]
 
   uploadedFiles.value = merged.filter((file, index, self) =>
     index === self.findIndex(f =>
@@ -67,6 +68,10 @@ function onFileChange(newFiles) {
       f.lastModified === file.lastModified
     )
   )
+
+  if (uploadedFiles.value.length > 0) {
+    delete errors.photos
+  }
 }
 
 
@@ -109,6 +114,10 @@ function validateForm() {
 
   if (needDeadline.value && (!vStartDate.value || !vEndDate.value)) {
     setFieldError('deadline', 'Pilih rentang tanggal pengerjaan')
+  }
+
+  if (!uploadedFiles.value.length) {
+    setFieldError('photos', 'Foto barang wajib diunggah')
   }
 
   if (!getDescriptionText()) {
@@ -301,7 +310,10 @@ onMounted(async () => {
             Foto Barang
           </label>
           <p class="field-hint">Upload foto barang yang ingin diperbaiki</p>
-          <div class="file-upload-area">
+          <div
+            class="file-upload-area"
+            :class="{ invalid: errors.photos }"
+          >
             <!-- <CFormInput
               type="file"
               id="photoUpload"
@@ -316,9 +328,13 @@ onMounted(async () => {
               clearable
               accept="image/*"
             />
-            
-
           </div>
+          <small
+            v-if="errors.photos"
+            class="error-text"
+          >
+            {{ errors.photos }}
+          </small>
         </div>
       </div>
  
@@ -527,6 +543,15 @@ onMounted(async () => {
 :deep(.c-date-range-picker.invalid .form-control),
 :deep(.c-date-range-picker.invalid .form-select) {
   border-color: #e45264 !important;
+}
+
+.file-upload-area.invalid :deep(.v-file-upload) {
+  border-color: #e45264 !important;
+}
+
+.file-upload-area.invalid {
+  outline: 1.5px solid #e45264;
+  border-radius: 8px;
 }
  
 /* ===== Example list ===== */
