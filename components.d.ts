@@ -11,7 +11,6 @@ declare module 'vue' {
     CardStatisticsVertical: typeof import('./src/@core/components/cards/CardStatisticsVertical.vue')['default']
     CardStatisticsWithImages: typeof import('./src/@core/components/cards/CardStatisticsWithImages.vue')['default']
     ErrorHeader: typeof import('./src/components/ErrorHeader.vue')['default']
-    LoginRegisterLayout: typeof import('./src/components/LoginRegisterLayout.vue')['default']
     MoreBtn: typeof import('./src/@core/components/MoreBtn.vue')['default']
     MultiStepForm: typeof import('./src/components/form/MultiStepForm.vue')['default']
     Payment: typeof import('./src/components/form/Payment.vue')['default']
