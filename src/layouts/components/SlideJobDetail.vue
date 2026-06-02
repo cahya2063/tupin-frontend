@@ -2,7 +2,8 @@
 import { apiFetch, getProfile } from '@/utils/api';
 import { backendUrl, createChat, getStatusJobNormalize } from '@/utils/tools';
 import { onMounted, ref, watch } from 'vue';
-
+import { useRouter } from 'vue-router';
+const router = useRouter()
 
 const props = defineProps({
     selectedJob: Object,
@@ -222,7 +223,7 @@ watch(() => props.selectedJob,
                   <span v-else-if="role == 'technician'">{{ profile?.nama }}</span>
                   <button
                     class="chat-btn"
-                    @click="createChat(selectedJob.idCreator, selectedJob.selectedTechnician)"
+                    @click="createChat(selectedJob.idCreator, selectedJob.selectedTechnician, router)"
                   >
                     <i class="ri-chat-1-line"></i>
                     Chat

@@ -18,6 +18,7 @@ const accountDataLocal = ref({
   avatar: '',
   phone_number: '',
   address: '',
+  province: '',
   village: '',
   subdistrict: '',
   city: '',
@@ -36,6 +37,7 @@ const selectedProvince = ref(null)
 const selectedRegency = ref(null)
 const selectedDistrict = ref(null)
 const selectedVillage = ref(null)
+const originalProfile = ref({})
 
 
 // provinsi
@@ -125,40 +127,79 @@ function getSelectedName(list, id) {
   return list.find(item => item.value === id)?.label || ''
 }
 
+function getProfileValue(field) {
+  return accountDataLocal.value[field] || originalProfile.value[field] || ''
+}
+
+function getSelectedNameOrProfile(list, id, field) {
+  return getSelectedName(list, id) || getProfileValue(field)
+}
+
+function cloneLocation(location) {
+  if (!location)
+    return null
+
+  return {
+    ...location,
+    coordinates: Array.isArray(location.coordinates)
+      ? [...location.coordinates]
+      : location.coordinates,
+  }
+}
+
+function setSelectedDestinationFromProfile(profile) {
+  if (profile.receiverLocation?.destinationId && profile.receiverLocation?.destinationName) {
+    selectedDestination.value = [{
+      value: profile.receiverLocation.destinationId,
+      label: profile.receiverLocation.destinationName,
+      zipCode: profile.zip_code || '',
+    }]
+
+    return
+  }
+
+  selectedDestination.value = []
+}
+
 // ================== API ==================
 
 async function updateProfile() {
   try {
     const dest = selectedDestination.value[0] || {}
-    const destinationId = dest.value || accountDataLocal.value.receiverLocation?.destinationId || ''
-    const destinationName = dest.label || accountDataLocal.value.receiverLocation?.destinationName || ''
+    const savedReceiverLocation = accountDataLocal.value.receiverLocation || originalProfile.value.receiverLocation
+    const destinationId = dest.value || savedReceiverLocation?.destinationId || ''
+    const destinationName = dest.label || savedReceiverLocation?.destinationName || ''
 
     const payload = {
       nama: accountDataLocal.value.name,
       phone_number: accountDataLocal.value.phone_number,
       address: accountDataLocal.value.address,
 
-      province: getSelectedName(
+      province: getSelectedNameOrProfile(
         provinceList.value,
         selectedProvince.value,
+        'province',
       ),
 
-      city: getSelectedName(
+      city: getSelectedNameOrProfile(
         regencyList.value,
         selectedRegency.value,
+        'city',
       ),
 
-      subdistrict: getSelectedName(
+      subdistrict: getSelectedNameOrProfile(
         districtList.value,
         selectedDistrict.value,
+        'subdistrict',
       ),
 
-      village: getSelectedName(
+      village: getSelectedNameOrProfile(
         villageList.value,
         selectedVillage.value,
+        'village',
       ),
 
-      zip_code: dest.zipCode || postCode.value || accountDataLocal.value.zip_code,
+      zip_code: dest.zipCode || postCode.value || getProfileValue('zip_code'),
 
       description: accountDataLocal.value.description,
     }
@@ -168,6 +209,9 @@ async function updateProfile() {
         type: 'Point',
         coordinates: [Number(lng.value), Number(lat.value)],
       }
+    }
+    else if (originalProfile.value.location) {
+      payload.location = originalProfile.value.location
     }
 
     if (destinationId && destinationName) {
@@ -195,12 +239,13 @@ async function getProfile() {
     const { data } = await apiFetch(`/profile/${userId}`)
     const user = data.user
 
-    Object.assign(accountDataLocal.value, {
+    const profile = {
       id: user._id,
       name: user.nama || '',
       email: user.email || '',
       phone_number: user.phone_number || '',
       address: user.address || '',
+      province: user.province || '',
       village: user.village || '',
       subdistrict: user.subdistrict || '',
       city: user.city || '',
@@ -209,15 +254,16 @@ async function getProfile() {
       description: user.description || '',
       receiverLocation: user.receiverLocation || null,
       location: user.location || null,
-    })
-
-    if (user.receiverLocation?.destinationId && user.receiverLocation?.destinationName) {
-      selectedDestination.value = [{
-        value: user.receiverLocation.destinationId,
-        label: user.receiverLocation.destinationName,
-        zipCode: user.zip_code || '',
-      }]
     }
+
+    Object.assign(accountDataLocal.value, profile)
+    originalProfile.value = {
+      ...profile,
+      receiverLocation: profile.receiverLocation ? { ...profile.receiverLocation } : null,
+      location: cloneLocation(profile.location),
+    }
+
+    setSelectedDestinationFromProfile(profile)
 
     postCode.value = user.zip_code || null
 
@@ -254,10 +300,10 @@ async function changeAvatar(e) {
     })
 
     accountDataLocal.value.avatar = data.avatar
-    alert('Avatar berhasil diperbarui ✅')
+    sweetAlert.success('Avatar berhasil diperbarui ✅')
   } catch (err) {
     console.error(err)
-    alert('Gagal upload avatar ❌')
+    sweetAlert.error('Gagal upload avatar ❌')
   }
 }
 
@@ -269,19 +315,14 @@ function resetAvatar() {
 
 function resetForm() {
   Object.assign(accountDataLocal.value, {
-    name: '',
-    email: '',
-    phone_number: '',
-    address: '',
-    village: '',
-    subdistrict: '',
-    city: '',
-    zip_code: '',
-    receiverLocation: null,
-    location: null,
+    ...originalProfile.value,
+    receiverLocation: originalProfile.value.receiverLocation
+      ? { ...originalProfile.value.receiverLocation }
+      : null,
+    location: cloneLocation(originalProfile.value.location),
   })
-  selectedDestination.value = []
-  postCode.value = null
+  setSelectedDestinationFromProfile(accountDataLocal.value)
+  postCode.value = originalProfile.value.zip_code || null
   postCodeError.value = ''
   hasLocationValue.value = false
 }
@@ -449,6 +490,7 @@ const phoneModel = computed({
                     item-title="label"
                     item-value="value"
                     variant="outlined"
+                    :placeholder="accountDataLocal.city"
                     @update:model-value="handleRegencyChange"
                   />
                 </VCol>
@@ -462,6 +504,7 @@ const phoneModel = computed({
                     item-title="label"
                     item-value="value"
                     variant="outlined"
+                    :placeholder="accountDataLocal.subdistrict"
                     @update:model-value="handleDistrictChange"
                   />
                 </VCol>
@@ -475,6 +518,7 @@ const phoneModel = computed({
                     item-title="label"
                     item-value="value"
                     variant="outlined"
+                    :placeholder="accountDataLocal.village"
                   />
                 </VCol>
               <!-- 👉 Zip Code -->
@@ -507,7 +551,7 @@ const phoneModel = computed({
                     :value="selectedDestination"
                     @change="handleDestinationChange"
                     @filter-change="handleSearch"
-                    :placeholder="`(Kode Pos) ${accountDataLocal.receiverLocation?.destinationName || postCode || 'Masukkan kode pos'}`"
+                    :placeholder="`(Kode Pos) ${accountDataLocal.receiverLocation?.destinationName || originalProfile.receiverLocation?.destinationName || postCode || 'Masukkan kode pos'}`"
                     virtual-scroller
                     teleport="body"
                   />

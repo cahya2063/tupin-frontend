@@ -49,7 +49,7 @@ export const getCurrentLocation = () => {
     )
   })
 }
-export async function createChat(clientId, technicianId) {
+export async function createChat(clientId, technicianId, router) {
   try {
     const response = await apiFetch(`/chats/create`, {
       method: 'POST',
@@ -62,6 +62,7 @@ export async function createChat(clientId, technicianId) {
       }),
     })
     console.log('Chat created:', response.data)
+    router.push('/chat-view')
   } catch (error) {
     console.error('Gagal membuat chat:', error)
   }

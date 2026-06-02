@@ -84,6 +84,7 @@ async function getSkills(id){
 }
 
 const buildTechnicianProfiles = async (technicians) =>
+  
   Promise.all(
     technicians.map(async ({ _id, distance }) => {
       
