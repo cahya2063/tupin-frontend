@@ -1,7 +1,7 @@
 <script setup>
 import { apiFetch } from '@/utils/api';
 import sweetAlert from '@/utils/sweetAlert';
-import { config, editor } from '@/utils/tools';
+import { backendUrl, config, editor } from '@/utils/tools';
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
 import { ref, watch } from 'vue';
 
@@ -99,7 +99,7 @@ function cancelAction() {
                 <v-row>
                   <v-col v-for="(photo, index) in selectedJob.photos" :key="index" cols="6" sm="4">
                     <v-img 
-                      :src="`http://localhost:3000/uploads/jobs/${photo}`" 
+                      :src="`${backendUrl}/uploads/jobs/${photo}`" 
                       cover 
                       aspect-ratio="1"
                       class="rounded-lg bg-grey-lighten-2 border"
