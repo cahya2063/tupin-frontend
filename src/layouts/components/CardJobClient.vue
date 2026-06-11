@@ -1,12 +1,12 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { apiFetch } from '@/utils/api'
-import SlideJobDetail from './SlideJobDetail.vue'
-import sweetAlert from '@/utils/sweetAlert'
-import CancelJobModal from './CancelJobModal.vue'
-import WarrantyModal from './WarrantyModal.vue'
 import ReviewModal from '@/components/form/ReviewModal.vue'
+import { apiFetch } from '@/utils/api'
+import sweetAlert from '@/utils/sweetAlert'
+import { computed, onMounted, ref, watch } from 'vue'
+import CancelJobModal from './CancelJobModal.vue'
 import ReportModal from './ReportModal.vue'
+import SlideJobDetail from './SlideJobDetail.vue'
+import WarrantyModal from './WarrantyModal.vue'
 
 const role = localStorage.getItem('role')
 
@@ -35,12 +35,6 @@ const userId = localStorage.getItem('userId')
 const receiverId = computed(() => props.selectedJob?.selectedTechnician)
 const modalReport = ref(false)
 const isHaveReports = ref(false)
-
-
-const profile = ref()
-
-
-
 
 const stripHtml = text => text?.replace(/<[^>]*>/g, '').trim() ?? ''
 
@@ -204,14 +198,12 @@ const isWithinWarranty = (jobDoneDate) => {
 
   const doneDate = new Date(jobDoneDate);
   const now = new Date();
-  
-  // hitung selisi ms
-  const diffTime = now - doneDate;
-  // 1 hari = 1000 ms * 60 detik * 60 menit * 24 jam
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
-  console.log('warranty debug : ', diffDays);
 
-  return diffDays >= 0;
+  const diffDays = (now - doneDate) / (1000 * 60 * 60 * 24);
+
+  console.log('diffDays : ', diffDays);
+  
+  return diffDays >= 0 && diffDays<= 4;
 };
 
 
@@ -453,6 +445,7 @@ watch(() => props.status, () => {
               class="action-btn btn-reject"
               @click="handleReportTechnician"
             >
+            
               <i class="ri-alarm-warning-line"></i>
               Laporkan Teknisi
             </button>

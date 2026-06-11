@@ -15,6 +15,7 @@ const emit = defineEmits(['close'])
 const repairPrice = ref(0)
 const isRepairPriceValid = computed(() => Number(repairPrice.value) > 0)
 const totalAmount = computed(() => Number(repairPrice.value || 0) + adminFee)
+const totalAmountTesting = computed(() => Number(1000) + adminFee)
 
 const formatRupiah = (val) => 'Rp ' + (val || 0).toLocaleString('id-ID')
 
@@ -99,7 +100,7 @@ const onPriceInput = (e) => {
           v-show="selectedJob?.status === 'checked'"
           :name="profile?.nama"
           :email="profile?.email"
-          :amount="totalAmount"
+          :amount="totalAmountTesting"
           :sub-account-id="technicianProfile?.subAccountId"
           :job-id="selectedJob?._id"
           :payer-id="profile?._id"
