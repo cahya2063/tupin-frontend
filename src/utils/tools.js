@@ -1,11 +1,22 @@
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { onUnmounted, ref, watch } from "vue"
 import { apiFetch } from "./api"
 import InlineEditor from '@ckeditor/ckeditor5-build-inline'
 import { io } from 'socket.io-client'
 import sweetAlert from './sweetAlert'
 const regionBaseUrl = `https://www.emsifa.com/api-wilayah-indonesia/api`
+
+delete L.Icon.Default.prototype._getIconUrl
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+})
 
 export const backendUrl = import.meta.env.VITE_API_URL
 // ===========CKEDITOR============//

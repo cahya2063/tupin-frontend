@@ -18,7 +18,8 @@ const accountError = ref('')
 const technician = ref()
 
 const quickAmounts = [50000, 100000, 200000, 500000]
-const payoutBankList = ['BCA', 'BNI', 'BRI']
+const payoutBankList = ['BCA', 'BNI', 'BRI', 'BNC']
+const eWalletList = ['LINKAJA', 'OVO', 'GOPAY', 'DANA']
 
 const withdrawAmount = computed(() => parseInt(amount.value || 0))
 
@@ -44,15 +45,15 @@ async function getBalance(subAccountId) {
 }
 
 const withdraw = async () => {
-  if (balance.value - withdrawAmount.value < 10000) {
-    sweetAlert.error('Penarikan tidak valid dan harus menyisakan saldo sebanyak 10000 Rp')
+  if (balance.value - withdrawAmount.value < 5000) {
+    sweetAlert.error('Penarikan tidak valid dan harus menyisakan saldo sebanyak 5000 Rp')
     return
   }
 
   try {
     console.log(`debug payout : ${accountNumber.value} ${channelName.value}, ${withdrawAmount.value}`)
     const request = {
-      technicianId: userId,
+      userId: userId,
       amount: withdrawAmount.value,
       channelName: channelName.value,
       accountNumber: accountNumber.value,
@@ -184,7 +185,7 @@ onMounted(async () => {
 
         <!-- Bank Selector -->
         <div class="field-group">
-          <label class="field-label">Pilih Bank</label>
+          <label class="field-label">Pilih Penarikan</label>
           <VExpansionPanels variant="accordion" class="bank-accordion">
             <VExpansionPanel :title="'Bank Dipilih : ' + channelName">
               <v-expansion-panel-text>
@@ -199,6 +200,19 @@ onMounted(async () => {
                   <i class="ri-bank-fill" :fill="channelName === bank ? 'white' : '#8d58ff'" style="size: 30px;"></i>
                     
                     {{ bank }}
+                  </button>
+                </div>
+                <div class="bank-grid">
+                  <button
+                    v-for="ewallet in eWalletList"
+                    :key="ewallet"
+                    class="bank-btn"
+                    :class="{ active: channelName === ewallet }"
+                    @click="channelName = ewallet"
+                  >
+                  <i class="ri-bank-fill" :fill="channelName === ewallet ? 'white' : '#8d58ff'" style="size: 30px;"></i>
+                    
+                    {{ ewallet }}
                   </button>
                 </div>
               </v-expansion-panel-text>

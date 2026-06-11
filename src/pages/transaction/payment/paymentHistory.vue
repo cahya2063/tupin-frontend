@@ -15,7 +15,7 @@ const isModalDeleteActive = ref(false)
 const selectedDeleteInvoice = ref(null)
 
 const filteredInvoices = computed(() =>
-  payment.value.invoices.reverse()
+  [...payment.value.invoices].reverse()
 )
 async function getInvoices(userId) {
   const response = await apiFetch(`/payment/get-invoice/${userId}`)
