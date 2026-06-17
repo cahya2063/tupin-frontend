@@ -13,22 +13,22 @@ const role = localStorage.getItem('role')
 const tabs = [
   {
     title: 'Wallet',
-    icon: 'ri-hourglass-line',
+    icon: 'ri-wallet-3-line',
     tab: 'wallet',
   },
   ...(role !== 'technician' ? [{
     title: 'Tagihan',
-    icon: 'ri-group-line',
+    icon: 'ri-bill-line',
     tab: 'invoices',
   }] : []),
   {
     title: 'Riwayat Penarikan',
-    icon: 'ri-hourglass-line',
+    icon: 'ri-refund-2-line',
     tab: 'disbursements-history',
   },
   {
     title: 'Transfer',
-    icon: 'ri-hourglass-line',
+    icon: 'ri-exchange-dollar-line',
     tab: 'transfer-history',
   },
 ]

@@ -40,7 +40,6 @@ export const getCurrentLocation = () => {
       reject('Geolocation tidak didukung browser')
       return
     }
-
     navigator.geolocation.getCurrentPosition(
       (position) => {
         resolve({
