@@ -60,8 +60,6 @@ async function getNearestTechnician(location){
     },
     body: JSON.stringify(location)
   })
-
-  
   return nearestTechnicianList
 }
 

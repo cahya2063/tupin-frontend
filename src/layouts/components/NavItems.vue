@@ -12,32 +12,32 @@ const menuItems = computed(() => {
     return [
       {
         title: 'Dashboard',
-        icon: 'ri-home-line',
+        icon: 'ri-dashboard-line',
         to: '/dashboard-admin',
       },
       {
         title: 'Pendaftaran teknisi',
-        icon: 'ri-user-search-line',
+        icon: 'ri-user-add-line',
         to: '/technician-registration',
       },
       {
         title: 'Management skill',
-        icon: 'ri-user-search-line',
+        icon: 'ri-settings-3-line',
         to: '/skill-management',
       },
       {
         title: 'Laporan pelanggan',
-        icon: 'ri-tools-line',
+        icon: 'ri-customer-service-2-line',
         to: '/report-history',
       },
       {
         title: 'Pelanggaran teknisi',
-        icon: 'ri-tools-line',
+        icon: 'ri-alarm-warning-line',
         to: '/penalty-point',
       },
       {
         title: 'Laporan pekerjaan',
-        icon: 'ri-tools-line',
+        icon: 'ri-file-list-3-line',
         to: '/report-job',
       },
 
@@ -49,22 +49,22 @@ const menuItems = computed(() => {
 
       {
         title: 'Dashboard',
-        icon: 'ri-home-line',
+        icon: 'ri-dashboard-line',
         to: '/dashboard-technician',
       },
       {
         title: 'Pesanan masuk',
-        icon: 'ri-tools-line',
+        icon: 'ri-inbox-archive-line',
         to: '/accepted-jobs',
       },
       {
         title: 'Pengajuan garansi',
-        icon: 'ri-tools-line',
+        icon: 'ri-shield-check-line',
         to: '/warranty-request',
       },
       {
         title: 'Laporan pelanggan',
-        icon: 'ri-tools-line',
+        icon: 'ri-customer-service-2-line',
         to: '/report-history',
       },
     ]
@@ -91,7 +91,7 @@ const menuItems = computed(() => {
     <VerticalNavLink
       :item="{
         title: 'Chat',
-        icon: 'ri-wechat-line',
+        icon: 'ri-chat-3-line',
         to: '/chat-view',
       }"
     />
@@ -99,7 +99,7 @@ const menuItems = computed(() => {
     <VerticalNavLink
       :item="{
         title: 'Pembayaran',
-        icon: 'ri-wechat-line',
+        icon: 'ri-wallet-3-line',
         to: '/payment-tabs',
       }"
     />
