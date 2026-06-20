@@ -42,7 +42,7 @@ export const getCurrentLocation = () => {
     }
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        resolve({
+        resolve({ // return ke pentrigger fungsi
           lat: position.coords.latitude,
           lng: position.coords.longitude
         })
@@ -306,12 +306,14 @@ export function useLocationPicker(options = {}) {
     try {
       const position = await getCurrentLocation()
 
+      // Pindahkan map ke lokasi pengguna
       setMapPosition(position.lat, position.lng)
 
       return position
     } catch (error) {
       console.error('Gagal ambil lokasi:', error)
 
+      // Jika terdapat callback error jalankan
       if (typeof onCurrentLocationError === 'function')
         onCurrentLocationError(error)
 

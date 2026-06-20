@@ -45,23 +45,37 @@ const today = new Date()
 // function handleFileUpload(e) {
 //   photoFile.value = e.target.files[0]
 // }
+
+// Fungsi untuk mengubah tanggal ke format (YYYY-MM-DD)
 function toLocalISODate(date) {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
   return local.toISOString().split('T')[0]
 }
 
 function onFileChange(newFiles) {
+  // jika newFiles null gunakan array kosong
   const files = newFiles || []
-  // kalau jumlah berkurang → berarti hapus
+
+  // Jika jumlah file baru lebih sedikit daripada file yang sudah tersimpan,
+  // berarti pengguna menghapus salah satu atau beberapa file
   if (files.length < uploadedFiles.value.length) {
+
+    // Perbarui daftar file sesuai kondisi terbaru
     uploadedFiles.value = files
     return
   }
 
-  // kalau bertambah → merge
+  // Jika jumlah file bertambah,
+  // gabungkan file lama dan file baru
   const merged = [...uploadedFiles.value, ...files]
 
+  // Hilangkan file duplikat
   uploadedFiles.value = merged.filter((file, index, self) =>
+
+    // File dianggap sama jika:
+    // 1. Nama file sama
+    // 2. Ukuran file sama
+    // 3. Waktu modifikasi terakhir sama
     index === self.findIndex(f =>
       f.name === file.name &&
       f.size === file.size &&
@@ -93,7 +107,7 @@ function clearErrors() {
 
 function getDescriptionText() {
   const wrapper = document.createElement('div')
-  wrapper.innerHTML = description.value || ''
+  wrapper.innerHTML = description.value || '' // ambil nilai description.value
 
   return (wrapper.textContent || '').replace(/\u00a0/g, ' ').trim()
 }
