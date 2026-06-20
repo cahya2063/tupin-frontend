@@ -6,8 +6,6 @@ import sweetAlert from '@/utils/sweetAlert'
 import avatar1 from '@images/avatars/avatar-1.png'
 
 
-
-
 const userId = localStorage.getItem('userId')
 const userRole = localStorage.getItem('role')
 
