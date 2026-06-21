@@ -95,6 +95,7 @@ const onPriceInput = (e) => {
         </div>
       </div>
 
+      
       <CModalFooter>
         <Payment
           v-show="selectedJob?.status === 'checked'"
