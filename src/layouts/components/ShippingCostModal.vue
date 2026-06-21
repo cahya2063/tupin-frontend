@@ -69,7 +69,7 @@ const formatRupiah = (val) => 'Rp ' + (val || 0).toLocaleString('id-ID')
         v-show="selectedJob?.status === 'open'"
         :name="profile?.nama"
         :email="profile?.email"
-        :amount="shippingCostTesting"
+        :amount=10000
         :sub-account-id="technicianProfile?.subAccountId"
         :job-id="selectedJob?._id"
         :payer-id="profile?._id"

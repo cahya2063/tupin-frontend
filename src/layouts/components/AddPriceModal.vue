@@ -100,7 +100,7 @@ const onPriceInput = (e) => {
           v-show="selectedJob?.status === 'checked'"
           :name="profile?.nama"
           :email="profile?.email"
-          :amount="totalAmountTesting"
+          :amount=10000
           :sub-account-id="technicianProfile?.subAccountId"
           :job-id="selectedJob?._id"
           :payer-id="profile?._id"
