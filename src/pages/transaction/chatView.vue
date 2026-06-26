@@ -45,6 +45,8 @@ async function getProfile(userId) {
 async function getChatByUserId(userId) {
   try {
     const response = await apiFetch(`/chats/${userId}`)
+    console.log('data chat : ', response.data);
+    
     return response.data.chats
   } catch (error) {
     console.error('Gagal ambil chat:', error)
@@ -215,14 +217,18 @@ function formatDate(date) {
         >
           <div class="avatar">
             <img :src="userRole == 'technician'? backendUrl+chat.client?.avatar : backendUrl+chat.teknisi?.avatar" alt="avatar">
+            
           </div>
           <div class="chat-meta">
             <h4>
               {{ userRole == 'technician' ? chat.client?.nama : chat.teknisi?.nama }}
             </h4>
-            <p class="last">Klik untuk membuka percakapan</p>
+            <p class="last">Klik untuk membuka chat</p>
           </div>
-          <span class="chat-time">Oct 26</span>
+          <span class="chat-time">
+            <v-badge v-if="chat.unreadMessages > 0" location="right center" color="error" :content="chat.unreadMessages"/>
+            <span v-else></span>
+          </span>
           
         </li>
       </ul>
