@@ -38,8 +38,7 @@ const errors = reactive({})
 const title = ref('')
 const category = ref('Elektronik')
 const needDeadline = ref(false)
-const vStartDate = ref(null)
-const vEndDate = ref(null)
+const deadline = ref()
 const today = new Date()
  
 // function handleFileUpload(e) {
@@ -47,10 +46,10 @@ const today = new Date()
 // }
 
 // Fungsi untuk mengubah tanggal ke format (YYYY-MM-DD)
-function toLocalISODate(date) {
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-  return local.toISOString().split('T')[0]
-}
+// function toLocalISODate(date) {
+//   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+//   return local.toISOString().split('T')[0]
+// }
 
 function onFileChange(newFiles) {
   // jika newFiles null gunakan array kosong
@@ -126,7 +125,7 @@ function validateForm() {
     setFieldError('category', 'Pilih kategori kerusakan')
   }
 
-  if (needDeadline.value && (!vStartDate.value || !vEndDate.value)) {
+  if (needDeadline.value && !deadline.value) {
     setFieldError('deadline', 'Pilih rentang tanggal pengerjaan')
   }
 
@@ -146,21 +145,18 @@ function validateForm() {
 }
 
 async function postJob() {
+  console.log('deadline : ', deadline.value);
   if (!validateForm()) {
     sweetAlert.error('Periksa kembali data yang wajib diisi')
     return
   }
+
+  
   
   const formData = new FormData()
   formData.append('title', title.value)
   formData.append('category', category.value)
-  formData.append(
-    'deadline',
-    JSON.stringify({
-      start_date: vStartDate.value ? toLocalISODate(vStartDate.value) : null,
-      end_date: vEndDate.value ? toLocalISODate(vEndDate.value) : null,
-    }),
-  )
+  formData.append('deadline', JSON.stringify(deadline.value))
   formData.append('description', description.value)
   formData.append('userId', userId)
   formData.append('location', JSON.stringify({ lat: lat.value, lng: lng.value }))
@@ -187,8 +183,7 @@ async function postJob() {
     title.value = ''
     category.value = 'Elektronik'
     needDeadline.value = false
-    vStartDate.value = null
-    vEndDate.value = null
+    deadline.value = null
     description.value = ''
     uploadedFiles.value = []
     destinationList.value = []
@@ -291,24 +286,25 @@ onMounted(async () => {
         <div class="form-group">
           <label class="field-label">
             <span class="label-number">03</span>
-            Jangka Waktu
+            Deadline pengerjaan
           </label>
-          <p class="field-hint">Apakah kamu butuh batas waktu pengerjaan?</p>
+          <p class="field-hint">Apakah kamu ingin menetapkan deadline pengerjaan?</p>
           <div class="switch-row">
             <span class="switch-label">Tidak</span>
             <CFormSwitch size="xl" id="deadlineSwitch" v-model="needDeadline" />
             <span class="switch-label">Ya</span>
           </div>
-          <CDateRangePicker
+          <CDatePicker
+            placeholder="Pilih tanggal"
             v-if="needDeadline"
             label="Pilih rentang tanggal"
             locale="id-ID"
             :min-date="today"
-            v-model:start-date="vStartDate"
-            v-model:end-date="vEndDate"
+            v-model:date="deadline"
             class="mt-3"
             :class="{ invalid: errors.deadline }"
           />
+          
           <small
             v-if="errors.deadline"
             class="error-text"

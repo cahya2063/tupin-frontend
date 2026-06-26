@@ -13,7 +13,7 @@ const technicianId = localStorage.getItem('userId')
 const props = defineProps({
   id: String,
   title: String,
-  deadline: Object,
+  deadline: String,
   desc: String,
   category: String,
   status: Object,
@@ -264,11 +264,11 @@ watch(() => props.status, () => {
   
         <!-- Meta: deadline + kategori -->
         <div class="meta-row">
-          <div v-if="deadline?.start_date" class="pill pill-deadline">
+          <div v-if="deadline" class="pill pill-deadline">
             <i class="ri-calendar-event-line pill-icon"></i>
-            Jangka waktu : <strong>{{ formatDate(deadline?.start_date) }} sampai {{ formatDate(deadline?.end_date) }}</strong>
+            Jangka waktu : <strong>{{ formatDate(deadline) }}</strong>
           </div>
-          <div v-else-if="deadline?.start_date == null" class="pill pill-deadline">
+          <div v-else-if="deadline == null" class="pill pill-deadline">
             <i class="ri-calendar-event-line pill-icon"></i>
             Jangka waktu : tidak ada deadline
           </div>
