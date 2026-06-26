@@ -257,20 +257,11 @@ watch(() => props.selectedJob,
                     <span class="dl-dot dl-dot--start"></span>
                   </div>
                   <div>
-                    <span class="dl-label">Mulai</span>
-                    <p class="dl-date">{{ formatDate(selectedJob?.deadline?.start_date) }}</p>
+                    <span class="dl-label">Tanggal deadline pengerjaan</span>
+                    <p class="dl-date">{{ formatDate(selectedJob?.deadline) }}</p>
                   </div>
                 </div>
-                <div class="deadline-line"></div>
-                <div class="deadline-point">
-                  <div class="deadline-dot-wrap">
-                    <span class="dl-dot dl-dot--end"></span>
-                  </div>
-                  <div>
-                    <span class="dl-label">Selesai</span>
-                    <p class="dl-date">{{ formatDate(selectedJob?.deadline?.end_date) }}</p>
-                  </div>
-                </div>
+                
               </div>
             </section>
  
