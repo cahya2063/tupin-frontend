@@ -1,11 +1,24 @@
 <script setup>
+import { apiFetch } from '@/utils/api'
+import { onMounted } from 'vue'
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route  = useRoute()
 const router = useRouter()
 
-const navItems = [
+const countMessages = ref(0)
+async function getCountMessage(){
+  try {
+    const messages = await apiFetch(`/messages/count-message`)
+    countMessages.value = messages.data.count
+    console.log('count message : ', countMessages.value);
+  } catch (error) {
+    console.error('gagal menghitung message');
+    
+  }
+}
+const navItems = computed(() => [
   {
     label: 'Home',
     icon: 'ri-home-5-line',
@@ -29,6 +42,7 @@ const navItems = [
     icon: 'ri-wechat-line',
     iconActive: 'ri-wechat-fill',
     to: '/chat-view',
+    badge: countMessages.value > 0 ? countMessages.value : null,
   },
   {
     label: 'Dompet',
@@ -36,10 +50,10 @@ const navItems = [
     iconActive: 'ri-wallet-3-fill',
     to: '/payment-tabs',
   },
-]
+])
 
 const activeIndex = computed(() => {
-  const idx = navItems.findIndex(item => route.path.startsWith(item.to))
+  const idx = navItems.value.findIndex(item => route.path.startsWith(item.to))
   return idx >= 0 ? idx : 0
 })
 
@@ -51,6 +65,10 @@ function navigate(item, index) {
   currentValue.value = index
   router.push(item.to)
 }
+
+onMounted(async()=>{
+  await getCountMessage()
+})
 </script>
 
 <template>
@@ -67,7 +85,20 @@ function navigate(item, index) {
         @click="navigate(item, index)"
       >
         <!-- Icon -->
+        <VBadge
+          v-if="item.badge"
+          :content="item.badge"
+          color="error"
+          location="top center"
+        >
+          <VIcon
+            :icon="currentValue === index ? item.iconActive : item.icon"
+            class="nav-btn__icon"
+          />
+        </VBadge>
+
         <VIcon
+          v-else
           :icon="currentValue === index ? item.iconActive : item.icon"
           class="nav-btn__icon"
         />

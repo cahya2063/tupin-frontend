@@ -11,10 +11,8 @@ import { getStatusJobNormalize, socket, useJobUpdater } from '@/utils/tools'
 
 const avatars = ref({})
 const role = localStorage.getItem('role')
-const showSidebar = ref(false)
 const acceptedJobs = ref([])
 const selectedJob = ref()
-const userName = ref([])
 const showRatingModal = ref(false)
 const userId = localStorage.getItem('userId')
 const receiverId = computed(() => selectedJob.value?.idCreator)
@@ -55,25 +53,22 @@ async function getAcceptedJobs(technicianId) {
     console.error(error)
   }
 }
- 
-// async function getDetailJobs(id) {
-//   try {
-//     const response = await apiFetch(`/jobs/${id}`)
-//     selectedJob.value = response.data.job
-//     const profile = await getProfile(selectedJob.value.idCreator)
-//     userName.value = profile.nama
-//     showSidebar.value = true
-//   } catch (error) {
-//     console.error(error)
-//   }
-// }
- 
 
- 
 
- 
+async function readCountJobNotification(){
+  try {
+    const readNotification = await apiFetch(`/notifications/read-count-notification`)
+    console.log('read count notif : ', readNotification.data.message);
+    
+  } catch (error) {
+    console.error('gagal membaca notifikasi');
+    
+  }
+}
+
 onMounted(async () => {
   await getAcceptedJobs(userId)
+  await readCountJobNotification()
 
   // trigger event register di server
   socket.emit('register', {

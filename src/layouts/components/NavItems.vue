@@ -1,5 +1,7 @@
 <script setup>
 import VerticalNavSectionTitle from '@/@layouts/components/VerticalNavSectionTitle.vue'
+import { apiFetch } from '@/utils/api'
+import sweetAlert from '@/utils/sweetAlert'
 import VerticalNavGroup from '@layouts/components/VerticalNavGroup.vue'
 import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
 
@@ -52,11 +54,11 @@ const menuItems = computed(() => {
         icon: 'ri-dashboard-line',
         to: '/dashboard-technician',
       },
-      {
-        title: 'Pesanan masuk',
-        icon: 'ri-inbox-archive-line',
-        to: '/accepted-jobs',
-      },
+      // {
+      //   title: 'Pesanan masuk',
+      //   icon: 'ri-inbox-archive-line',
+      //   to: '/accepted-jobs',
+      // },
       {
         title: 'Pengajuan garansi',
         icon: 'ri-shield-check-line',
@@ -71,6 +73,37 @@ const menuItems = computed(() => {
   }
 
   return [] // default: kosong
+})
+
+const countNotification = ref(0)
+async function countJobNotification(){
+  try{
+    const notifications  = await apiFetch(`/notifications/count-notification/${localStorage.getItem('userId')}`)
+    countNotification.value = notifications.data.count;
+    console.log('notifications : ', notifications.data);
+
+  }catch(error){
+    console.error('gagal ambil menghitung notifikasi');
+    
+  }
+}
+const countMessages = ref(0)
+async function getCountMessage(){
+  try {
+    const messages = await apiFetch(`/messages/count-message`)
+    countMessages.value = messages.data.count
+    console.log('count message : ', countMessages.value);
+  } catch (error) {
+    console.error('gagal menghitung message');
+    
+  }
+}
+
+onMounted(async() => {
+  await countJobNotification()
+  await getCountMessage()
+  console.log('messages : ', countMessages);
+  
 })
 </script>
 
@@ -93,6 +126,17 @@ const menuItems = computed(() => {
         title: 'Chat',
         icon: 'ri-chat-3-line',
         to: '/chat-view',
+        badgeClass: 'bg-error',
+        badgeContent: countMessages > 0 ? countMessages : null,
+      }"
+    />
+    <VerticalNavLink
+      :item="{
+        title: 'Pesanan masuk',
+        icon: 'ri-inbox-archive-line',
+        to: '/accepted-jobs',
+        badgeContent: countNotification > 0 ? countNotification : null,
+        badgeClass: 'bg-error'
       }"
     />
 
