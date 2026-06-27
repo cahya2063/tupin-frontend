@@ -8,6 +8,7 @@ const props = defineProps({
   profile: Object,
   technicianProfile: Object,
   shippingCost: Number,
+  distance: Number
 })
 
 const emit = defineEmits(['close'])
@@ -29,29 +30,18 @@ const formatRupiah = (val) => 'Rp ' + (val || 0).toLocaleString('id-ID')
     </CModalHeader>
 
     <CModalBody class="p-0">
-      <div class="modal-section">
-        <small class="modal-section-label">Lokasi</small>
-        <div class="location-grid">
-          <div class="location-card location-card--client">
-            <span class="location-card__icon"><i class="ri-user-line"></i></span>
-            <div>
-              <span class="location-card__lbl">Pelanggan</span>
-              <strong class="location-card__val">{{ selectedJob?.destination?.destinationName || '-' }}</strong>
-            </div>
-          </div>
-          <div class="location-card location-card--tech">
-            <span class="location-card__icon"><i class="ri-tools-line"></i></span>
-            <div>
-              <span class="location-card__lbl">Teknisi</span>
-              <strong class="location-card__val">{{ technicianProfile?.receiverLocation?.destinationName || '-' }}</strong>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div class="modal-section">
         <small class="modal-section-label">Rincian Biaya</small>
         <div class="cost-table">
+          <div class="cost-row">
+            <span class="cost-label">Jarak</span>
+            <span class="cost-value">{{ distance.toFixed(1) }} Km</span>
+          </div>
+          <div class="cost-row">
+            <span class="cost-label">Ukuran</span>
+            <span class="cost-value">{{ selectedJob?.size }}</span>
+          </div>
           <div class="cost-row">
             <span class="cost-label">Ongkos kirim</span>
             <span class="cost-value">{{ formatRupiah(shippingCost) }}</span>

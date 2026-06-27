@@ -1,21 +1,16 @@
 <script setup>
 import { apiFetch, getProfile } from '@/utils/api'
-import { nextTick, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { Ckeditor } from '@ckeditor/ckeditor5-vue'
 import { config, editor, useLocationPicker } from '@/utils/tools'
 import sweetAlert from '@/utils/sweetAlert'
 import { useRouter } from 'vue-router'
 
 const {
-  destinationList,
-  handleSearch,
-  selectedDestination,
-  postCodeError,
   lat,
   lng,
   initLocationMap,
   getMyLocation,
-  handleDestinationChange,
   resetLocation,
 } = useLocationPicker({
   clearDestinationWhenPostCodeChanges: true,
@@ -38,18 +33,37 @@ const errors = reactive({})
 const title = ref('')
 const category = ref('Elektronik')
 const needDeadline = ref(false)
+const size = ref('')
 const deadline = ref()
 const today = new Date()
  
-// function handleFileUpload(e) {
-//   photoFile.value = e.target.files[0]
-// }
+const sizeOptions = [
+  {
+    value: 'kecil',
+    label: 'Kecil',
+    example: 'HP, Laptop, Blender, Rice Cooker'
+  },
+  {
+    value: 'sedang',
+    label: 'Sedang',
+    example: 'TV ≤ 32", Microwave, Kursi'
+  },
+  {
+    value: 'besar',
+    label: 'Besar',
+    example: 'Mesin Cuci, Kulkas 1 Pintu, Meja Kerja'
+  },
+  {
+    value: 'sangat_besar',
+    label: 'Sangat Besar',
+    example: 'Lemari, Sofa, Kulkas 2 Pintu'
+  }
+]
 
-// Fungsi untuk mengubah tanggal ke format (YYYY-MM-DD)
-// function toLocalISODate(date) {
-//   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-//   return local.toISOString().split('T')[0]
-// }
+const selectedSize = computed(() => {
+  return sizeOptions.find(item => item.value === size.value)
+})
+
 
 function onFileChange(newFiles) {
   // jika newFiles null gunakan array kosong
@@ -128,6 +142,9 @@ function validateForm() {
   if (needDeadline.value && !deadline.value) {
     setFieldError('deadline', 'Pilih rentang tanggal pengerjaan')
   }
+  if (!size.value){
+    setFieldError('size', 'pilih ukuran barang')
+  }
 
   if (!uploadedFiles.value.length) {
     setFieldError('photos', 'Foto barang wajib diunggah')
@@ -137,9 +154,6 @@ function validateForm() {
     setFieldError('description', 'Deskripsi kerusakan wajib diisi')
   }
 
-  if (!selectedDestination.value?.[0]?.value) {
-    setFieldError('destination', 'Kode pos atau lokasi wajib dipilih')
-  }
 
   return Object.keys(errors).length === 0
 }
@@ -160,8 +174,8 @@ async function postJob() {
   formData.append('description', description.value)
   formData.append('userId', userId)
   formData.append('location', JSON.stringify({ lat: lat.value, lng: lng.value }))
-  formData.append('destination', JSON.stringify({ destinationId: selectedDestination.value[0].value, destinationName: selectedDestination.value[0].label }))
   formData.append('selectedTechnician', props.technicianId)
+  formData.append('size', size.value)
  
   console.log('uploaded files : ', uploadedFiles.value);
   
@@ -186,7 +200,7 @@ async function postJob() {
     deadline.value = null
     description.value = ''
     uploadedFiles.value = []
-    destinationList.value = []
+    // destinationList.value = []
     resetLocation()
 
     router.push('/posted-jobs')
@@ -254,7 +268,7 @@ onMounted(async () => {
         <div class="form-group">
           <label class="field-label">
             <span class="label-number">02</span>
-            Kategori Kerusakan
+            Kategori dan dimensi barang
           </label>
           <p class="field-hint">Pilih kategori yang sesuai dengan barangmu</p>
           <div
@@ -280,7 +294,54 @@ onMounted(async () => {
         </div>
       </div>
  
-      <!-- ROW 2: Deadline & Foto -->
+      <div class="form-group size-box">
+      <label class="field-label">
+        <span class="label-number">03</span>
+        Ukuran Barang
+      </label>
+
+      <p class="field-hint">
+        Pilih ukuran barang yang akan dijemput.
+      </p>
+
+      <div
+        class="category-options"
+        :class="{ invalid: errors.size }"
+      >
+        <label
+          v-for="opt in sizeOptions"
+          :key="opt.value"
+          class="category-chip"
+          :class="{ active: size === opt.value }"
+        >
+          <input
+            type="radio"
+            :value="opt.value"
+            v-model="size"
+            hidden
+          />
+
+          {{ opt.label }}
+        </label>
+      </div>
+
+      <small
+        v-if="errors.size"
+        class="error-text"
+      >
+        {{ errors.size }}
+      </small>
+
+      <!-- Contoh muncul setelah dipilih -->
+      <div
+        v-if="selectedSize"
+        class="size-example-box mt-3"
+      >
+        <strong>Contoh barang:</strong><br>
+        {{ selectedSize.example }}
+      </div>
+    </div>
+
       <div class="form-row">
         <!-- Deadline -->
         <div class="form-group">
@@ -378,35 +439,7 @@ onMounted(async () => {
  
         <!-- Lokasi -->
         <div class="form-group">
-          <label class="field-label">
-            <span class="label-number">06</span>
-            Lokasi Perbaikan
-          </label>
-          <p class="field-hint">masukkan kode pos tempat perbaikan</p>
-          ( jika tidak ada yang cocok input manual atau pilih yang terdekat )
-
-          <!-- ERROR MESSAGE -->
-            <p v-if="postCodeError" style="color: red; margin-bottom: 8px;">
-              {{ postCodeError }}
-            </p>
-
-            <CMultiSelect
-              :multiple="false"
-              :options="destinationList"
-              :value="selectedDestination"
-              @change="handleDestinationChange"
-              @filter-change="handleSearch"
-              placeholder="masukkan kode pos"
-              :class="{ invalid: errors.destination }"
-
-            />
-            <small
-              v-if="errors.destination"
-              class="error-text"
-            >
-              {{ errors.destination }}
-            </small>
-          <!-- <p>Dipilih: {{ selectedDestination }}</p> -->
+          
           <p class="field-hint">Klik peta atau seret penanda untuk menentukan lokasi</p>
           <div id="map" class="map-container"></div>
           <div class="map-footer">
@@ -430,6 +463,18 @@ onMounted(async () => {
 </template>
  
 <style scoped>
+
+.size-example-box {
+  margin-top: 10px;
+  padding: 12px 16px;
+  background: #f7f5ff;
+  border-left: 4px solid #6c63ff;
+  border-radius: 8px;
+  color: #555;
+}
+.size-box{
+  margin-bottom: 20px;
+}
 .c-multi-select .form-multi-select-options {
   max-height: 400px !important;
   overflow-y: auto;

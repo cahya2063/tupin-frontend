@@ -31,6 +31,7 @@ const showCancelModal = ref(false)
 const showDetailJob = ref(false)
 const modalAddPrice = ref(false)
 const showReportModal = ref(false)
+const distance = ref(null)
 
 const openReportModal = () => {
   showReportModal.value = true
@@ -70,13 +71,6 @@ const statusConfig = computed(() => {
   if (s === 'perbaikan dibatalkan') return { accent: '#ef4444', bg: '#fef2f2', text: '#7f1d1d', border: '#fca5a5', avatarBg: '#ef4444' }
   return { accent: '#8d58ff', bg: '#f4f0ff', text: '#4c1d95', border: '#c4b5fd', avatarBg: '#8d58ff' }
 })
-
-const creatorInitials = computed(() => {
-  if (!props.creator) return '?'
-  return props.creator.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-})
-
-const shortId = computed(() => props.id?.slice(-6) ?? '------')
 
 const paymentStatus = ref('')
 
@@ -122,6 +116,7 @@ async function getTechnicianProfile(technicianId){
 async function calculateShippingCost(jobId){
   try {
 
+    const location = props.selectedJob.location
     shippingCost.value = null // reset
     
     const response = await apiFetch(`/ongkir/${jobId}/calculate-shipping-cost`, {
@@ -129,35 +124,18 @@ async function calculateShippingCost(jobId){
       headers: {
         'Content-Type': 'application/json'
       },
+      body: JSON.stringify({
+        size: props.selectedJob.size,
+        technicianId: props.selectedJob.selectedTechnician,
+        lat: location.lat,
+        lng: location.lng
+      })
     })
 
-    console.log('Shipping cost:', response)
+    console.log('Shipping cost:', response.data)
 
-    const data = response.data.shippingCost.data
-
-    // cek instant terlebih dahulu
-    const instantCost = data.calculate_instant?.[0]?.shipping_cost
-
-    if (instantCost) {
-      // jika ada instant -> dikali 2
-      shippingCost.value = instantCost * 2
-    } else {
-      const cargoList = data.calculate_cargo || []
-      
-      if (cargoList.length > 0) {
-        // jika instant kosong -> ambil cargo termurah
-        const cheapestCargo = cargoList.reduce((prev, current) => {
-          return current.shipping_cost < prev.shipping_cost
-            ? current
-            : prev
-        })
-
-        // cargo tidak dikali 2
-        shippingCost.value = cheapestCargo.shipping_cost
-      } else {
-        shippingCost.value = 0
-      }
-    }
+    shippingCost.value = response.data.shippingCost
+    distance.value = response.data.distance
 
   } catch (error) {
     console.error('Gagal menghitung biaya pengiriman:', error)
@@ -352,6 +330,7 @@ watch(() => props.status, () => {
         :profile="profile"
         :technician-profile="technicianProfile"
         :shipping-cost="shippingCost"
+        :distance="distance"
         @close="modalShippingCost = false"
       />
       <!-- Modal add price -->
