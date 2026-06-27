@@ -13,7 +13,7 @@ const role = localStorage.getItem('role')
 const props = defineProps({
   id: String,
   title: String,
-  deadline: Object,
+  deadline: String,
   desc: String,
   category: String,
   status: Object,
@@ -342,7 +342,7 @@ watch(() => props.status, () => {
         <div class="meta-row">
           <div v-if="deadline" class="pill pill-deadline">
             <i class="ri-calendar-event-line pill-icon"></i>
-            Jangka waktu: <strong>{{ formatDate(deadline?.start_date) }}</strong> sampai <strong>{{ formatDate(deadline?.end_date) }}</strong>
+            Deadline pengerjaan: <strong>{{ formatDate(deadline) }}</strong>
           </div>
           <div class="pill pill-category">
             <i class="ri-price-tag-3-line pill-icon"></i>
