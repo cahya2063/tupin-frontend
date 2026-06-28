@@ -11,8 +11,8 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
 
   // Daftar halaman publik (tidak butuh login)
-  const publicPages = ['/login', '/register', '/register-technician', '/account/activate', '/']
-  const guestPages = ['/login', '/register', '/register-technician', '/']
+  const publicPages = ['/login', '/register', '/register-technician', '/account/activate', '/', '/forget-password', '/reset-password']
+  const guestPages = ['/login', '/register', '/register-technician', '/', '/forget-password', '/reset-password']
   const authRequired = !publicPages.includes(to.path)
 
   if (authRequired && !token) {

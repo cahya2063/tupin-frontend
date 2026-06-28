@@ -43,25 +43,7 @@ const onPriceInput = (e) => {
     </CModalHeader>
 
     <CModalBody class="p-0">
-      <div class="modal-section">
-        <small class="modal-section-label">Lokasi</small>
-        <div class="location-grid">
-          <div class="location-card location-card--client">
-            <span class="location-card__icon"><i class="ri-user-line"></i></span>
-            <div>
-              <span class="location-card__lbl">Pelanggan</span>
-              <strong class="location-card__val">{{ selectedJob?.destination?.destinationName || '-' }}</strong>
-            </div>
-          </div>
-          <div class="location-card location-card--tech">
-            <span class="location-card__icon"><i class="ri-tools-line"></i></span>
-            <div>
-              <span class="location-card__lbl">Teknisi</span>
-              <strong class="location-card__val">{{ technicianProfile?.receiverLocation?.destinationName || '-' }}</strong>
-            </div>
-          </div>
-        </div>
-      </div>
+      
 
       <div class="modal-section">
         <small class="modal-section-label">Rincian Biaya</small>
@@ -100,7 +82,7 @@ const onPriceInput = (e) => {
           v-show="selectedJob?.status === 'checked'"
           :name="profile?.nama"
           :email="profile?.email"
-          :amount="totalAmountTesting"
+          :amount="totalAmount"
           :sub-account-id="technicianProfile?.subAccountId"
           :job-id="selectedJob?._id"
           :payer-id="profile?._id"

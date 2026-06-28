@@ -1,52 +1,43 @@
-<!-- views/Login.vue -->
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiFetch } from '@/utils/api'
 
+const name = ref('')
 const email = ref('')
-const password = ref('')
+// const password = ref('')
 const alertMessage = ref('')
 const statusCode = ref(null)
 const isSubmitting = ref(false)
-
 const router = useRouter()
 
-async function loginUser() {
+async function forgetPassword() {
   try {
     alertMessage.value = ''
     statusCode.value = null
     isSubmitting.value = true
 
-    const response = await apiFetch(`/signin`, {
+    const response = await apiFetch(`/forget-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         email: email.value,
-        password: password.value,
+        // password: password.value,
       }),
     })
+
     const result = response.data
     alertMessage.value = result.message
     statusCode.value = response.status
 
-    if (response.status === 200 && result.token) {
-      localStorage.setItem('token', result.token)
-      localStorage.setItem('userId', result.data.id)
-      localStorage.setItem('role', result.data.role)
-      setTimeout(() => {
-        const userRole = result.data.role
-        if (userRole === 'pelanggan' || userRole === 'client') {
-          router.push('/dashboard-client')
-        } else if (userRole === 'admin') {
-          router.push('/dashboard-admin')
-        } else if (userRole === 'teknisi' || userRole === 'technician') {
-          router.push('/dashboard-technician')
-        } else {
-          router.push('/dashboard')
-        }
-      }, 2000)
-    }
+    // kalau berhasil (status 201), redirect ke /login
+    // if (response.status === 201) {
+    //   setTimeout(() => {
+    //     router.push('/login')
+    //   }, 1500)
+    // }
   } catch (error) {
     console.error('Error:', error)
     alertMessage.value = 'Terjadi kesalahan di server'
@@ -60,21 +51,24 @@ async function loginUser() {
 <template>
   <div class="auth-form-container">
     <div class="form-header">
-      <h2>Login Aplikasi</h2>
-      <p>Masuk untuk mengakses layanan perbaikan profesional kami.</p>
+      <h2>Lupa Password</h2>
+      <p>masukkan email terdaftar untuk memperbarui password.</p>
     </div>
 
+    <!-- alert kondisi -->
     <div
       v-if="alertMessage"
       class="form-alert"
-      :class="{ success: statusCode === 200 }"
+      :class="{ success: statusCode === 201 }"
       role="alert"
     >
-      <i :class="statusCode === 200 ? 'ri-checkbox-circle-line' : 'ri-error-warning-line'"></i>
+      <i :class="statusCode === 201 ? 'ri-checkbox-circle-line' : 'ri-error-warning-line'"></i>
       <span>{{ alertMessage }}</span>
     </div>
 
-    <form class="auth-form" @submit.prevent="loginUser" method="post">
+    <!-- form registrasi -->
+    <form class="auth-form" @submit.prevent="forgetPassword" method="post">
+
       <label class="field-group">
         <span>Email</span>
         <input
@@ -86,38 +80,17 @@ async function loginUser() {
         >
       </label>
 
-      <label class="field-group">
-        <span>Password</span>
-        <input
-          v-model="password"
-          type="password"
-          name="password"
-          required
-          placeholder="Masukkan passwordmu..."
-        >
-      </label>
-
       <div class="form-footer">
         <button
           type="submit"
           class="submit-button"
           :disabled="isSubmitting"
         >
-          <i class="ri-login-circle-line"></i>
-          {{ isSubmitting ? 'Memproses...' : 'Login' }}
+          <i class="ri-user-add-line"></i>
+          {{ isSubmitting ? 'Memproses...' : 'Kirim Email' }}
         </button>
       </div>
       
-      <div class="text-center mt-4 auth-links">
-        <p class="auth-link-text">
-          Belum punya akun?
-          <RouterLink to="/register" class="router-link">Daftar</RouterLink>
-        </p>
-        <p class="auth-link-text">
-          Lupa password akun?
-          <RouterLink to="/forget-password" class="router-link">reset password</RouterLink>
-        </p>
-      </div>
     </form>
   </div>
 </template>
@@ -171,7 +144,7 @@ async function loginUser() {
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .field-group {
@@ -242,7 +215,7 @@ async function loginUser() {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 20px;
   text-align: center;
 }
 
@@ -261,5 +234,11 @@ async function loginUser() {
 
 .router-link:hover {
   text-decoration: underline;
+}
+
+.tech-link {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px dashed #e2d9ff;
 }
 </style>
