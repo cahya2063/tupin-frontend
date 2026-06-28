@@ -13,6 +13,7 @@ const form = reactive({
   skills: [],
   ktp: null,
   selfie: null,
+  cv: null,
   description: '',
 })
 
@@ -71,14 +72,15 @@ function validateForm() {
     setFieldError('phone_number', 'Nomor telepon minimal 9 digit')
   }
 
- 
-
   if (form.skills.length === 0) {
     setFieldError('skills', 'Pilih minimal satu keahlian')
   }
 
   if (!getSingleFile(form.ktp)) {
     setFieldError('ktp', 'Foto KTP wajib diunggah')
+  }
+  if(!getSingleFile(form.cv)){
+    setFieldError('cv', 'CV wajib diunggah')
   }
 
   if (!getSingleFile(form.selfie)) {
@@ -115,6 +117,7 @@ function resetForm() {
   form.skills = []
   form.ktp = null
   form.selfie = null
+  form.cv = null,
   form.description = ''
 }
 
@@ -159,6 +162,7 @@ async function registerTechnician() {
     formData.append('description', form.description)
     formData.append('ktp', getSingleFile(form.ktp))
     formData.append('selfie', getSingleFile(form.selfie))
+    formData.append('cv', getSingleFile(form.cv))
 
     const response = await apiFetch('/signup-tech', {
       method: 'POST',
@@ -362,6 +366,17 @@ onMounted(getAllSkills)
             show-size
             variant="outlined"
             :error-messages="errors.selfie ? [errors.selfie] : []"
+          ></v-file-input>
+          <v-file-input
+            v-model="form.cv"
+            prepend-icon=""
+            clearable
+            label="Curiculum Vitae"
+            name="cv"
+            accept=".pdf"
+            show-size
+            variant="outlined"
+            :error-messages="errors.cv ? [errors.cv] : []"
           ></v-file-input>
 
           <label class="field-group">

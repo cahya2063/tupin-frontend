@@ -145,6 +145,14 @@ export const routes = [
         component: () => import('@/pages/auth/register.vue'),
       },
       {
+        path: 'forget-password',
+        component: ()=> import('@/pages/auth/forgetPassword.vue')
+      },
+      {
+        path: 'reset-password',
+        component: ()=> import('@/pages/resetPassword.vue')
+      },
+      {
         path: '/:pathMatch(.*)*',
         component: () => import('@/pages/[...error].vue'),
       },

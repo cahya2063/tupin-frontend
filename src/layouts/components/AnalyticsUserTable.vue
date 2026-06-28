@@ -383,6 +383,26 @@ function getAvatarColor(name) {
               >
             </a>
           </p>
+          <span class="detail-label">Curriculum Vitae</span>
+
+            <a
+              :href="`${backendUrl}/${selectedTechnician.cv}`"
+              target="_blank"
+              class="document-card"
+            >
+              <div class="document-icon">
+                📄
+              </div>
+
+              <div class="document-info">
+                <div class="document-title">
+                  Curriculum Vitae
+                </div>
+
+              </div>
+
+              
+            </a>
         </div>
         
       </div>

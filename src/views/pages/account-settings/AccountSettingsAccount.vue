@@ -530,15 +530,15 @@ const phoneModel = computed({
                 <div class="location-section">
                   <div class="location-header">
                     <div>
-                      <h3>Lokasi dan kode pos</h3>
-                      <p>Pilih kode pos, lalu klik peta atau ambil lokasi saat ini.</p>
+                      <h3>Lokasi teknisi</h3>
+                      <p>Pilih titik lokasi anda.</p>
                     </div>
                     <div class="coordinate-pill">
                       {{ lat.toFixed(5) }}, {{ lng.toFixed(5) }}
                     </div>
                   </div>
 
-                  <p
+                  <!-- <p
                     v-if="postCodeError"
                     class="location-error"
                   >
@@ -554,7 +554,7 @@ const phoneModel = computed({
                     :placeholder="`(Kode Pos) ${accountDataLocal.receiverLocation?.destinationName || originalProfile.receiverLocation?.destinationName || postCode || 'Masukkan kode pos'}`"
                     virtual-scroller
                     teleport="body"
-                  />
+                  /> -->
 
                   <div
                     id="profile-map"

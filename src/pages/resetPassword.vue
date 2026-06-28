@@ -1,7 +1,7 @@
 <script setup>
 import { apiFetch } from '@/utils/api'
 import technicianImage from '@assets/login/image.png'
-import { computed, reactive, ref, onUnmounted } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -18,22 +18,6 @@ const alertMessage = ref('')
 const status = ref('idle')
 const showPassword = ref(false)
 const showPasswordConfirmation = ref(false)
-
-const countdown = ref(5)
-let countdownTimer = null
-
-const targetRoleName = computed(() => {
-  const role = localStorage.getItem('role') || activationRole.value
-  if (role === 'client' || role === 'pelanggan') return 'Pelanggan'
-  if (role === 'technician' || role === 'teknisi') return 'Teknisi'
-  return ''
-})
-
-onUnmounted(() => {
-  if (countdownTimer) {
-    clearInterval(countdownTimer)
-  }
-})
 
 const passwordRules = computed(() => [
   {
@@ -103,21 +87,21 @@ const activationToken = computed(() => {
   return token || ''
 })
 
-const activationRole = computed(() => {
-  const role = route.query.role
+// const activationRole = computed(() => {
+//   const role = route.query.role
 
-  if (Array.isArray(role))
-    return role[0] || ''
+//   if (Array.isArray(role))
+//     return role[0] || ''
 
-  return role || ''
-})
+//   return role || ''
+// })
 
-const activationEndpoint = computed(() => {
-  if (activationRole.value === 'client')
-    return '/client/activate'
+// const activationEndpoint = computed(() => {
+//   if (activationRole.value === 'client')
+//     return '/client/activate'
 
-  return '/technician/activate'
-})
+//   return '/technician/activate'
+// })
 
 const canSubmit = computed(() => Boolean(activationToken.value) && !isSubmitting.value && !isPasswordWeak.value)
 
@@ -158,7 +142,7 @@ function validateForm() {
 }
 
 
-async function activateAccount() {
+async function resetPassword() {
   alertMessage.value = ''
   status.value = 'idle'
 
@@ -168,7 +152,7 @@ async function activateAccount() {
   try {
     isSubmitting.value = true
 
-    const response = await apiFetch(activationEndpoint.value, {
+    const response = await apiFetch('/reset-password', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -184,50 +168,21 @@ async function activateAccount() {
     if (response.status != 200) {
       status.value = 'error'
       alertMessage.value =
-        response.data?.message || 'Token aktivasi tidak valid atau sudah kedaluwarsa.'
+        response.message || 'Token rese password tidak valid atau sudah kedaluwarsa.'
 
       return
     }
 
     status.value = 'success'
 
-    const result = response.data
-    console.log('response activate : ', response.data);
-    
-    if (result && result.token) {
-      localStorage.setItem('token', response.data.token)
-      localStorage.setItem('userId', response.data.id)
-      localStorage.setItem('role', response.data.role || activationRole.value)
-    } else {
-      localStorage.setItem('role', activationRole.value)
-    }
-
     alertMessage.value =
-      result?.message || 'Password berhasil dibuat.'
+      response.message || 'Password berhasil dperbarui.'
 
     form.password = ''
     form.passwordConfirmation = ''
-
-    countdown.value = 5
-    countdownTimer = setInterval(() => {
-      countdown.value--
-      if (countdown.value <= 0) {
-        clearInterval(countdownTimer)
-        const userRole = localStorage.getItem('role') || activationRole.value
-        if (userRole === 'pelanggan' || userRole === 'client') {
-          router.push('/dashboard-client')
-        } else if (userRole === 'admin') {
-          router.push('/dashboard-admin')
-        } else if (userRole === 'teknisi' || userRole === 'technician') {
-          router.push('/dashboard-technician')
-        } else {
-          router.push('/dashboard')
-        }
-      }
-    }, 1000)
   }
   catch (error) {
-    console.error('Gagal aktivasi akun:', error)
+    console.error('Gagal perbarui password:', error)
 
     status.value = 'error'
     alertMessage.value =
@@ -245,52 +200,9 @@ function goHome() {
 </script>
 
 <template>
-  <main class="activation-page">
-    <nav class="activation-nav">
-      <button
-        type="button"
-        class="brand-button"
-        aria-label="Kembali ke halaman utama"
-        @click="goHome"
-      >
-        <span class="brand-mark">F</span>
-        <span>Fixify</span>
-      </button>
+    
 
       
-    </nav>
-
-    <section class="activation-layout">
-      <aside class="activation-copy">
-        <div>
-          <h1>Buat password baru untuk mulai menerima pekerjaan.</h1>
-          <p>
-            Akun teknisi kamu sudah disetujui. Amankan akun dengan password baru
-            sebelum masuk ke dashboard Fixify.
-          </p>
-        </div>
-
-        <img
-          :src="technicianImage"
-          alt="Ilustrasi teknisi Fixify"
-          class="technician-illustration"
-        >
-
-        <div class="security-list">
-          <div class="security-item">
-            <i class="ri-shield-keyhole-line"></i>
-            <span>Link aktivasi pribadi</span>
-          </div>
-          <div class="security-item">
-            <i class="ri-timer-flash-line"></i>
-            <span>Token punya batas waktu</span>
-          </div>
-          <div class="security-item">
-            <i class="ri-lock-password-line"></i>
-            <span>Password langsung terenkripsi</span>
-          </div>
-        </div>
-      </aside>
 
       <section
         class="form-panel"
@@ -305,7 +217,7 @@ function goHome() {
             <h2 id="activation-title">
               Perbarui Password
             </h2>
-            <p>Gunakan password yang kuat untuk akun teknisi kamu.</p>
+            <p>Gunakan password yang kuat untuk akunmu.</p>
           </div>
         </div>
 
@@ -326,7 +238,7 @@ function goHome() {
           v-if="activationToken && status !== 'success'"
           class="password-form"
           novalidate
-          @submit.prevent="activateAccount"
+          @submit.prevent="resetPassword"
         >
           <label class="field-group">
             <span>Password Baru</span>
@@ -439,13 +351,8 @@ function goHome() {
           <span class="success-icon">
             <i class="ri-checkbox-circle-line"></i>
           </span>
-          <h3>Password Berhasil Diperbarui</h3>
-          <p>
-            Akun {{ targetRoleName.toLowerCase() }} kamu sudah siap digunakan.
-          </p>
-          <p style="margin-top: 8px; font-size: 14px; color: #8d58ff; font-weight: 700;">
-            Mengalihkan ke dashboard dalam {{ countdown }} detik...
-          </p>
+          <h3>Password berhasil diperbarui</h3>
+          <p>Silahkan kehalaman login untuk masuk ke dashboard.</p>
         </div>
 
         <div
@@ -454,11 +361,9 @@ function goHome() {
         >
           <i class="ri-mail-warning-line"></i>
           <h3>Link aktivasi tidak lengkap</h3>
-          <p>Buka ulang tombol aktivasi dari email persetujuan teknisi.</p>
+          <p>Buka ulang tombol aktivasi dari email reset password.</p>
         </div>
       </section>
-    </section>
-  </main>
 </template>
 
 <style scoped>
@@ -609,10 +514,8 @@ function goHome() {
 }
 
 .form-panel {
-  border: 1px solid rgba(141, 88, 255, 0.18);
   border-radius: 8px;
   background-color: #ffffff;
-  box-shadow: 0 24px 70px rgba(54, 31, 103, 0.12);
   padding: 34px;
 }
 
