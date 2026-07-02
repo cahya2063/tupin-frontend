@@ -1,9 +1,10 @@
 <script setup>
 import { apiFetch, getProfile } from '@/utils/api'
-import { computed, nextTick, onMounted, reactive, ref } from 'vue'
-import { Ckeditor } from '@ckeditor/ckeditor5-vue'
-import { config, editor, useLocationPicker } from '@/utils/tools'
 import sweetAlert from '@/utils/sweetAlert'
+import { config, editor, useLocationPicker } from '@/utils/tools'
+import { Ckeditor } from '@ckeditor/ckeditor5-vue'
+import L from 'leaflet'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const {
@@ -125,6 +126,45 @@ function getDescriptionText() {
   return (wrapper.textContent || '').replace(/\u00a0/g, ' ').trim()
 }
 
+// apakah titik lokasi di dalam radius?
+function isInsideRadius(lat, lng, targetLat, targetLng, radius = 10000) {
+  // .distanceTo() digunakan untuk hitung jarak koordinat
+  return (
+    L.latLng(lat, lng).distanceTo(
+      L.latLng(targetLat, targetLng)
+    ) <= radius // apakah diluar radius?
+  )
+}
+
+// ambil koordinat teknisi
+const targetLocation = computed(() => {
+  const coordinates = technicianProfile.value?.location?.coordinates
+  if (coordinates && coordinates.length === 2) {
+    return {
+      lng: Number(coordinates[0]),
+      lat: Number(coordinates[1])
+    }
+  }
+  return {
+    lng: 114.35454859511096,
+    lat: -8.24293075358376
+  }
+})
+
+
+watch([lat, lng], ([newLat, newLng]) => {
+  const target = targetLocation.value
+
+  
+  console.log('inside radius : ', isInsideRadius(newLat, newLng, target.lat, target.lng));
+  if (!isInsideRadius(newLat, newLng, target.lat, target.lng)) {
+    
+    errors.location = 'Lokasi harus berada dalam radius 10 Km dari teknisi'
+  } else {
+    delete errors.location
+  }
+})
+
 function validateForm() {
   clearErrors()
 
@@ -154,6 +194,15 @@ function validateForm() {
     setFieldError('description', 'Deskripsi kerusakan wajib diisi')
   }
 
+  // Validasi radius lokasi perbaikan ke teknisi
+  const target = targetLocation.value
+
+  if (!isInsideRadius(lat.value, lng.value, target.lat, target.lng)) {
+      setFieldError(
+          'location',
+          'Lokasi harus berada dalam radius 10 Km dari teknisi'
+      )
+  }
 
   return Object.keys(errors).length === 0
 }
@@ -221,7 +270,34 @@ onMounted(async () => {
   console.log('profile teknisi : ', technicianProfile.value.skills);
   
   await nextTick()
-  initLocationMap('map')
+
+  // Inisialisasi lokasi teknisi
+  const target = targetLocation.value
+  lat.value = target.lat
+  lng.value = target.lng
+
+  const { map, marker } = initLocationMap('map')
+
+  // buat radius 10 km
+  if (map) {
+    L.circle([target.lat, target.lng], {
+      color: '#9341fd',
+      fillColor: '#9341fd',
+      fillOpacity: 0.1,
+      radius: 10000 // 10 Km
+    }).addTo(map)
+
+    // style marker dan radius
+    const techMarker = L.marker([target.lat, target.lng], {
+      icon: L.divIcon({
+        className: 'tech-marker-icon',
+        html: '<div style="background-color: #9341fd; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6]
+      })
+    }).addTo(map)
+    techMarker.bindPopup('<b>Lokasi Teknisi</b>').openPopup()
+  }
 })
  
 
@@ -438,16 +514,28 @@ onMounted(async () => {
         </div>
  
         <!-- Lokasi -->
-        <div class="form-group">
-          
-          <p class="field-hint">Klik peta atau seret penanda untuk menentukan lokasi</p>
+        <div class="form-group" :class="{ invalid: errors.location }">
+          <label class="field-label">
+            <span class="label-number">06</span>
+            Lokasi Perbaikan
+          </label>
+          <p class="field-hint">Klik peta atau seret penanda untuk menentukan lokasi (Maksimal 10 Km dari teknisi)</p>
           <div id="map" class="map-container"></div>
           <div class="map-footer">
             <button type="button" class="btn-location" @click.prevent="getMyLocation">
               📍 Ambil Lokasi Saya
             </button>
+            <!-- <span v-if="distanceToTechnician !== null" class="distance-badge">
+              Jarak ke teknisi: {{ distanceToTechnician.toFixed(2) }} Km
+            </span> -->
             <span class="coords">{{ lat.toFixed(5) }}, {{ lng.toFixed(5) }}</span>
           </div>
+          <small
+            v-if="errors.location"
+            class="error-text"
+          >
+            {{ errors.location }}
+          </small>
         </div>
       </div>
  
@@ -668,6 +756,22 @@ onMounted(async () => {
 }
  
 /* ===== Map ===== */
+.form-group.invalid {
+  border-color: #e45264 !important;
+}
+
+.distance-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #9341fd;
+  background: #f5edff;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid #e1ccff;
+  display: inline-flex;
+  align-items: center;
+}
+
 .map-container {
   height: 280px;
   border-radius: 8px;

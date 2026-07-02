@@ -85,8 +85,8 @@ function syncDestinationToProfile(selected) {
 }
 
 const {
-  destinationList,
-  handleSearch,
+  // destinationList,
+  // handleSearch,
   selectedDestination,
   postCode,
   postCodeError,
@@ -96,13 +96,13 @@ const {
   initLocationMap,
   setMapPosition,
   getMyLocation,
-  handleDestinationChange,
+  // handleDestinationChange,
 } = useLocationPicker({
-  clearDestinationWhenPostCodeChanges: true,
-  onDestinationChange: syncDestinationToProfile,
-  onPostCodeFound: code => {
-    accountDataLocal.value.zip_code = code
-  },
+  // clearDestinationWhenPostCodeChanges: true,
+  // onDestinationChange: syncDestinationToProfile,
+  // onPostCodeFound: code => {
+  //   accountDataLocal.value.zip_code = code
+  // },
   onCurrentLocationError: () => {
     alert('Gagal mengambil lokasi. Pastikan izin lokasi browser aktif.')
   },
