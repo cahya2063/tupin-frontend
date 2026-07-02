@@ -232,23 +232,6 @@ export function useDestination() {
   }
 }
 
-// ambil kode pos dari koordinat
-export async function getPostCodeFromCoordinates(lat, lng) {
-  try {
-    const response = await apiFetch('/ongkir/get-poscode', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ lat, lon: lng }),
-    })
-
-    return response.data.location?.address?.postcode || null
-  } catch (error) {
-    console.error('Gagal mengambil kode pos:', error)
-    return null
-  }
-}
 
 export function useLocationPicker(options = {}) {
   // Default value dan callback dari user
@@ -429,44 +412,6 @@ export function useLocationPicker(options = {}) {
     marker = null
   }
 
-  // ketika lat dan lng diperbarui
-  watch([lat, lng], async ([latitude, longitude]) => {
-    if (!latitude || !longitude)
-      return
-
-    const previousPostCode = postCode.value
-    const locationPostCode = await getPostCodeFromCoordinates(latitude, longitude)
-
-    if (!locationPostCode) {
-      postCode.value = null
-      postCodeError.value = 'Kode pos tidak ditemukan, silakan input manual'
-
-      return
-    }
-
-    // reset destination jika postcode berubah
-    if (
-      clearDestinationWhenPostCodeChanges &&
-      previousPostCode &&
-      String(previousPostCode) !== String(locationPostCode)
-    ) {
-      // reset destination
-      selectedDestination.value = []
-
-      if (typeof onDestinationChange === 'function')
-        onDestinationChange(null)
-    }
-
-    // jika postcode ada
-    postCode.value = locationPostCode
-    postCodeError.value = ''
-
-    // caro destinasi
-    await getDestination(locationPostCode)
-
-    if (typeof onPostCodeFound === 'function')
-      onPostCodeFound(locationPostCode)
-  })
 
   onUnmounted(destroyLocationMap)
 

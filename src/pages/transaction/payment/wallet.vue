@@ -11,6 +11,8 @@ const showSuccess = ref(false)
 const subAccountId = ref('')
 const channelName = ref('BCA')
 const accountNumber = ref('')
+const accountHolderName = ref('')
+const isLoading = ref(false)
 
 const amountError = ref('')
 const accountError = ref('')
@@ -18,8 +20,8 @@ const accountError = ref('')
 const technician = ref()
 
 const quickAmounts = [50000, 100000, 200000, 500000]
-const payoutBankList = ['BCA', 'BNI', 'BRI', 'BNC']
-const eWalletList = ['LINKAJA', 'OVO', 'GOPAY', 'DANA']
+const payoutBankList = ['BCA', 'BNI', 'BRI']
+// const eWalletList = ['LINKAJA', 'OVO', 'GOPAY', 'DANA']
 
 const withdrawAmount = computed(() => parseInt(amount.value || 0))
 
@@ -45,18 +47,20 @@ async function getBalance(subAccountId) {
 }
 
 const withdraw = async () => {
-  if (balance.value - withdrawAmount.value < 5000) {
-    sweetAlert.error('Penarikan tidak valid dan harus menyisakan saldo sebanyak 5000 Rp')
+  if (balance.value - withdrawAmount.value < 4000) {
+    sweetAlert.error('Penarikan tidak valid dan harus menyisakan saldo sebanyak 4000 Rp')
     return
   }
 
   try {
+    isLoading.value = true
     console.log(`debug payout : ${accountNumber.value} ${channelName.value}, ${withdrawAmount.value}`)
     const request = {
       userId: userId,
       amount: withdrawAmount.value,
       channelName: channelName.value,
       accountNumber: accountNumber.value,
+      accountName: accountHolderName.value
     }
     const response = await apiFetch('/payment/create-disbursements', {
       method: 'POST',
@@ -65,6 +69,8 @@ const withdraw = async () => {
       },
       body: JSON.stringify(request),
     })
+    console.log('disbursements : ', response.data);
+    
     if(response.data.success){
 
       sweetAlert.success('Permintaan penarikan saldo berhasil diproses.')
@@ -75,6 +81,9 @@ const withdraw = async () => {
     console.log('response : ', response.data)
   } catch (error) {
     sweetAlert.error(error.message)
+  }
+  finally {
+    isLoading.value = false
   }
 }
 
@@ -173,6 +182,16 @@ onMounted(async () => {
               @input="onlyNumber"
             />
           </CInputGroup>
+          <label class="field-label">Nama Pemegang Rekening</label>
+          <CInputGroup class="has-validation">
+            <CFormInput
+              v-model="accountHolderName"
+              type="text"
+              placeholder="Masukkan Nama Pemegang Rekening"
+              class="account-input"
+              required
+            />
+          </CInputGroup>
           <transition name="fade">
             <div v-if="accountError" class="error-msg">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="#ef4444">
@@ -202,7 +221,7 @@ onMounted(async () => {
                     {{ bank }}
                   </button>
                 </div>
-                <div class="bank-grid">
+                <!-- <div class="bank-grid">
                   <button
                     v-for="ewallet in eWalletList"
                     :key="ewallet"
@@ -214,7 +233,7 @@ onMounted(async () => {
                     
                     {{ ewallet }}
                   </button>
-                </div>
+                </div> -->
               </v-expansion-panel-text>
             </VExpansionPanel>
           </VExpansionPanels>
@@ -223,12 +242,13 @@ onMounted(async () => {
         <!-- Withdraw Button -->
         <button
           class="btn-withdraw"
-          :disabled="!amount || !accountNumber || showSuccess"
+          :disabled="!amount || !accountHolderName || !accountNumber || showSuccess || isLoading"
           @click="withdraw"
         >
         <i class="ri-download-fill" v-if="showSuccess" width="18" height="18" fill="white"></i>
         <i class="ri-download-fill" v-else width="18" height="18" fill="white"></i>
           {{ showSuccess ? 'Berhasil Diproses!' : 'Tarik Saldo' }}
+          <CSpinner v-if="isLoading"/>
         </button>
 
         <!-- Info Footer -->
